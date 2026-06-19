@@ -1,34 +1,72 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { View, Text, ScrollView, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../navigation';
 import { Colors } from '../../constants';
+import { getBarber, BarberShop } from '../../services/barberService';
+import { getBarberReviews, Review } from '../../services/reviewService';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'BarberDetail'>;
 
-const MOCK = {
+// Fallback used when the barber doc cannot be loaded (e.g. offline / mock data)
+const MOCK: Partial<BarberShop> & { services: any[]; staff: any[] } = {
   shopName: "Sirat's Barber Shop",
   rating: 4.9, reviewCount: 128,
-  neighborhood: 'Kadıköy', openTime: '09:00', closeTime: '21:00',
+  neighborhood: 'Kadıköy',
+  workingHours: { days: [0,1,2,3,4,5], openTime: '09:00', closeTime: '21:00', slotDurationMin: 30 },
   services: [
-    { id: 's1', name: 'Saç Kesimi', price: 500, durationMin: 30, desc: 'Klasik veya modern kesim' },
-    { id: 's2', name: 'Sakal Düzeltme', price: 350, durationMin: 20, desc: 'Şekillendirme + bakım' },
-    { id: 's3', name: 'Full Tıraş', price: 400, durationMin: 45, desc: 'Klasik ustura tıraşı' },
-    { id: 's4', name: 'Saç + Sakal', price: 750, durationMin: 60, desc: 'Kombine paket' },
+    { id: 's1', name: 'Saç Kesimi', price: 500, durationMin: 30 },
+    { id: 's2', name: 'Sakal Düzeltme', price: 350, durationMin: 20 },
+    { id: 's3', name: 'Full Tıraş', price: 400, durationMin: 45 },
+    { id: 's4', name: 'Saç + Sakal', price: 750, durationMin: 60 },
   ],
   staff: [
     { id: 'st1', name: 'Engyal T.', title: 'Kıdemli Berber' },
     { id: 'st2', name: 'Volkan B.', title: 'Berber' },
     { id: 'st3', name: 'Mehmet K.', title: 'Usta' },
   ],
-  reviews: [
-    { name: 'Ali Yılmaz', rating: 5, text: 'Harika deneyim, kesinlikle tavsiye ederim!' },
-    { name: 'Burak Demir', rating: 4, text: 'Temiz ortam, fiyat/performans çok iyi.' },
-  ],
 };
 
 export default function BarberDetailScreen({ navigation, route }: Props) {
+  const { barberId } = route.params;
+  const [barber, setBarber] = useState<BarberShop | null>(null);
+  const [reviews, setReviews] = useState<Review[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      try {
+        const [b, r] = await Promise.all([
+          getBarber(barberId),
+          getBarberReviews(barberId).catch(() => []),
+        ]);
+        if (!active) return;
+        setBarber(b);
+        setReviews(r);
+      } catch {
+        /* fall back to mock below */
+      } finally {
+        if (active) setLoading(false);
+      }
+    })();
+    return () => { active = false; };
+  }, [barberId]);
+
+  if (loading) {
+    return (
+      <SafeAreaView style={{ flex: 1, backgroundColor: Colors.background, justifyContent: 'center' }}>
+        <ActivityIndicator color={Colors.primary} />
+      </SafeAreaView>
+    );
+  }
+
+  const data = barber ?? (MOCK as BarberShop);
+  const wh = data.workingHours ?? MOCK.workingHours!;
+  const services = (data.services?.length ? data.services : MOCK.services);
+  const staff = (data.staff?.length ? data.staff : MOCK.staff);
+
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: Colors.background }}>
       <ScrollView>
@@ -38,11 +76,11 @@ export default function BarberDetailScreen({ navigation, route }: Props) {
             <Text style={{ color: '#aabbff', fontSize: 15 }}>← Geri</Text>
           </TouchableOpacity>
           <View style={styles.shopIcon}><Text style={{ fontSize: 28 }}>💈</Text></View>
-          <Text style={styles.shopName}>{MOCK.shopName}</Text>
-          <Text style={styles.shopSub}>⭐ {MOCK.rating} · {MOCK.reviewCount} yorum</Text>
+          <Text style={styles.shopName}>{data.shopName}</Text>
+          <Text style={styles.shopSub}>⭐ {data.rating ?? 0} · {data.reviewCount ?? 0} yorum</Text>
           <View style={styles.metaRow}>
-            <Text style={styles.metaItem}>📍 {MOCK.neighborhood}</Text>
-            <Text style={styles.metaItem}>🕐 {MOCK.openTime}–{MOCK.closeTime}</Text>
+            {!!data.neighborhood && <Text style={styles.metaItem}>📍 {data.neighborhood}</Text>}
+            <Text style={styles.metaItem}>🕐 {wh.openTime}–{wh.closeTime}</Text>
             <View style={styles.openBadge}><Text style={{ color: '#4ade80', fontSize: 11, fontWeight: '700' }}>● Açık</Text></View>
           </View>
         </View>
@@ -51,7 +89,7 @@ export default function BarberDetailScreen({ navigation, route }: Props) {
           {/* Staff */}
           <Text style={styles.sectionTitle}>Berberler</Text>
           <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-            {MOCK.staff.map(s => (
+            {staff.map((s: any) => (
               <View key={s.id} style={styles.staffItem}>
                 <View style={styles.staffAvatar}><Text style={{ fontSize: 22 }}>✂</Text></View>
                 <Text style={styles.staffName}>{s.name}</Text>
@@ -63,11 +101,11 @@ export default function BarberDetailScreen({ navigation, route }: Props) {
           {/* Services */}
           <Text style={styles.sectionTitle}>Hizmetler</Text>
           <View style={styles.card}>
-            {MOCK.services.map(s => (
+            {services.map((s: any) => (
               <View key={s.id} style={styles.serviceItem}>
                 <View>
                   <Text style={styles.serviceName}>{s.name}</Text>
-                  <Text style={styles.serviceDesc}>{s.desc} · {s.durationMin} dk</Text>
+                  <Text style={styles.serviceDesc}>{s.durationMin} dk</Text>
                 </View>
                 <Text style={styles.servicePrice}>₺{s.price}</Text>
               </View>
@@ -77,22 +115,24 @@ export default function BarberDetailScreen({ navigation, route }: Props) {
           {/* Reviews */}
           <Text style={styles.sectionTitle}>Yorumlar</Text>
           <View style={styles.card}>
-            {MOCK.reviews.map((r, i) => (
-              <View key={i} style={[styles.reviewItem, i < MOCK.reviews.length - 1 && { borderBottomWidth: 1, borderBottomColor: Colors.borderLight }]}>
+            {reviews.length === 0 ? (
+              <Text style={{ fontSize: 12, color: Colors.textMuted, paddingVertical: 8 }}>Henüz yorum yok.</Text>
+            ) : reviews.map((r, i) => (
+              <View key={r.id} style={[styles.reviewItem, i < reviews.length - 1 && { borderBottomWidth: 1, borderBottomColor: Colors.borderLight }]}>
                 <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-                  <Text style={{ fontWeight: '700', fontSize: 13 }}>{r.name}</Text>
+                  <Text style={{ fontWeight: '700', fontSize: 13 }}>{r.customerName}</Text>
                   <Text style={{ color: Colors.warning }}>{'⭐'.repeat(r.rating)}</Text>
                 </View>
-                <Text style={{ fontSize: 12, color: Colors.textSecondary, marginTop: 4 }}>{r.text}</Text>
+                <Text style={{ fontSize: 12, color: Colors.textSecondary, marginTop: 4 }}>{r.comment}</Text>
               </View>
             ))}
           </View>
 
           {/* Buttons */}
-          <TouchableOpacity style={styles.btnPrimary} onPress={() => navigation.navigate('Appointment', { barberId: route.params.barberId })}>
+          <TouchableOpacity style={styles.btnPrimary} onPress={() => navigation.navigate('Appointment', { barberId })}>
             <Text style={styles.btnPrimaryText}>Randevu Al</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.btnSecondary} onPress={() => navigation.navigate('Messaging', { barberId: route.params.barberId, barberName: MOCK.shopName })}>
+          <TouchableOpacity style={styles.btnSecondary} onPress={() => navigation.navigate('Messaging', { barberId, barberName: data.shopName })}>
             <Text style={styles.btnSecondaryText}>Mesaj Gönder</Text>
           </TouchableOpacity>
           <View style={{ height: 16 }} />

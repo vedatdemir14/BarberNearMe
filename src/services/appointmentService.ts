@@ -43,6 +43,12 @@ export async function createAppointment(
   return ref.id;
 }
 
+// ── Get single appointment ────────────────────────────────────
+export async function getAppointment(id: string): Promise<Appointment | null> {
+  const snap = await getDoc(doc(db, 'appointments', id));
+  return snap.exists() ? ({ id: snap.id, ...snap.data() } as Appointment) : null;
+}
+
 // ── Get appointments for customer ─────────────────────────────
 export async function getCustomerAppointments(customerId: string): Promise<Appointment[]> {
   const q = query(
