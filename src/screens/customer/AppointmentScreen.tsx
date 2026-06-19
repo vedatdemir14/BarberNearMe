@@ -1,58 +1,178 @@
 import { SafeAreaView } from 'react-native-safe-area-context';
-import React, { useState } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Alert } from 'react-native';
+import React, { useEffect, useMemo, useState } from 'react';
+import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Alert, ActivityIndicator } from 'react-native';
+import { Timestamp } from 'firebase/firestore';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../navigation';
-import { Colors } from '../../constants';
+import { Colors, DAYS_TR } from '../../constants';
+import { useAuth } from '../../hooks/useAuth';
+import { getBarber, BarberShop, Service, StaffMember } from '../../services/barberService';
+import { createAppointment, getBookedSlots } from '../../services/appointmentService';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Appointment'>;
 
-const SERVICES = [
+const MONTHS_TR = ['Ocak','Şubat','Mart','Nisan','Mayıs','Haziran','Temmuz','Ağustos','Eylül','Ekim','Kasım','Aralık'];
+
+const FALLBACK_SERVICES: Service[] = [
   { id: 's1', name: 'Saç Kesimi', price: 500, durationMin: 30 },
   { id: 's2', name: 'Sakal Düzeltme', price: 350, durationMin: 20 },
   { id: 's3', name: 'Full Tıraş', price: 400, durationMin: 45 },
 ];
-const DAYS = ['Pzt','Sal','Çrş','Prş','Cum','Cmt','Paz'];
-const TIMES = ['09:00','09:30','10:00','10:30','11:00','11:30','13:00','14:00','14:30','15:00','15:30','16:00'];
-const UNAVAILABLE = ['09:00','09:30','13:00'];
+const FALLBACK_STAFF: StaffMember[] = [{ id: 'st1', name: 'Engyal T.', title: 'Berber' }];
+const FALLBACK_HOURS = { openTime: '09:00', closeTime: '21:00', slotDurationMin: 30 };
 
-export default function AppointmentScreen({ navigation }: Props) {
-  const [selectedSvc, setSelectedSvc] = useState(0);
-  const [selectedDay, setSelectedDay] = useState(13);
-  const [selectedTime, setSelectedTime] = useState('10:30');
-
-  function handleBook() {
-    if (!selectedTime) { Alert.alert('Saat seçin'); return; }
-    navigation.navigate('AppointmentConfirm', { appointmentId: 'new' });
+// Generate "HH:MM" slots between open and close times
+function genSlots(open: string, close: string, stepMin: number): string[] {
+  const [oh, om] = open.split(':').map(Number);
+  const [ch, cm] = close.split(':').map(Number);
+  const end = ch * 60 + cm;
+  const out: string[] = [];
+  for (let t = oh * 60 + om; t < end; t += stepMin) {
+    out.push(`${String(Math.floor(t / 60)).padStart(2, '0')}:${String(t % 60).padStart(2, '0')}`);
   }
+  return out;
+}
+
+function sameDay(a: Date, b: Date) {
+  return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
+}
+
+export default function AppointmentScreen({ navigation, route }: Props) {
+  const { barberId } = route.params;
+  const { user, profile } = useAuth();
+
+  const [barber, setBarber] = useState<BarberShop | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [booking, setBooking] = useState(false);
+
+  const [selectedSvc, setSelectedSvc] = useState(0);
+  const [selectedStaff, setSelectedStaff] = useState(0);
+  const [selectedDate, setSelectedDate] = useState(new Date());
+  const [selectedTime, setSelectedTime] = useState<string | null>(null);
+  const [bookedSlots, setBookedSlots] = useState<string[]>([]);
+
+  useEffect(() => {
+    let active = true;
+    getBarber(barberId)
+      .then(b => { if (active) setBarber(b); })
+      .catch(() => { /* fallback below */ })
+      .finally(() => { if (active) setLoading(false); });
+    return () => { active = false; };
+  }, [barberId]);
+
+  const services = barber?.services?.length ? barber.services : FALLBACK_SERVICES;
+  const staff = barber?.staff?.length ? barber.staff : FALLBACK_STAFF;
+  const hours = barber?.workingHours ?? FALLBACK_HOURS;
+
+  const slots = useMemo(
+    () => genSlots(hours.openTime, hours.closeTime, hours.slotDurationMin),
+    [hours.openTime, hours.closeTime, hours.slotDurationMin]
+  );
+
+  // Fetch already-booked slots whenever the selected day changes
+  useEffect(() => {
+    let active = true;
+    setSelectedTime(null);
+    getBookedSlots(barberId, selectedDate)
+      .then(s => { if (active) setBookedSlots(s); })
+      .catch(() => { if (active) setBookedSlots([]); });
+    return () => { active = false; };
+  }, [barberId, selectedDate]);
+
+  // Current month calendar grid
+  const today = new Date();
+  const year = today.getFullYear();
+  const month = today.getMonth();
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const firstWeekday = (new Date(year, month, 1).getDay() + 6) % 7; // Monday-based offset
+
+  async function handleBook() {
+    if (!user) { Alert.alert('Giriş gerekli', 'Randevu almak için giriş yapın.'); return; }
+    if (!selectedTime) { Alert.alert('Saat seçin', 'Lütfen bir saat seçin.'); return; }
+
+    const svc = services[selectedSvc];
+    const stf = staff[selectedStaff];
+    const [h, m] = selectedTime.split(':').map(Number);
+    const date = new Date(selectedDate);
+    date.setHours(h, m, 0, 0);
+
+    if (date.getTime() < Date.now()) { Alert.alert('Geçmiş saat', 'Geçmiş bir saate randevu alınamaz.'); return; }
+
+    setBooking(true);
+    try {
+      const id = await createAppointment({
+        customerId: user.uid,
+        barberId,
+        staffId: stf.id,
+        staffName: stf.name,
+        serviceId: svc.id,
+        serviceName: svc.name,
+        servicePrice: svc.price,
+        date: Timestamp.fromDate(date),
+        timeSlot: selectedTime,
+        durationMin: svc.durationMin,
+        status: 'pending',
+      });
+      navigation.navigate('AppointmentConfirm', { appointmentId: id });
+    } catch (e: any) {
+      Alert.alert('Hata', e.message ?? 'Randevu oluşturulamadı.');
+    } finally {
+      setBooking(false);
+    }
+  }
+
+  if (loading) {
+    return (
+      <SafeAreaView style={{ flex: 1, backgroundColor: Colors.background, justifyContent: 'center' }}>
+        <ActivityIndicator color={Colors.primary} />
+      </SafeAreaView>
+    );
+  }
+
+  const svc = services[selectedSvc];
+  const stf = staff[selectedStaff];
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: Colors.background }}>
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()}><Text style={styles.back}>←</Text></TouchableOpacity>
-        <View><Text style={styles.headerTitle}>Randevu Al</Text><Text style={styles.headerSub}>Sirat's Barber Shop</Text></View>
+        <View><Text style={styles.headerTitle}>Randevu Al</Text><Text style={styles.headerSub}>{barber?.shopName ?? 'Berber'}</Text></View>
       </View>
       <ScrollView contentContainerStyle={{ padding: 16, gap: 16 }}>
         {/* Service */}
         <Text style={styles.sectionTitle}>Hizmet Seç</Text>
-        {SERVICES.map((s, i) => (
+        {services.map((s, i) => (
           <TouchableOpacity key={s.id} style={[styles.serviceCard, selectedSvc === i && styles.serviceCardActive]} onPress={() => setSelectedSvc(i)}>
             <View><Text style={styles.serviceName}>{s.name}</Text><Text style={styles.serviceSub}>~{s.durationMin} dk</Text></View>
             <Text style={styles.servicePrice}>₺{s.price}</Text>
           </TouchableOpacity>
         ))}
 
+        {/* Staff */}
+        <Text style={styles.sectionTitle}>Berber Seç</Text>
+        <View style={styles.timeGrid}>
+          {staff.map((s, i) => (
+            <TouchableOpacity key={s.id} style={[styles.staffChip, selectedStaff === i && styles.timeSelected]} onPress={() => setSelectedStaff(i)}>
+              <Text style={[styles.timeText, selectedStaff === i && { color: '#fff' }]}>{s.name}</Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+
         {/* Calendar */}
-        <Text style={styles.sectionTitle}>Tarih Seç — Mayıs 2025</Text>
+        <Text style={styles.sectionTitle}>Tarih Seç — {MONTHS_TR[month]} {year}</Text>
         <View style={styles.calGrid}>
-          {DAYS.map(d => <Text key={d} style={styles.calHeader}>{d}</Text>)}
-          {[...Array(2)].map((_, i) => <View key={'e'+i} />)}
-          {[...Array(31)].map((_, i) => {
+          {DAYS_TR.map(d => <Text key={d} style={styles.calHeader}>{d}</Text>)}
+          {[...Array(firstWeekday)].map((_, i) => <View key={'e' + i} style={styles.calDay} />)}
+          {[...Array(daysInMonth)].map((_, i) => {
             const day = i + 1;
-            const isSel = selectedDay === day;
+            const date = new Date(year, month, day);
+            const isPast = date < new Date(today.getFullYear(), today.getMonth(), today.getDate());
+            const isSel = sameDay(selectedDate, date);
             return (
-              <TouchableOpacity key={day} style={[styles.calDay, isSel && styles.calDaySelected]} onPress={() => setSelectedDay(day)}>
-                <Text style={[styles.calDayText, isSel && { color: '#fff' }]}>{day}</Text>
+              <TouchableOpacity key={day} disabled={isPast}
+                style={[styles.calDay, isSel && styles.calDaySelected]}
+                onPress={() => setSelectedDate(date)}>
+                <Text style={[styles.calDayText, isPast && { color: Colors.textMuted, opacity: 0.4 }, isSel && { color: '#fff' }]}>{day}</Text>
               </TouchableOpacity>
             );
           })}
@@ -61,8 +181,10 @@ export default function AppointmentScreen({ navigation }: Props) {
         {/* Time */}
         <Text style={styles.sectionTitle}>Saat Seç</Text>
         <View style={styles.timeGrid}>
-          {TIMES.map(t => {
-            const unavail = UNAVAILABLE.includes(t);
+          {slots.map(t => {
+            const [h, m] = t.split(':').map(Number);
+            const slotDate = new Date(selectedDate); slotDate.setHours(h, m, 0, 0);
+            const unavail = bookedSlots.includes(t) || slotDate.getTime() < Date.now();
             const isSel = selectedTime === t;
             return (
               <TouchableOpacity key={t} disabled={unavail}
@@ -77,17 +199,22 @@ export default function AppointmentScreen({ navigation }: Props) {
         {/* Summary */}
         <Text style={styles.sectionTitle}>Özet</Text>
         <View style={styles.summaryCard}>
-          {[['Hizmet', SERVICES[selectedSvc].name], ['Berber', 'Engyal T.'], ['Tarih', `${selectedDay} Mayıs 2025`], ['Saat', selectedTime]].map(([l, v]) => (
+          {[
+            ['Hizmet', svc.name],
+            ['Berber', stf.name],
+            ['Tarih', `${selectedDate.getDate()} ${MONTHS_TR[selectedDate.getMonth()]} ${selectedDate.getFullYear()}`],
+            ['Saat', selectedTime ?? '—'],
+          ].map(([l, v]) => (
             <View key={l} style={styles.summaryRow}><Text style={styles.summaryLabel}>{l}</Text><Text style={styles.summaryVal}>{v}</Text></View>
           ))}
           <View style={[styles.summaryRow, { borderTopWidth: 1.5, borderTopColor: Colors.border, marginTop: 8, paddingTop: 8 }]}>
             <Text style={[styles.summaryLabel, { fontWeight: '700', fontSize: 15 }]}>Toplam</Text>
-            <Text style={[styles.summaryVal, { fontSize: 15 }]}>₺{SERVICES[selectedSvc].price}</Text>
+            <Text style={[styles.summaryVal, { fontSize: 15 }]}>₺{svc.price}</Text>
           </View>
         </View>
 
-        <TouchableOpacity style={styles.btnPrimary} onPress={handleBook}>
-          <Text style={styles.btnText}>Randevu Oluştur →</Text>
+        <TouchableOpacity style={[styles.btnPrimary, booking && { opacity: 0.6 }]} onPress={handleBook} disabled={booking}>
+          {booking ? <ActivityIndicator color="#fff" /> : <Text style={styles.btnText}>Randevu Oluştur →</Text>}
         </TouchableOpacity>
         <View style={{ height: 16 }} />
       </ScrollView>
@@ -106,6 +233,7 @@ const styles = StyleSheet.create({
   serviceName: { fontSize: 14, fontWeight: '600', color: Colors.primary },
   serviceSub: { fontSize: 12, color: Colors.textSecondary },
   servicePrice: { fontSize: 15, fontWeight: '700', color: Colors.primary },
+  staffChip: { paddingVertical: 10, paddingHorizontal: 16, borderWidth: 1.5, borderColor: Colors.border, borderRadius: 10, alignItems: 'center' },
   calGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 4 },
   calHeader: { width: '13%', textAlign: 'center', fontSize: 10, fontWeight: '600', color: Colors.textMuted, paddingVertical: 4 },
   calDay: { width: '13%', aspectRatio: 1, alignItems: 'center', justifyContent: 'center', borderRadius: 8 },
