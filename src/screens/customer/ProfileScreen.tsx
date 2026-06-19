@@ -3,6 +3,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Alert } from 'react-native';
 import { Colors } from '../../constants';
 import { logout } from '../../services/authService';
+import { useAuth } from '../../hooks/useAuth';
 
 const MENU = [
   { icon: '📅', label: 'Randevularım', screen: 'Appointments' },
@@ -14,6 +15,10 @@ const MENU = [
 ];
 
 export default function ProfileScreen({ navigation }: any) {
+  const { profile } = useAuth();
+  const fullName = profile ? `${profile.firstName} ${profile.lastName}`.trim() : '';
+  const isBarber = profile?.role === 'barber';
+
   async function handleLogout() {
     Alert.alert('Çıkış', 'Çıkış yapmak istiyor musunuz?', [
       { text: 'İptal', style: 'cancel' },
@@ -26,9 +31,9 @@ export default function ProfileScreen({ navigation }: any) {
       <ScrollView>
         <View style={styles.hero}>
           <View style={styles.avatar}><Text style={{ fontSize: 36 }}>😊</Text></View>
-          <Text style={styles.name}>Ahmet Yılmaz</Text>
-          <Text style={styles.email}>ahmet@email.com</Text>
-          <View style={styles.badge}><Text style={styles.badgeText}>Müşteri Hesabı</Text></View>
+          <Text style={styles.name}>{fullName || 'Kullanıcı'}</Text>
+          <Text style={styles.email}>{profile?.email ?? ''}</Text>
+          <View style={styles.badge}><Text style={styles.badgeText}>{isBarber ? 'Berber Hesabı' : 'Müşteri Hesabı'}</Text></View>
         </View>
         <View style={styles.menuSection}>
           {MENU.map(m => (
