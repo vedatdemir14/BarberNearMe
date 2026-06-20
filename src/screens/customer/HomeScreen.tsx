@@ -6,6 +6,7 @@ import {
 } from 'react-native';
 import MapView, { Marker, Region } from 'react-native-maps';
 import * as Location from 'expo-location';
+import Slider from '@react-native-community/slider';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../navigation';
 import { getBarbers, BarberShop } from '../../services/barberService';
@@ -16,7 +17,7 @@ const { width: SCREEN_W } = Dimensions.get('window');
 type Props = NativeStackScreenProps<RootStackParamList, 'CustomerTabs'>;
 
 const FILTERS = ['Tümü', 'Yakın', 'En İyi', 'Açık', 'Uygun Fiyat'];
-const RADIUS_OPTIONS = [1, 5, 10, 25]; // km — null = Tümü
+const MAX_RADIUS = 50; // km — slider sonu = "Tümü" (mesafe filtresi yok)
 
 // İki coğrafi nokta arası mesafe (km) — Haversine
 function haversineKm(lat1: number, lng1: number, lat2: number, lng2: number): number {
@@ -138,7 +139,7 @@ export default function HomeScreen({ navigation }: Props) {
   const [selectedId, setSelectedId]   = useState<string | null>(null);
   const [showMap, setShowMap]         = useState(true);
   const [userLoc, setUserLoc]         = useState<{ lat: number; lng: number } | null>(null);
-  const [radiusKm, setRadiusKm]       = useState<number | null>(null); // null = Tümü
+  const [radiusKm, setRadiusKm]       = useState<number>(MAX_RADIUS); // MAX = Tümü
   const mapRef = useRef<MapView>(null);
 
   useEffect(() => {
@@ -185,8 +186,8 @@ export default function HomeScreen({ navigation }: Props) {
       (b.neighborhood ?? '').toLowerCase().includes(q)
     );
 
-    // Mesafe yarıçapı filtresi (yalnızca konum varsa)
-    if (radiusKm != null && userLoc) {
+    // Mesafe yarıçapı filtresi (konum varsa ve slider sonda değilse)
+    if (userLoc && radiusKm < MAX_RADIUS) {
       list = list.filter(b => {
         const c = getLatLng(b);
         return c != null && haversineKm(userLoc.lat, userLoc.lng, c.lat, c.lng) <= radiusKm;
@@ -208,7 +209,7 @@ export default function HomeScreen({ navigation }: Props) {
         break;
       default:
         // Tümü: yarıçap seçiliyse yakından uzağa sırala
-        if (radiusKm != null && userLoc) list = [...list].sort((a, b) => distOf(a) - distOf(b));
+        if (userLoc && radiusKm < MAX_RADIUS) list = [...list].sort((a, b) => distOf(a) - distOf(b));
     }
     return list;
   }, [barbers, search, activeFilter, radiusKm, userLoc]);
@@ -251,19 +252,24 @@ export default function HomeScreen({ navigation }: Props) {
         ))}
       </ScrollView>
 
-      {/* Mesafe (yarıçap) seçici */}
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.radiusScroll} contentContainerStyle={{ alignItems: 'center' }}>
-        <Text style={styles.radiusLabel}>📍 Mesafe</Text>
-        {RADIUS_OPTIONS.map(km => (
-          <TouchableOpacity key={km} style={[styles.radiusChip, radiusKm === km && styles.radiusChipActive]} onPress={() => setRadiusKm(km)}>
-            <Text style={[styles.radiusChipText, radiusKm === km && styles.radiusChipTextActive]}>{km} km</Text>
-          </TouchableOpacity>
-        ))}
-        <TouchableOpacity style={[styles.radiusChip, radiusKm === null && styles.radiusChipActive]} onPress={() => setRadiusKm(null)}>
-          <Text style={[styles.radiusChipText, radiusKm === null && styles.radiusChipTextActive]}>Tümü</Text>
-        </TouchableOpacity>
-      </ScrollView>
-      {radiusKm != null && !userLoc && (
+      {/* Mesafe (slider) */}
+      <View style={styles.radiusBox}>
+        <Text style={styles.radiusLabel}>
+          📍 Mesafe: {radiusKm >= MAX_RADIUS ? 'Tümü' : `${radiusKm} km içinde`}
+        </Text>
+        <Slider
+          style={{ width: '100%', height: 36 }}
+          minimumValue={1}
+          maximumValue={MAX_RADIUS}
+          step={1}
+          value={radiusKm}
+          onValueChange={setRadiusKm}
+          minimumTrackTintColor={Colors.secondary}
+          maximumTrackTintColor={Colors.border}
+          thumbTintColor={Colors.secondary}
+        />
+      </View>
+      {radiusKm < MAX_RADIUS && !userLoc && (
         <Text style={styles.radiusHint}>Konum alınamadı — mesafe filtresi için konum iznine izin ver.</Text>
       )}
 
@@ -393,12 +399,8 @@ const styles = StyleSheet.create({
   chipActive: { backgroundColor: Colors.primary, borderColor: Colors.primary },
   chipText: { fontSize: 13, color: Colors.text, fontWeight: '600' },
   chipTextActive: { color: '#fff', fontWeight: '700' },
-  radiusScroll: { paddingLeft: 16, marginBottom: 10, flexGrow: 0 },
-  radiusLabel: { fontSize: 13, fontWeight: '700', color: Colors.textSecondary, marginRight: 8 },
-  radiusChip: { paddingHorizontal: 14, paddingVertical: 6, borderRadius: 16, borderWidth: 1.5, borderColor: Colors.border, backgroundColor: Colors.surface, marginRight: 8 },
-  radiusChipActive: { backgroundColor: Colors.secondary, borderColor: Colors.secondary },
-  radiusChipText: { fontSize: 13, color: Colors.text, fontWeight: '600' },
-  radiusChipTextActive: { color: '#fff', fontWeight: '700' },
+  radiusBox: { paddingHorizontal: 16, marginBottom: 4 },
+  radiusLabel: { fontSize: 13, fontWeight: '700', color: Colors.primary },
   radiusHint: { fontSize: 11, color: Colors.danger, paddingHorizontal: 16, marginBottom: 8 },
   distance: { fontSize: 12, color: Colors.accent, fontWeight: '700', marginTop: 3 },
   toggleRow: {
