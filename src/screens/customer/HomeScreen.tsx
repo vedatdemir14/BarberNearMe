@@ -2,11 +2,12 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity, ScrollView,
-  StyleSheet, FlatList, ActivityIndicator, Dimensions,
+  StyleSheet, FlatList, ActivityIndicator, Dimensions, Modal, Switch,
 } from 'react-native';
 import MapView, { Marker, Region } from 'react-native-maps';
 import * as Location from 'expo-location';
 import Slider from '@react-native-community/slider';
+import { Ionicons } from '@expo/vector-icons';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../navigation';
 import { getBarbers, BarberShop } from '../../services/barberService';
@@ -16,7 +17,8 @@ const { width: SCREEN_W } = Dimensions.get('window');
 
 type Props = NativeStackScreenProps<RootStackParamList, 'CustomerTabs'>;
 
-const FILTERS = ['Tümü', 'Yakın', 'En İyi', 'Açık', 'Uygun Fiyat'];
+const SORT_OPTIONS = ['Önerilen', 'Yakın', 'En İyi', 'Uygun Fiyat'];
+const SERVICE_KEYWORDS = ['Saç', 'Sakal', 'Çocuk', 'Cilt'];
 const MAX_RADIUS = 50; // km — slider sonu = "Tümü" (mesafe filtresi yok)
 
 // İki coğrafi nokta arası mesafe (km) — Haversine
@@ -134,13 +136,31 @@ const MOCK_BARBERS: BarberShop[] = [
 export default function HomeScreen({ navigation }: Props) {
   const [barbers, setBarbers]         = useState<BarberShop[]>([]);
   const [search, setSearch]           = useState('');
-  const [activeFilter, setFilter]     = useState('Tümü');
   const [loading, setLoading]         = useState(true);
   const [selectedId, setSelectedId]   = useState<string | null>(null);
   const [showMap, setShowMap]         = useState(true);
   const [userLoc, setUserLoc]         = useState<{ lat: number; lng: number } | null>(null);
-  const [radiusKm, setRadiusKm]       = useState<number>(MAX_RADIUS); // MAX = Tümü
   const mapRef = useRef<MapView>(null);
+
+  // ── Filtre/tercih durumları (Tercihler panelinde) ──
+  const [showFilters, setShowFilters]     = useState(false);
+  const [sortBy, setSortBy]               = useState('Önerilen');
+  const [serviceFilters, setServiceFilters] = useState<string[]>([]);
+  const [openOnly, setOpenOnly]           = useState(false);
+  const [radiusKm, setRadiusKm]           = useState<number>(MAX_RADIUS); // MAX = Tümü
+
+  const activeFilterCount =
+    (sortBy !== 'Önerilen' ? 1 : 0) +
+    serviceFilters.length +
+    (openOnly ? 1 : 0) +
+    (radiusKm < MAX_RADIUS ? 1 : 0);
+
+  function toggleService(kw: string) {
+    setServiceFilters(prev => prev.includes(kw) ? prev.filter(x => x !== kw) : [...prev, kw]);
+  }
+  function resetFilters() {
+    setSortBy('Önerilen'); setServiceFilters([]); setOpenOnly(false); setRadiusKm(MAX_RADIUS);
+  }
 
   useEffect(() => {
     getBarbers()
@@ -186,6 +206,18 @@ export default function HomeScreen({ navigation }: Props) {
       (b.neighborhood ?? '').toLowerCase().includes(q)
     );
 
+    // Hizmet türü filtresi (seçilen tüm türleri sunan berberler)
+    if (serviceFilters.length) {
+      list = list.filter(b =>
+        serviceFilters.every(kw =>
+          (b.services ?? []).some(s => s.name.toLowerCase().includes(kw.toLowerCase()))
+        )
+      );
+    }
+
+    // Sadece şu an açık olanlar
+    if (openOnly) list = list.filter(isOpenNow);
+
     // Mesafe yarıçapı filtresi (konum varsa ve slider sonda değilse)
     if (userLoc && radiusKm < MAX_RADIUS) {
       list = list.filter(b => {
@@ -194,25 +226,22 @@ export default function HomeScreen({ navigation }: Props) {
       });
     }
 
-    switch (activeFilter) {
+    switch (sortBy) {
       case 'Yakın':
         list = [...list].sort((a, b) => distOf(a) - distOf(b));
         break;
       case 'En İyi':
         list = [...list].sort((a, b) => (b.rating ?? 0) - (a.rating ?? 0));
         break;
-      case 'Açık':
-        list = list.filter(isOpenNow);
-        break;
       case 'Uygun Fiyat':
         list = [...list].sort((a, b) => minPrice(a) - minPrice(b));
         break;
       default:
-        // Tümü: yarıçap seçiliyse yakından uzağa sırala
+        // Önerilen: yarıçap seçiliyse yakından uzağa sırala
         if (userLoc && radiusKm < MAX_RADIUS) list = [...list].sort((a, b) => distOf(a) - distOf(b));
     }
     return list;
-  }, [barbers, search, activeFilter, radiusKm, userLoc]);
+  }, [barbers, search, sortBy, serviceFilters, openOnly, radiusKm, userLoc]);
 
   return (
     <SafeAreaView style={styles.container}>
@@ -222,8 +251,11 @@ export default function HomeScreen({ navigation }: Props) {
           <Text style={styles.greeting}>Merhaba 👋</Text>
           <Text style={styles.title}>Berber Bul</Text>
         </View>
-        <TouchableOpacity onPress={() => (navigation as any).navigate('Messages')}>
-          <Text style={styles.msgIcon}>💬</Text>
+        <TouchableOpacity style={styles.prefBtn} onPress={() => setShowFilters(true)}>
+          <Ionicons name="options-outline" size={24} color={Colors.primary} />
+          {activeFilterCount > 0 && (
+            <View style={styles.prefBadge}><Text style={styles.prefBadgeText}>{activeFilterCount}</Text></View>
+          )}
         </TouchableOpacity>
       </View>
 
@@ -239,38 +271,19 @@ export default function HomeScreen({ navigation }: Props) {
         />
       </View>
 
-      {/* Filters */}
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filterScroll}>
-        {FILTERS.map(f => (
-          <TouchableOpacity
-            key={f}
-            style={[styles.chip, activeFilter === f && styles.chipActive]}
-            onPress={() => setFilter(f)}
-          >
-            <Text style={[styles.chipText, activeFilter === f && styles.chipTextActive]}>{f}</Text>
-          </TouchableOpacity>
-        ))}
-      </ScrollView>
-
-      {/* Mesafe (slider) */}
-      <View style={styles.radiusBox}>
-        <Text style={styles.radiusLabel}>
-          📍 Mesafe: {radiusKm >= MAX_RADIUS ? 'Tümü' : `${radiusKm} km içinde`}
-        </Text>
-        <Slider
-          style={{ width: '100%', height: 36 }}
-          minimumValue={1}
-          maximumValue={MAX_RADIUS}
-          step={1}
-          value={radiusKm}
-          onValueChange={setRadiusKm}
-          minimumTrackTintColor={Colors.secondary}
-          maximumTrackTintColor={Colors.border}
-          thumbTintColor={Colors.secondary}
-        />
-      </View>
-      {radiusKm < MAX_RADIUS && !userLoc && (
-        <Text style={styles.radiusHint}>Konum alınamadı — mesafe filtresi için konum iznine izin ver.</Text>
+      {/* Aktif filtre özeti (varsa) */}
+      {activeFilterCount > 0 && (
+        <View style={styles.activeRow}>
+          <Text style={styles.activeText} numberOfLines={1}>
+            {[
+              sortBy !== 'Önerilen' ? sortBy : null,
+              ...serviceFilters,
+              openOnly ? 'Açık' : null,
+              radiusKm < MAX_RADIUS ? `${radiusKm} km` : null,
+            ].filter(Boolean).join(' · ')}
+          </Text>
+          <TouchableOpacity onPress={resetFilters}><Text style={styles.activeClear}>Temizle</Text></TouchableOpacity>
+        </View>
       )}
 
       {/* Map / List toggle */}
@@ -373,6 +386,77 @@ export default function HomeScreen({ navigation }: Props) {
           }
         />
       )}
+
+      {/* ── Tercihler / Filtreler paneli ── */}
+      <Modal visible={showFilters} animationType="slide" transparent onRequestClose={() => setShowFilters(false)}>
+        <View style={styles.modalOverlay}>
+          <TouchableOpacity style={{ flex: 1 }} activeOpacity={1} onPress={() => setShowFilters(false)} />
+          <View style={styles.modalSheet}>
+            <View style={styles.modalHandle} />
+            <Text style={styles.modalTitle}>Filtreler</Text>
+
+            <ScrollView contentContainerStyle={{ paddingBottom: 8 }}>
+              {/* Sıralama */}
+              <Text style={styles.modalSection}>Sıralama</Text>
+              <View style={styles.chipWrap}>
+                {SORT_OPTIONS.map(o => (
+                  <TouchableOpacity key={o} style={[styles.chip, sortBy === o && styles.chipActive]} onPress={() => setSortBy(o)}>
+                    <Text style={[styles.chipText, sortBy === o && styles.chipTextActive]}>{o}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+
+              {/* Hizmet türü */}
+              <Text style={styles.modalSection}>Hizmet türü</Text>
+              <View style={styles.chipWrap}>
+                {SERVICE_KEYWORDS.map(kw => {
+                  const on = serviceFilters.includes(kw);
+                  return (
+                    <TouchableOpacity key={kw} style={[styles.chip, on && styles.chipActive]} onPress={() => toggleService(kw)}>
+                      <Text style={[styles.chipText, on && styles.chipTextActive]}>{kw}</Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+
+              {/* Açık */}
+              <View style={styles.switchRow}>
+                <Text style={styles.switchLabel}>Sadece şu an açık olanlar</Text>
+                <Switch value={openOnly} onValueChange={setOpenOnly}
+                  trackColor={{ true: '#F59E0B' }} thumbColor="#fff" />
+              </View>
+
+              {/* Mesafe */}
+              <Text style={styles.modalSection}>
+                Mesafe: {radiusKm >= MAX_RADIUS ? 'Tümü' : `${radiusKm} km içinde`}
+              </Text>
+              <Slider
+                style={{ width: '100%', height: 40 }}
+                minimumValue={1}
+                maximumValue={MAX_RADIUS}
+                step={1}
+                value={radiusKm}
+                onValueChange={setRadiusKm}
+                minimumTrackTintColor="#F59E0B"
+                maximumTrackTintColor="#E5E7EB"
+                thumbTintColor="#F59E0B"
+              />
+              {radiusKm < MAX_RADIUS && !userLoc && (
+                <Text style={styles.radiusHint}>Konum alınamadı — mesafe filtresi için konum iznine izin ver.</Text>
+              )}
+            </ScrollView>
+
+            <View style={styles.modalBtns}>
+              <TouchableOpacity style={styles.modalReset} onPress={resetFilters}>
+                <Text style={styles.modalResetText}>Temizle</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.modalApply} onPress={() => setShowFilters(false)}>
+                <Text style={styles.modalApplyText}>{filtered.length} berber göster</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -383,6 +467,26 @@ const styles = StyleSheet.create({
   greeting: { fontSize: 13, color: Colors.textSecondary },
   title: { fontSize: 22, fontWeight: '800', color: Colors.primary },
   msgIcon: { fontSize: 24 },
+  prefBtn: { width: 42, height: 42, borderRadius: 12, borderWidth: 1.5, borderColor: Colors.border, backgroundColor: Colors.surface, alignItems: 'center', justifyContent: 'center' },
+  prefBadge: { position: 'absolute', top: -6, right: -6, minWidth: 18, height: 18, borderRadius: 9, backgroundColor: '#F59E0B', alignItems: 'center', justifyContent: 'center', paddingHorizontal: 4 },
+  prefBadgeText: { color: '#fff', fontSize: 11, fontWeight: '800' },
+  activeRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, marginBottom: 8, gap: 8 },
+  activeText: { flex: 1, fontSize: 12, color: Colors.textSecondary, fontWeight: '600' },
+  activeClear: { fontSize: 12, color: Colors.danger, fontWeight: '700' },
+  // Modal
+  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.4)' },
+  modalSheet: { backgroundColor: Colors.surface, borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: 20, paddingTop: 10, maxHeight: '80%' },
+  modalHandle: { alignSelf: 'center', width: 40, height: 4, borderRadius: 2, backgroundColor: Colors.border, marginBottom: 12 },
+  modalTitle: { fontSize: 18, fontWeight: '800', color: Colors.primary, marginBottom: 8 },
+  modalSection: { fontSize: 14, fontWeight: '700', color: Colors.primary, marginTop: 14, marginBottom: 8 },
+  chipWrap: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  switchRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 18 },
+  switchLabel: { fontSize: 14, color: Colors.primary, fontWeight: '600' },
+  modalBtns: { flexDirection: 'row', gap: 12, marginTop: 14 },
+  modalReset: { flex: 1, borderWidth: 1.5, borderColor: Colors.border, borderRadius: 12, paddingVertical: 14, alignItems: 'center' },
+  modalResetText: { fontSize: 15, color: Colors.primary, fontWeight: '700' },
+  modalApply: { flex: 2, backgroundColor: Colors.primary, borderRadius: 12, paddingVertical: 14, alignItems: 'center' },
+  modalApplyText: { fontSize: 15, color: '#fff', fontWeight: '700' },
   searchRow: {
     flexDirection: 'row', alignItems: 'center', gap: 8,
     margin: 16, marginTop: 4, backgroundColor: Colors.surface,
