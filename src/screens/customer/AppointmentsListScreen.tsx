@@ -107,11 +107,11 @@ export default function AppointmentsListScreen({ navigation }: any) {
             const badge = badgeStyle(item.status);
             return (
               <View style={styles.card}>
-                <View style={styles.icon}><Text style={{ fontSize: 22 }}>💈</Text></View>
+                <View style={styles.icon}><Text style={{ fontSize: 18, color: Colors.primary }}>✂</Text></View>
                 <View style={{ flex: 1 }}>
                   <Text style={styles.shopName}>{shopNames[item.barberId] ?? 'Berber'}</Text>
                   <Text style={styles.sub}>{item.serviceName} · {item.staffName}</Text>
-                  <Text style={styles.date}>📅 {formatDate(item.date.toDate())} · {item.timeSlot}</Text>
+                  <Text style={styles.date}>{formatDate(item.date.toDate())} · {item.timeSlot}</Text>
                   <View style={[styles.badge, { backgroundColor: badge.bg }]}>
                     <Text style={[styles.badgeText, { color: badge.text }]}>{badge.label}</Text>
                   </View>
@@ -146,7 +146,7 @@ const styles = StyleSheet.create({
   tabText: { fontSize: 13, color: Colors.textSecondary },
   tabTextActive: { color: Colors.secondary, fontWeight: '700' },
   card: { flexDirection: 'row', gap: 12, padding: 14, backgroundColor: Colors.surface, borderRadius: 14, borderWidth: 1, borderColor: Colors.borderLight },
-  icon: { width: 48, height: 48, borderRadius: 12, backgroundColor: '#eff6ff', alignItems: 'center', justifyContent: 'center' },
+  icon: { width: 48, height: 48, borderRadius: 12, backgroundColor: '#F5F5F5', alignItems: 'center', justifyContent: 'center' },
   shopName: { fontSize: 14, fontWeight: '700', color: Colors.primary },
   sub: { fontSize: 12, color: Colors.textSecondary, marginTop: 2 },
   date: { fontSize: 12, color: Colors.secondary, fontWeight: '600', marginTop: 4 },

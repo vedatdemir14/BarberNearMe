@@ -94,7 +94,7 @@ export default function BarberRegStep3Screen({ navigation, route }: Props) {
         <Text style={styles.sub}>Müşteriler randevu alırken bu bilgileri görecek.</Text>
 
         {/* ── Harita Konum Seçici ── */}
-        <Text style={styles.sectionTitle}>📍 Dükkan Konumu</Text>
+        <Text style={styles.sectionTitle}>Dükkan Konumu</Text>
         <Text style={styles.hint}>Haritaya dokunarak dükkanın konumunu işaretle</Text>
 
         <View style={styles.mapWrap}>
@@ -109,7 +109,7 @@ export default function BarberRegStep3Screen({ navigation, route }: Props) {
           </MapView>
           {!pin && (
             <View style={styles.mapOverlay} pointerEvents="none">
-              <Text style={styles.mapOverlayText}>📍 Konuma dokun</Text>
+              <Text style={styles.mapOverlayText}>Konuma dokun</Text>
             </View>
           )}
         </View>
@@ -142,7 +142,7 @@ export default function BarberRegStep3Screen({ navigation, route }: Props) {
         />
 
         {/* ── Çalışma Günleri ── */}
-        <Text style={styles.sectionTitle}>📅 Çalışma Günleri</Text>
+        <Text style={styles.sectionTitle}>Çalışma Günleri</Text>
         <View style={styles.chipRow}>
           {DAYS.map((d, i) => (
             <TouchableOpacity
@@ -156,7 +156,7 @@ export default function BarberRegStep3Screen({ navigation, route }: Props) {
         </View>
 
         {/* ── Saatler ── */}
-        <Text style={styles.sectionTitle}>🕐 Çalışma Saatleri</Text>
+        <Text style={styles.sectionTitle}>Çalışma Saatleri</Text>
         <View style={styles.row}>
           <View style={{ flex: 1 }}>
             <Text style={styles.label}>Açılış</Text>
@@ -188,7 +188,7 @@ export default function BarberRegStep3Screen({ navigation, route }: Props) {
         </View>
 
         <TouchableOpacity style={[styles.btn, loading && { opacity: 0.6 }]} onPress={handleNext} disabled={loading}>
-          {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.btnText}>Devam Et →</Text>}
+          {loading ? <ActivityIndicator color="#020000" /> : <Text style={styles.btnText}>Devam Et →</Text>}
         </TouchableOpacity>
         <View style={{ height: 24 }} />
 
@@ -204,9 +204,9 @@ const styles = StyleSheet.create({
 
   progress:     { flexDirection: 'row', gap: 8, marginBottom: 4 },
   dot:          { width: 28, height: 28, borderRadius: 14, backgroundColor: Colors.borderLight, alignItems: 'center', justifyContent: 'center' },
-  dotActive:    { backgroundColor: Colors.primary },
+  dotActive:    { backgroundColor: Colors.secondary },
   dotText:      { fontSize: 12, fontWeight: '700', color: Colors.textMuted },
-  dotTextActive:{ color: '#fff' },
+  dotTextActive:{ color: '#020000' },
 
   title:        { fontSize: 22, fontWeight: '800', color: Colors.primary },
   sub:          { fontSize: 13, color: Colors.textSecondary },
@@ -232,12 +232,12 @@ const styles = StyleSheet.create({
   chip:         { paddingHorizontal: 14, paddingVertical: 9, borderRadius: 10, borderWidth: 1.5, borderColor: Colors.border, backgroundColor: Colors.surface },
   chipActive:   { backgroundColor: Colors.secondary, borderColor: Colors.secondary },
   chipText:     { fontSize: 13, fontWeight: '600', color: Colors.textSecondary },
-  chipTextActive:{ color: '#fff' },
+  chipTextActive:{ color: '#020000' },
 
   input: {
     borderWidth: 1.5, borderColor: Colors.border, borderRadius: 10,
     paddingHorizontal: 12, paddingVertical: 10, fontSize: 14, color: Colors.text, backgroundColor: Colors.surface,
   },
-  btn:     { backgroundColor: Colors.primary, borderRadius: 12, paddingVertical: 15, alignItems: 'center', marginTop: 8 },
-  btnText: { color: '#fff', fontSize: 16, fontWeight: '700' },
+  btn:     { backgroundColor: Colors.secondary, borderRadius: 12, paddingVertical: 15, alignItems: 'center', marginTop: 8 },
+  btnText: { color: '#020000', fontSize: 16, fontWeight: '700' },
 });

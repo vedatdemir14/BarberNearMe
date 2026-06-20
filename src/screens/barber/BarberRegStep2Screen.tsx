@@ -92,7 +92,7 @@ export default function BarberRegStep2Screen({ navigation, route }: Props) {
           {/* Hizmetler */}
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>✂️ Hizmetler</Text>
+              <Text style={styles.sectionTitle}>Hizmetler</Text>
               <TouchableOpacity onPress={addService} style={styles.addBtn}>
                 <Text style={styles.addBtnText}>+ Ekle</Text>
               </TouchableOpacity>
@@ -132,7 +132,7 @@ export default function BarberRegStep2Screen({ navigation, route }: Props) {
           {/* Çalışanlar */}
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>👤 Çalışanlar</Text>
+              <Text style={styles.sectionTitle}>Çalışanlar</Text>
               <TouchableOpacity onPress={addStaff} style={styles.addBtn}>
                 <Text style={styles.addBtnText}>+ Ekle</Text>
               </TouchableOpacity>
@@ -164,7 +164,7 @@ export default function BarberRegStep2Screen({ navigation, route }: Props) {
           </View>
 
           <TouchableOpacity style={[styles.btn, loading && { opacity: 0.6 }]} onPress={handleNext} disabled={loading}>
-            {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.btnText}>Devam Et →</Text>}
+            {loading ? <ActivityIndicator color="#020000" /> : <Text style={styles.btnText}>Devam Et →</Text>}
           </TouchableOpacity>
           <View style={{ height: 24 }} />
 
@@ -180,9 +180,9 @@ const styles = StyleSheet.create({
 
   progress:     { flexDirection: 'row', gap: 8, marginBottom: 4 },
   dot:          { width: 28, height: 28, borderRadius: 14, backgroundColor: Colors.borderLight, alignItems: 'center', justifyContent: 'center' },
-  dotActive:    { backgroundColor: Colors.primary },
+  dotActive:    { backgroundColor: Colors.secondary },
   dotText:      { fontSize: 12, fontWeight: '700', color: Colors.textMuted },
-  dotTextActive:{ color: '#fff' },
+  dotTextActive:{ color: '#020000' },
 
   title: { fontSize: 22, fontWeight: '800', color: Colors.primary },
   sub:   { fontSize: 13, color: Colors.textSecondary },
@@ -190,8 +190,8 @@ const styles = StyleSheet.create({
   section:       { gap: 10 },
   sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   sectionTitle:  { fontSize: 15, fontWeight: '700', color: Colors.primary },
-  addBtn:        { backgroundColor: Colors.primary, borderRadius: 8, paddingHorizontal: 12, paddingVertical: 6 },
-  addBtnText:    { color: '#fff', fontSize: 13, fontWeight: '600' },
+  addBtn:        { backgroundColor: Colors.secondary, borderRadius: 8, paddingHorizontal: 12, paddingVertical: 6 },
+  addBtnText:    { color: '#020000', fontSize: 13, fontWeight: '600' },
 
   card:       { backgroundColor: Colors.surface, borderRadius: 12, padding: 14, borderWidth: 1, borderColor: Colors.borderLight, gap: 8 },
   cardHeader: { flexDirection: 'row', justifyContent: 'space-between' },
@@ -204,6 +204,6 @@ const styles = StyleSheet.create({
     borderWidth: 1.5, borderColor: Colors.border, borderRadius: 10,
     paddingHorizontal: 12, paddingVertical: 10, fontSize: 14, color: Colors.text, backgroundColor: '#fafafa',
   },
-  btn:     { backgroundColor: Colors.primary, borderRadius: 12, paddingVertical: 15, alignItems: 'center', marginTop: 4 },
-  btnText: { color: '#fff', fontSize: 16, fontWeight: '700' },
+  btn:     { backgroundColor: Colors.secondary, borderRadius: 12, paddingVertical: 15, alignItems: 'center', marginTop: 4 },
+  btnText: { color: '#020000', fontSize: 16, fontWeight: '700' },
 });

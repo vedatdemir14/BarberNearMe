@@ -58,7 +58,7 @@ export default function MyReviewsScreen({ navigation }: any) {
             <View style={styles.card}>
               <View style={styles.cardTop}>
                 <Text style={styles.shopName}>{shopNames[item.barberId] ?? 'Berber'}</Text>
-                <Text style={styles.stars}>{'⭐'.repeat(item.rating)}</Text>
+                <Text style={styles.stars}>{'★'.repeat(item.rating)}</Text>
               </View>
               {!!item.comment && <Text style={styles.comment}>{item.comment}</Text>}
               <Text style={styles.date}>{formatDate(item.createdAt)}</Text>
@@ -66,7 +66,7 @@ export default function MyReviewsScreen({ navigation }: any) {
           )}
           ListEmptyComponent={
             <View style={styles.empty}>
-              <Text style={{ fontSize: 40 }}>⭐</Text>
+              <Text style={{ fontSize: 40, color: Colors.secondary }}>★</Text>
               <Text style={styles.emptyText}>Henüz değerlendirme yapmadın.</Text>
               <Text style={styles.emptyHint}>Tamamlanan bir randevuyu "Randevularım"dan değerlendirebilirsin.</Text>
             </View>

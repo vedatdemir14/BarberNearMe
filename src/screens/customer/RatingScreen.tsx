@@ -104,7 +104,7 @@ export default function RatingScreen({ navigation, route }: Props) {
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }}>
       <ScrollView contentContainerStyle={{ padding: 16, gap: 16 }} keyboardShouldPersistTaps="handled">
         <View style={styles.card}>
-          <View style={styles.avatar}><Text style={{ fontSize: 24 }}>💈</Text></View>
+          <View style={styles.avatar}><Text style={{ fontSize: 18, color: Colors.primary }}>✂</Text></View>
           <View>
             <Text style={styles.shopName}>{shopName}</Text>
             {apptDate && (
@@ -124,7 +124,7 @@ export default function RatingScreen({ navigation, route }: Props) {
         <View style={styles.starRow}>
           {[1,2,3,4,5].map(n => (
             <TouchableOpacity key={n} onPress={() => setStars(n)} disabled={alreadyReviewed}>
-              <Text style={[styles.star, n <= stars && styles.starActive]}>⭐</Text>
+              <Text style={[styles.star, n <= stars && styles.starActive]}>★</Text>
             </TouchableOpacity>
           ))}
         </View>
@@ -160,16 +160,16 @@ const styles = StyleSheet.create({
   title: { fontSize: 18, fontWeight: '700', color: Colors.primary },
   sub: { fontSize: 12, color: Colors.textSecondary },
   card: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: Colors.surface, borderRadius: 12, padding: 14, borderWidth: 1, borderColor: Colors.borderLight },
-  avatar: { width: 44, height: 44, borderRadius: 22, backgroundColor: '#e8e0ff', alignItems: 'center', justifyContent: 'center' },
+  avatar: { width: 44, height: 44, borderRadius: 22, backgroundColor: '#F5F5F5', alignItems: 'center', justifyContent: 'center' },
   shopName: { fontSize: 15, fontWeight: '700', color: Colors.primary },
   apptInfo: { fontSize: 12, color: Colors.textSecondary },
   sectionTitle: { fontSize: 14, fontWeight: '700', color: Colors.primary },
   starRow: { flexDirection: 'row', justifyContent: 'center', gap: 8 },
-  star: { fontSize: 36, opacity: 0.3 },
-  starActive: { opacity: 1 },
+  star: { fontSize: 36, color: Colors.border },
+  starActive: { color: Colors.secondary },
   textarea: { borderWidth: 1.5, borderColor: Colors.border, borderRadius: 10, padding: 12, fontSize: 14, backgroundColor: '#fafafa', height: 100 },
-  btnPrimary: { backgroundColor: Colors.primary, borderRadius: 12, paddingVertical: 15, alignItems: 'center' },
-  btnText: { color: '#fff', fontSize: 16, fontWeight: '700' },
-  reviewedBanner: { backgroundColor: '#dcfce7', borderRadius: 10, padding: 12, borderWidth: 1, borderColor: '#86efac' },
-  reviewedText: { color: '#16a34a', fontSize: 13, fontWeight: '700', textAlign: 'center' },
+  btnPrimary: { backgroundColor: Colors.secondary, borderRadius: 12, paddingVertical: 15, alignItems: 'center' },
+  btnText: { color: '#020000', fontSize: 16, fontWeight: '700' },
+  reviewedBanner: { backgroundColor: '#FFF9D9', borderRadius: 10, padding: 12, borderWidth: 1, borderColor: Colors.secondary },
+  reviewedText: { color: Colors.primary, fontSize: 13, fontWeight: '700', textAlign: 'center' },
 });

@@ -248,7 +248,7 @@ export default function HomeScreen({ navigation }: Props) {
       {/* Header */}
       <View style={styles.header}>
         <View>
-          <Text style={styles.greeting}>Merhaba 👋</Text>
+          <Text style={styles.greeting}>Merhaba</Text>
           <Text style={styles.title}>Berber Bul</Text>
         </View>
         <TouchableOpacity style={styles.prefBtn} onPress={() => setShowFilters(true)}>
@@ -261,7 +261,7 @@ export default function HomeScreen({ navigation }: Props) {
 
       {/* Search */}
       <View style={styles.searchRow}>
-        <Text style={styles.searchIcon}>🔍</Text>
+        <Ionicons name="search-outline" size={16} color={Colors.textMuted} />
         <TextInput
           style={styles.searchInput}
           placeholder="Berber veya konum ara..."
@@ -292,13 +292,13 @@ export default function HomeScreen({ navigation }: Props) {
           style={[styles.toggleBtn, showMap && styles.toggleActive]}
           onPress={() => setShowMap(true)}
         >
-          <Text style={[styles.toggleText, showMap && styles.toggleTextActive]}>🗺 Harita</Text>
+          <Text style={[styles.toggleText, showMap && styles.toggleTextActive]}>Harita</Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={[styles.toggleBtn, !showMap && styles.toggleActive]}
           onPress={() => setShowMap(false)}
         >
-          <Text style={[styles.toggleText, !showMap && styles.toggleTextActive]}>☰ Liste</Text>
+          <Text style={[styles.toggleText, !showMap && styles.toggleTextActive]}>Liste</Text>
         </TouchableOpacity>
       </View>
 
@@ -322,7 +322,7 @@ export default function HomeScreen({ navigation }: Props) {
                   key={b.id}
                   coordinate={{ latitude: lat, longitude: lng }}
                   title={b.shopName}
-                  description={`⭐ ${b.rating} · ${b.neighborhood}`}
+                  description={`${b.rating} · ${b.neighborhood}`}
                   pinColor={selectedId === b.id ? '#1a3c5e' : Colors.primary}
                   onPress={() => setSelectedId(b.id)}
                   onCalloutPress={() => navigation.navigate('BarberDetail', { barberId: b.id })}
@@ -366,15 +366,15 @@ export default function HomeScreen({ navigation }: Props) {
                 navigation.navigate('BarberDetail', { barberId: item.id });
               }}
             >
-              <View style={styles.avatar}><Text style={{ fontSize: 24 }}>💈</Text></View>
+              <View style={styles.avatar}><Text style={{ fontSize: 20, color: Colors.primary }}>✂</Text></View>
               <View style={{ flex: 1 }}>
                 <Text style={styles.shopName}>{item.shopName}</Text>
-                <Text style={styles.shopMeta}>📍 {item.neighborhood} · {item.workingHours.openTime}–{item.workingHours.closeTime}</Text>
+                <Text style={styles.shopMeta}>{item.neighborhood} · {item.workingHours.openTime}–{item.workingHours.closeTime}</Text>
                 {(() => {
                   const km = distanceKm(item);
-                  return km != null ? <Text style={styles.distance}>📏 {km.toFixed(1)} km uzakta</Text> : null;
+                  return km != null ? <Text style={styles.distance}>{km.toFixed(1)} km uzakta</Text> : null;
                 })()}
-                <Text style={styles.rating}>⭐ {item.rating.toFixed(1)} <Text style={{ color: Colors.textMuted }}>({item.reviewCount} yorum)</Text></Text>
+                <Text style={styles.rating}>★ {item.rating.toFixed(1)} <Text style={{ color: Colors.textMuted }}>({item.reviewCount} yorum)</Text></Text>
                 <Text style={styles.price}>₺{Math.min(...item.services.map(s => s.price))}'den başlıyor</Text>
               </View>
             </TouchableOpacity>
@@ -423,7 +423,7 @@ export default function HomeScreen({ navigation }: Props) {
               <View style={styles.switchRow}>
                 <Text style={styles.switchLabel}>Sadece şu an açık olanlar</Text>
                 <Switch value={openOnly} onValueChange={setOpenOnly}
-                  trackColor={{ true: '#F59E0B' }} thumbColor="#fff" />
+                  trackColor={{ true: Colors.secondary }} thumbColor="#fff" />
               </View>
 
               {/* Mesafe */}
@@ -437,9 +437,9 @@ export default function HomeScreen({ navigation }: Props) {
                 step={1}
                 value={radiusKm}
                 onValueChange={setRadiusKm}
-                minimumTrackTintColor="#F59E0B"
-                maximumTrackTintColor="#E5E7EB"
-                thumbTintColor="#F59E0B"
+                minimumTrackTintColor={Colors.secondary}
+                maximumTrackTintColor={Colors.borderLight}
+                thumbTintColor={Colors.secondary}
               />
               {radiusKm < MAX_RADIUS && !userLoc && (
                 <Text style={styles.radiusHint}>Konum alınamadı — mesafe filtresi için konum iznine izin ver.</Text>
@@ -468,8 +468,8 @@ const styles = StyleSheet.create({
   title: { fontSize: 22, fontWeight: '800', color: Colors.primary },
   msgIcon: { fontSize: 24 },
   prefBtn: { width: 42, height: 42, borderRadius: 12, borderWidth: 1.5, borderColor: Colors.border, backgroundColor: Colors.surface, alignItems: 'center', justifyContent: 'center' },
-  prefBadge: { position: 'absolute', top: -6, right: -6, minWidth: 18, height: 18, borderRadius: 9, backgroundColor: '#F59E0B', alignItems: 'center', justifyContent: 'center', paddingHorizontal: 4 },
-  prefBadgeText: { color: '#fff', fontSize: 11, fontWeight: '800' },
+  prefBadge: { position: 'absolute', top: -6, right: -6, minWidth: 18, height: 18, borderRadius: 9, backgroundColor: Colors.secondary, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 4 },
+  prefBadgeText: { color: '#020000', fontSize: 11, fontWeight: '800' },
   activeRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, marginBottom: 8, gap: 8 },
   activeText: { flex: 1, fontSize: 12, color: Colors.textSecondary, fontWeight: '600' },
   activeClear: { fontSize: 12, color: Colors.danger, fontWeight: '700' },
@@ -485,14 +485,13 @@ const styles = StyleSheet.create({
   modalBtns: { flexDirection: 'row', gap: 12, marginTop: 14 },
   modalReset: { flex: 1, borderWidth: 1.5, borderColor: Colors.border, borderRadius: 12, paddingVertical: 14, alignItems: 'center' },
   modalResetText: { fontSize: 15, color: Colors.primary, fontWeight: '700' },
-  modalApply: { flex: 2, backgroundColor: Colors.primary, borderRadius: 12, paddingVertical: 14, alignItems: 'center' },
-  modalApplyText: { fontSize: 15, color: '#fff', fontWeight: '700' },
+  modalApply: { flex: 2, backgroundColor: Colors.secondary, borderRadius: 12, paddingVertical: 14, alignItems: 'center' },
+  modalApplyText: { fontSize: 15, color: '#020000', fontWeight: '700' },
   searchRow: {
     flexDirection: 'row', alignItems: 'center', gap: 8,
     margin: 16, marginTop: 4, backgroundColor: Colors.surface,
     borderWidth: 1.5, borderColor: Colors.border, borderRadius: 20, paddingHorizontal: 14,
   },
-  searchIcon: { fontSize: 16 },
   searchInput: { flex: 1, paddingVertical: 11, fontSize: 15, color: Colors.text },
   filterScroll: { paddingLeft: 16, marginBottom: 12, flexGrow: 0 },
   chip: {
@@ -500,9 +499,9 @@ const styles = StyleSheet.create({
     borderWidth: 1.5, borderColor: Colors.border, backgroundColor: Colors.surface,
     marginRight: 8,
   },
-  chipActive: { backgroundColor: Colors.primary, borderColor: Colors.primary },
+  chipActive: { backgroundColor: Colors.secondary, borderColor: Colors.secondary },
   chipText: { fontSize: 13, color: Colors.text, fontWeight: '600' },
-  chipTextActive: { color: '#fff', fontWeight: '700' },
+  chipTextActive: { color: '#020000', fontWeight: '700' },
   radiusBox: { paddingHorizontal: 16, marginBottom: 4 },
   radiusLabel: { fontSize: 13, fontWeight: '700', color: Colors.primary },
   radiusHint: { fontSize: 11, color: Colors.danger, paddingHorizontal: 16, marginBottom: 8 },
@@ -513,9 +512,9 @@ const styles = StyleSheet.create({
     borderWidth: 1, borderColor: Colors.border, overflow: 'hidden',
   },
   toggleBtn: { flex: 1, paddingVertical: 8, alignItems: 'center' },
-  toggleActive: { backgroundColor: Colors.primary },
+  toggleActive: { backgroundColor: Colors.secondary },
   toggleText: { fontSize: 13, fontWeight: '600', color: Colors.textSecondary },
-  toggleTextActive: { color: '#fff' },
+  toggleTextActive: { color: '#020000' },
   mapContainer: {
     marginHorizontal: 16, height: 200, borderRadius: 14,
     overflow: 'hidden', marginBottom: 4,

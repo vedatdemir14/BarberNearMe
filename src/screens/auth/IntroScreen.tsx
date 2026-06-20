@@ -60,7 +60,7 @@ const styles = StyleSheet.create({
   },
   logoIcon: {
     fontSize: 72,
-    color: '#fff',
+    color: Colors.secondary,
     marginBottom: 16,
   },
   logoText: {
@@ -71,7 +71,7 @@ const styles = StyleSheet.create({
   },
   tagline: {
     fontSize: 16,
-    color: '#8899cc',
+    color: '#888888',
     marginTop: 8,
   },
   buttonsSection: {
@@ -79,7 +79,7 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   btnPrimary: {
-    backgroundColor: '#fff',
+    backgroundColor: Colors.secondary,
     borderRadius: 14,
     paddingVertical: 16,
     alignItems: 'center',
@@ -88,11 +88,11 @@ const styles = StyleSheet.create({
   btnPrimaryText: {
     fontSize: 16,
     fontWeight: '700',
-    color: Colors.primary,
+    color: '#020000',
   },
   btnGhost: {
     borderWidth: 1.5,
-    borderColor: 'rgba(255,255,255,0.3)',
+    borderColor: 'rgba(255,255,255,0.2)',
     borderRadius: 14,
     paddingVertical: 16,
     alignItems: 'center',
@@ -104,12 +104,12 @@ const styles = StyleSheet.create({
   },
   barberLink: {
     textAlign: 'center',
-    color: '#8899cc',
+    color: '#666666',
     fontSize: 14,
     paddingBottom: 8,
   },
   barberLinkBold: {
-    color: '#aabbff',
+    color: Colors.secondary,
     fontWeight: '600',
   },
 });

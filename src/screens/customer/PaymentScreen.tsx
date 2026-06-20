@@ -187,7 +187,7 @@ export default function PaymentScreen({ route, navigation }: Props) {
 
         {/* Güvenlik notu */}
         <View style={styles.secureNote}>
-          <Text style={styles.secureText}>🔒 256-bit SSL ile şifrelenmiş güvenli ödeme</Text>
+          <Text style={styles.secureText}>256-bit SSL ile şifrelenmiş güvenli ödeme</Text>
         </View>
 
         {/* Ödeme butonu */}
@@ -235,7 +235,7 @@ const styles = StyleSheet.create({
   secureNote: { alignItems: 'center', paddingVertical: 4 },
   secureText: { fontSize: 12, color: Colors.textMuted },
 
-  payBtn:         { backgroundColor: Colors.primary, borderRadius: 14, paddingVertical: 16, alignItems: 'center' },
+  payBtn:         { backgroundColor: Colors.secondary, borderRadius: 14, paddingVertical: 16, alignItems: 'center' },
   payBtnDisabled: { backgroundColor: Colors.textMuted },
-  payBtnText:     { color: '#fff', fontSize: 16, fontWeight: '800' },
+  payBtnText:     { color: '#020000', fontSize: 16, fontWeight: '800' },
 });

@@ -11,7 +11,7 @@ export default function NotificationsScreen({ navigation }: any) {
         <Text style={styles.title}>Bildirimler</Text>
       </View>
       <View style={styles.empty}>
-        <Text style={{ fontSize: 44 }}>🔔</Text>
+        <Text style={{ fontSize: 32, color: Colors.secondary }}>◎</Text>
         <Text style={styles.emptyText}>Henüz bildirimin yok.</Text>
         <Text style={styles.emptyHint}>Randevu hatırlatmaları ve berber onay bildirimleri yakında burada görünecek.</Text>
       </View>
