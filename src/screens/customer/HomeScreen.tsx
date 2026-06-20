@@ -5,6 +5,7 @@ import {
   StyleSheet, FlatList, ActivityIndicator, Dimensions,
 } from 'react-native';
 import MapView, { Marker, Region } from 'react-native-maps';
+import * as Location from 'expo-location';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../navigation';
 import { getBarbers, BarberShop } from '../../services/barberService';
@@ -15,6 +16,17 @@ const { width: SCREEN_W } = Dimensions.get('window');
 type Props = NativeStackScreenProps<RootStackParamList, 'CustomerTabs'>;
 
 const FILTERS = ['Tümü', 'Yakın', 'En İyi', 'Açık', 'Uygun Fiyat'];
+const RADIUS_OPTIONS = [1, 5, 10, 25]; // km — null = Tümü
+
+// İki coğrafi nokta arası mesafe (km) — Haversine
+function haversineKm(lat1: number, lng1: number, lat2: number, lng2: number): number {
+  const R = 6371;
+  const dLat = ((lat2 - lat1) * Math.PI) / 180;
+  const dLng = ((lng2 - lng1) * Math.PI) / 180;
+  const a = Math.sin(dLat / 2) ** 2 +
+    Math.cos((lat1 * Math.PI) / 180) * Math.cos((lat2 * Math.PI) / 180) * Math.sin(dLng / 2) ** 2;
+  return 2 * R * Math.asin(Math.sqrt(a));
+}
 
 // Urla / Gülbahçe (İYTE çevresi) — berberlerin bulunduğu bölge
 const DEFAULT_REGION: Region = {
@@ -125,6 +137,8 @@ export default function HomeScreen({ navigation }: Props) {
   const [loading, setLoading]         = useState(true);
   const [selectedId, setSelectedId]   = useState<string | null>(null);
   const [showMap, setShowMap]         = useState(true);
+  const [userLoc, setUserLoc]         = useState<{ lat: number; lng: number } | null>(null);
+  const [radiusKm, setRadiusKm]       = useState<number | null>(null); // null = Tümü
   const mapRef = useRef<MapView>(null);
 
   useEffect(() => {
@@ -134,16 +148,54 @@ export default function HomeScreen({ navigation }: Props) {
       .finally(() => setLoading(false));
   }, []);
 
+  // Kullanıcının gerçek konumunu al (izin verirse) → harita + mesafe için
+  useEffect(() => {
+    (async () => {
+      try {
+        const { status } = await Location.requestForegroundPermissionsAsync();
+        if (status !== 'granted') return;
+        const pos = await Location.getCurrentPositionAsync({});
+        const loc = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+        setUserLoc(loc);
+        mapRef.current?.animateToRegion(
+          { latitude: loc.lat, longitude: loc.lng, latitudeDelta: 0.08, longitudeDelta: 0.08 }, 600
+        );
+      } catch { /* konum alınamadı → varsayılan bölge kalır */ }
+    })();
+  }, []);
+
+  // Bir berberin kullanıcıya uzaklığı (km) — konum yoksa null
+  const distanceKm = (b: BarberShop): number | null => {
+    if (!userLoc) return null;
+    const c = getLatLng(b);
+    return c ? haversineKm(userLoc.lat, userLoc.lng, c.lat, c.lng) : null;
+  };
+
   const filtered = useMemo(() => {
     const q = search.toLowerCase();
+    // "Yakın" ve yarıçap için uzaklık: konum varsa gerçek km, yoksa merkez yaklaşığı
+    const distOf = (b: BarberShop) => {
+      const c = getLatLng(b);
+      if (!c) return Number.POSITIVE_INFINITY;
+      return userLoc ? haversineKm(userLoc.lat, userLoc.lng, c.lat, c.lng) : distToCenter(b);
+    };
+
     let list = barbers.filter(b =>
       b.shopName.toLowerCase().includes(q) ||
       (b.neighborhood ?? '').toLowerCase().includes(q)
     );
 
+    // Mesafe yarıçapı filtresi (yalnızca konum varsa)
+    if (radiusKm != null && userLoc) {
+      list = list.filter(b => {
+        const c = getLatLng(b);
+        return c != null && haversineKm(userLoc.lat, userLoc.lng, c.lat, c.lng) <= radiusKm;
+      });
+    }
+
     switch (activeFilter) {
       case 'Yakın':
-        list = [...list].sort((a, b) => distToCenter(a) - distToCenter(b));
+        list = [...list].sort((a, b) => distOf(a) - distOf(b));
         break;
       case 'En İyi':
         list = [...list].sort((a, b) => (b.rating ?? 0) - (a.rating ?? 0));
@@ -154,10 +206,12 @@ export default function HomeScreen({ navigation }: Props) {
       case 'Uygun Fiyat':
         list = [...list].sort((a, b) => minPrice(a) - minPrice(b));
         break;
-      // 'Tümü' → no extra filtering/sorting
+      default:
+        // Tümü: yarıçap seçiliyse yakından uzağa sırala
+        if (radiusKm != null && userLoc) list = [...list].sort((a, b) => distOf(a) - distOf(b));
     }
     return list;
-  }, [barbers, search, activeFilter]);
+  }, [barbers, search, activeFilter, radiusKm, userLoc]);
 
   return (
     <SafeAreaView style={styles.container}>
@@ -197,6 +251,22 @@ export default function HomeScreen({ navigation }: Props) {
         ))}
       </ScrollView>
 
+      {/* Mesafe (yarıçap) seçici */}
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.radiusScroll} contentContainerStyle={{ alignItems: 'center' }}>
+        <Text style={styles.radiusLabel}>📍 Mesafe</Text>
+        {RADIUS_OPTIONS.map(km => (
+          <TouchableOpacity key={km} style={[styles.radiusChip, radiusKm === km && styles.radiusChipActive]} onPress={() => setRadiusKm(km)}>
+            <Text style={[styles.radiusChipText, radiusKm === km && styles.radiusChipTextActive]}>{km} km</Text>
+          </TouchableOpacity>
+        ))}
+        <TouchableOpacity style={[styles.radiusChip, radiusKm === null && styles.radiusChipActive]} onPress={() => setRadiusKm(null)}>
+          <Text style={[styles.radiusChipText, radiusKm === null && styles.radiusChipTextActive]}>Tümü</Text>
+        </TouchableOpacity>
+      </ScrollView>
+      {radiusKm != null && !userLoc && (
+        <Text style={styles.radiusHint}>Konum alınamadı — mesafe filtresi için konum iznine izin ver.</Text>
+      )}
+
       {/* Map / List toggle */}
       <View style={styles.toggleRow}>
         <TouchableOpacity
@@ -220,6 +290,7 @@ export default function HomeScreen({ navigation }: Props) {
             ref={mapRef}
             style={styles.map}
             initialRegion={DEFAULT_REGION}
+            showsUserLocation={!!userLoc}
           >
             {filtered.map(b => {
               const loc = b.location as any;
@@ -280,6 +351,10 @@ export default function HomeScreen({ navigation }: Props) {
               <View style={{ flex: 1 }}>
                 <Text style={styles.shopName}>{item.shopName}</Text>
                 <Text style={styles.shopMeta}>📍 {item.neighborhood} · {item.workingHours.openTime}–{item.workingHours.closeTime}</Text>
+                {(() => {
+                  const km = distanceKm(item);
+                  return km != null ? <Text style={styles.distance}>📏 {km.toFixed(1)} km uzakta</Text> : null;
+                })()}
                 <Text style={styles.rating}>⭐ {item.rating.toFixed(1)} <Text style={{ color: Colors.textMuted }}>({item.reviewCount} yorum)</Text></Text>
                 <Text style={styles.price}>₺{Math.min(...item.services.map(s => s.price))}'den başlıyor</Text>
               </View>
@@ -318,6 +393,14 @@ const styles = StyleSheet.create({
   chipActive: { backgroundColor: Colors.primary, borderColor: Colors.primary },
   chipText: { fontSize: 13, color: Colors.text, fontWeight: '600' },
   chipTextActive: { color: '#fff', fontWeight: '700' },
+  radiusScroll: { paddingLeft: 16, marginBottom: 10, flexGrow: 0 },
+  radiusLabel: { fontSize: 13, fontWeight: '700', color: Colors.textSecondary, marginRight: 8 },
+  radiusChip: { paddingHorizontal: 14, paddingVertical: 6, borderRadius: 16, borderWidth: 1.5, borderColor: Colors.border, backgroundColor: Colors.surface, marginRight: 8 },
+  radiusChipActive: { backgroundColor: Colors.secondary, borderColor: Colors.secondary },
+  radiusChipText: { fontSize: 13, color: Colors.text, fontWeight: '600' },
+  radiusChipTextActive: { color: '#fff', fontWeight: '700' },
+  radiusHint: { fontSize: 11, color: Colors.danger, paddingHorizontal: 16, marginBottom: 8 },
+  distance: { fontSize: 12, color: Colors.accent, fontWeight: '700', marginTop: 3 },
   toggleRow: {
     flexDirection: 'row', marginHorizontal: 16, marginBottom: 10,
     backgroundColor: Colors.surface, borderRadius: 10,
