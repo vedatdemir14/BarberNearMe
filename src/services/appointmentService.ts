@@ -12,6 +12,7 @@ import {
   Timestamp,
 } from 'firebase/firestore';
 import { db } from './firebase';
+import { getUserPushToken, sendPushNotification } from './notificationService';
 
 export type AppointmentStatus = 'pending' | 'confirmed' | 'completed' | 'cancelled';
 
@@ -44,7 +45,36 @@ export async function createAppointment(
     ...data,
     createdAt: serverTimestamp(),
   });
+  // Berbere bildirim: yeni randevu talebi
+  const apptData = data as Appointment;
+  getUserPushToken(apptData.barberId).then(token => {
+    if (token) sendPushNotification(token, '✂️ Yeni Randevu Talebi', `Yeni bir randevu talebi aldınız.`);
+  }).catch(() => {});
+
   return ref.id;
+}
+
+// ── Update appointment status ─────────────────────────────────
+export async function updateAppointmentStatus(
+  id: string,
+  status: AppointmentStatus,
+): Promise<void> {
+  await updateDoc(doc(db, 'appointments', id), { status });
+
+  // Müşteriye bildirim gönder
+  const appt = await getAppointment(id);
+  if (!appt) return;
+  const token = await getUserPushToken(appt.customerId).catch(() => null);
+  if (!token) return;
+
+  const messages: Record<string, { title: string; body: string }> = {
+    confirmed:  { title: '✅ Randevunuz Onaylandı', body: `${appt.timeSlot} randevunuz onaylandı.` },
+    cancelled:  { title: '❌ Randevunuz Reddedildi', body: 'Randevunuz berber tarafından reddedildi.' },
+    completed:  { title: '🎉 Randevunuz Tamamlandı', body: 'Randevunuzu değerlendirmeyi unutmayın!' },
+  };
+
+  const msg = messages[status];
+  if (msg) sendPushNotification(token, msg.title, msg.body, { appointmentId: id }).catch(() => {});
 }
 
 // ── Get single appointment ────────────────────────────────────

@@ -16,11 +16,12 @@ export default function EmailVerificationScreen() {
     setChecking(true);
     try {
       await refreshUser();
-      // refreshUser reload'dan sonra state'i günceller
-      // emailVerified=true ise navigation otomatik doğru ekrana geçer
-      if (!user?.emailVerified) {
+      // refreshUser sonrası auth.currentUser'a bak (state henüz re-render olmadı)
+      const { auth } = await import('../../services/firebase');
+      if (!auth.currentUser?.emailVerified) {
         Alert.alert('Henüz Doğrulanmadı', 'E-postanızdaki linke tıkladıktan sonra tekrar deneyin.');
       }
+      // emailVerified=true ise Context state güncellendi, Navigation otomatik geçer
     } catch (e: any) {
       Alert.alert('Hata', e.message);
     } finally {
