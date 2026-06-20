@@ -15,7 +15,8 @@ import { Colors } from '../../constants';
 
 const { width: SCREEN_W } = Dimensions.get('window');
 
-type Props = NativeStackScreenProps<RootStackParamList, 'CustomerTabs'>;
+// Tab ekranı; root stack'e de yönlendirdiği için esnek navigation tipi
+type Props = { navigation: any };
 
 const SORT_OPTIONS = ['Önerilen', 'Yakın', 'Uygun Fiyat'];
 const SERVICE_KEYWORDS = ['Saç', 'Sakal', 'Çocuk', 'Cilt'];
