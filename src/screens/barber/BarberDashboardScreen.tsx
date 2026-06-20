@@ -197,7 +197,7 @@ function AppointmentCard({ appt, onPress }: { appt: Appointment; onPress: () => 
   return (
     <TouchableOpacity style={styles.apptCard} onPress={onPress}>
       <View style={{ flex: 1 }}>
-        <Text style={styles.apptService}>{appt.serviceId}</Text>
+        <Text style={styles.apptService}>{appt.serviceName ?? appt.serviceId}</Text>
         <Text style={styles.apptMeta}>📅 {dateStr}  🕐 {appt.timeSlot}</Text>
         {appt.kaporaAmount ? (
           <Text style={styles.apptKapora}>Kapora: ₺{appt.kaporaAmount}</Text>
