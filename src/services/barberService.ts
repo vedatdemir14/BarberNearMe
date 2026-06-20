@@ -60,13 +60,15 @@ export interface WorkingHours {
 
 // ── Get all active barbers ────────────────────────────────────
 export async function getBarbers(): Promise<BarberShop[]> {
+  // Sıralama JS'te yapılıyor (Firestore composite index gerektirmesin diye)
   const q = query(
     collection(db, 'barbers'),
-    where('isActive', '==', true),
-    orderBy('rating', 'desc')
+    where('isActive', '==', true)
   );
   const snap = await getDocs(q);
-  return snap.docs.map(d => ({ id: d.id, ...d.data() } as BarberShop));
+  return snap.docs
+    .map(d => ({ id: d.id, ...d.data() } as BarberShop))
+    .sort((a, b) => (b.rating ?? 0) - (a.rating ?? 0));
 }
 
 // ── Get single barber ─────────────────────────────────────────

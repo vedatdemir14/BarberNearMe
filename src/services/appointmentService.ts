@@ -43,26 +43,36 @@ export async function createAppointment(
   return ref.id;
 }
 
+// ── Get single appointment ────────────────────────────────────
+export async function getAppointment(id: string): Promise<Appointment | null> {
+  const snap = await getDoc(doc(db, 'appointments', id));
+  return snap.exists() ? ({ id: snap.id, ...snap.data() } as Appointment) : null;
+}
+
 // ── Get appointments for customer ─────────────────────────────
 export async function getCustomerAppointments(customerId: string): Promise<Appointment[]> {
+  // Sıralama JS'te (Firestore composite index gerektirmesin diye)
   const q = query(
     collection(db, 'appointments'),
-    where('customerId', '==', customerId),
-    orderBy('date', 'desc')
+    where('customerId', '==', customerId)
   );
   const snap = await getDocs(q);
-  return snap.docs.map(d => ({ id: d.id, ...d.data() } as Appointment));
+  return snap.docs
+    .map(d => ({ id: d.id, ...d.data() } as Appointment))
+    .sort((a, b) => (b.date?.toMillis?.() ?? 0) - (a.date?.toMillis?.() ?? 0));
 }
 
 // ── Get appointments for barber ───────────────────────────────
 export async function getBarberAppointments(barberId: string): Promise<Appointment[]> {
+  // Sıralama JS'te (Firestore composite index gerektirmesin diye)
   const q = query(
     collection(db, 'appointments'),
-    where('barberId', '==', barberId),
-    orderBy('date', 'desc')
+    where('barberId', '==', barberId)
   );
   const snap = await getDocs(q);
-  return snap.docs.map(d => ({ id: d.id, ...d.data() } as Appointment));
+  return snap.docs
+    .map(d => ({ id: d.id, ...d.data() } as Appointment))
+    .sort((a, b) => (b.date?.toMillis?.() ?? 0) - (a.date?.toMillis?.() ?? 0));
 }
 
 // ── Get booked slots for a specific day ───────────────────────
@@ -75,15 +85,21 @@ export async function getBookedSlots(
   const endOfDay = new Date(date);
   endOfDay.setHours(23, 59, 59, 999);
 
+  // Sadece berbere göre çek; gün ve durum filtresini JS'te yap
+  // (Firestore composite index gerektirmesin diye)
   const q = query(
     collection(db, 'appointments'),
-    where('barberId', '==', barberId),
-    where('date', '>=', Timestamp.fromDate(startOfDay)),
-    where('date', '<=', Timestamp.fromDate(endOfDay)),
-    where('status', 'in', ['pending', 'confirmed'])
+    where('barberId', '==', barberId)
   );
   const snap = await getDocs(q);
-  return snap.docs.map(d => (d.data() as Appointment).timeSlot);
+  return snap.docs
+    .map(d => d.data() as Appointment)
+    .filter(a => {
+      if (!['pending', 'confirmed'].includes(a.status)) return false;
+      const t = a.date?.toDate?.();
+      return t && t >= startOfDay && t <= endOfDay;
+    })
+    .map(a => a.timeSlot);
 }
 
 // ── Update appointment status ─────────────────────────────────

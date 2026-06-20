@@ -1,10 +1,10 @@
 import { SafeAreaView } from 'react-native-safe-area-context';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity, ScrollView,
   StyleSheet, FlatList, ActivityIndicator, Dimensions,
 } from 'react-native';
-import MapView, { Marker, UrlTile, Region } from 'react-native-maps';
+import MapView, { Marker, Region } from 'react-native-maps';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../navigation';
 import { getBarbers, BarberShop } from '../../services/barberService';
@@ -20,6 +20,41 @@ const ISTANBUL_REGION: Region = {
   latitude: 41.0082, longitude: 28.9784,
   latitudeDelta: 0.12, longitudeDelta: 0.12,
 };
+
+// Extract lat/lng from a Firestore GeoPoint or plain object
+function getLatLng(b: BarberShop): { lat: number; lng: number } | null {
+  const loc = b.location as any;
+  if (!loc) return null;
+  const lat = loc.latitude ?? loc._lat;
+  const lng = loc.longitude ?? loc._long;
+  return lat != null && lng != null ? { lat, lng } : null;
+}
+
+// Squared distance to the map center — good enough for sorting "nearest"
+function distToCenter(b: BarberShop): number {
+  const c = getLatLng(b);
+  if (!c) return Number.POSITIVE_INFINITY;
+  const dLat = c.lat - ISTANBUL_REGION.latitude;
+  const dLng = c.lng - ISTANBUL_REGION.longitude;
+  return dLat * dLat + dLng * dLng;
+}
+
+function minPrice(b: BarberShop): number {
+  return b.services?.length ? Math.min(...b.services.map(s => s.price)) : Number.POSITIVE_INFINITY;
+}
+
+// Is the shop open right now, based on working hours (days: 0=Mon … 6=Sun)
+function isOpenNow(b: BarberShop): boolean {
+  const wh = b.workingHours;
+  if (!wh) return false;
+  const now = new Date();
+  const dayIdx = (now.getDay() + 6) % 7; // JS Sun=0 → Mon=0 based
+  if (!wh.days?.includes(dayIdx)) return false;
+  const cur = now.getHours() * 60 + now.getMinutes();
+  const [oh, om] = wh.openTime.split(':').map(Number);
+  const [ch, cm] = wh.closeTime.split(':').map(Number);
+  return cur >= oh * 60 + om && cur < ch * 60 + cm;
+}
 
 // Fallback mock data for UI testing before Firebase is configured
 const MOCK_BARBERS: BarberShop[] = [
@@ -99,9 +134,30 @@ export default function HomeScreen({ navigation }: Props) {
       .finally(() => setLoading(false));
   }, []);
 
-  const filtered = barbers.filter(b =>
-    b.shopName.toLowerCase().includes(search.toLowerCase())
-  );
+  const filtered = useMemo(() => {
+    const q = search.toLowerCase();
+    let list = barbers.filter(b =>
+      b.shopName.toLowerCase().includes(q) ||
+      (b.neighborhood ?? '').toLowerCase().includes(q)
+    );
+
+    switch (activeFilter) {
+      case 'Yakın':
+        list = [...list].sort((a, b) => distToCenter(a) - distToCenter(b));
+        break;
+      case 'En İyi':
+        list = [...list].sort((a, b) => (b.rating ?? 0) - (a.rating ?? 0));
+        break;
+      case 'Açık':
+        list = list.filter(isOpenNow);
+        break;
+      case 'Uygun Fiyat':
+        list = [...list].sort((a, b) => minPrice(a) - minPrice(b));
+        break;
+      // 'Tümü' → no extra filtering/sorting
+    }
+    return list;
+  }, [barbers, search, activeFilter]);
 
   return (
     <SafeAreaView style={styles.container}>
@@ -165,11 +221,6 @@ export default function HomeScreen({ navigation }: Props) {
             style={styles.map}
             initialRegion={ISTANBUL_REGION}
           >
-            <UrlTile
-              urlTemplate="https://tile.openstreetmap.org/{z}/{x}/{y}.png"
-              maximumZ={19}
-              flipY={false}
-            />
             {filtered.map(b => {
               const loc = b.location as any;
               if (!loc) return null;

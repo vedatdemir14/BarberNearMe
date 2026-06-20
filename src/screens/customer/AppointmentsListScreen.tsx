@@ -1,24 +1,90 @@
 import { SafeAreaView } from 'react-native-safe-area-context';
-import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, FlatList, StyleSheet } from 'react-native';
-import { NativeStackScreenProps } from '@react-navigation/native-stack';
+import React, { useCallback, useState } from 'react';
+import { View, Text, TouchableOpacity, FlatList, StyleSheet, ActivityIndicator, Alert } from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
 import { Colors } from '../../constants';
+import { useAuth } from '../../hooks/useAuth';
+import { getCustomerAppointments, updateAppointmentStatus, Appointment } from '../../services/appointmentService';
+import { getBarber } from '../../services/barberService';
 
 const TABS = ['Yaklaşan', 'Geçmiş', 'İptal'];
-const MOCK = [
-  { id: '1', shop: "Sirat's Barber Shop", service: 'Saç Kesimi', staff: 'Engyal Taskiran', date: '14 Mayıs 2025', time: '10:30', status: 'confirmed', past: false },
-  { id: '2', shop: "Brian's Barber", service: 'Sakal Düzeltme', staff: 'Volkan B.', date: '2 Nisan 2025', time: '14:00', status: 'completed', past: true },
-];
+const MONTHS_TR = ['Ocak','Şubat','Mart','Nisan','Mayıs','Haziran','Temmuz','Ağustos','Eylül','Ekim','Kasım','Aralık'];
+
+// Randevuya en az bu kadar kalmışsa iptal edilebilir
+const CANCEL_WINDOW_MS = 2 * 60 * 60 * 1000; // 2 saat
+
+function formatDate(d: Date) {
+  return `${d.getDate()} ${MONTHS_TR[d.getMonth()]} ${d.getFullYear()}`;
+}
 
 export default function AppointmentsListScreen({ navigation }: any) {
+  const { user } = useAuth();
   const [tab, setTab] = useState(0);
-  const filtered = MOCK.filter(a => tab === 0 ? !a.past : tab === 1 ? a.past : false);
+  const [appts, setAppts] = useState<Appointment[]>([]);
+  const [shopNames, setShopNames] = useState<Record<string, string>>({});
+  const [loading, setLoading] = useState(true);
+
+  useFocusEffect(
+    useCallback(() => {
+      let active = true;
+      if (!user) { setLoading(false); return; }
+      setLoading(true);
+      getCustomerAppointments(user.uid)
+        .then(async data => {
+          if (!active) return;
+          setAppts(data);
+          // Resolve shop names for the barbers referenced by these appointments
+          const ids = [...new Set(data.map(a => a.barberId))];
+          const entries = await Promise.all(
+            ids.map(async id => [id, (await getBarber(id).catch(() => null))?.shopName ?? 'Berber'] as const)
+          );
+          if (active) setShopNames(Object.fromEntries(entries));
+        })
+        .catch(() => { if (active) setAppts([]); })
+        .finally(() => { if (active) setLoading(false); });
+      return () => { active = false; };
+    }, [user])
+  );
+
+  function handleCancel(item: Appointment) {
+    const msLeft = item.date.toDate().getTime() - Date.now();
+    if (msLeft < CANCEL_WINDOW_MS) {
+      Alert.alert('İptal edilemez', 'Randevuya 2 saatten az kaldığı için iptal edilemez.');
+      return;
+    }
+    Alert.alert('Randevuyu iptal et', 'Bu randevuyu iptal etmek istediğinize emin misiniz?', [
+      { text: 'Vazgeç', style: 'cancel' },
+      {
+        text: 'İptal Et',
+        style: 'destructive',
+        onPress: async () => {
+          try {
+            await updateAppointmentStatus(item.id, 'cancelled');
+            // Anlık güncelle: listede durumu cancelled yap
+            setAppts(prev => prev.map(a => (a.id === item.id ? { ...a, status: 'cancelled' } : a)));
+          } catch (e: any) {
+            Alert.alert('Hata', e.message ?? 'Randevu iptal edilemedi.');
+          }
+        },
+      },
+    ]);
+  }
+
+  const now = Date.now();
+  const filtered = appts.filter(a => {
+    const isPast = a.date.toDate().getTime() < now;
+    if (tab === 2) return a.status === 'cancelled';
+    if (tab === 1) return a.status !== 'cancelled' && (a.status === 'completed' || isPast);
+    return a.status !== 'cancelled' && a.status !== 'completed' && !isPast;
+  });
 
   const badgeStyle = (s: string) => s === 'confirmed'
     ? { bg: '#dbeafe', text: '#1d4ed8', label: 'Onaylandı' }
     : s === 'completed'
     ? { bg: '#dcfce7', text: '#16a34a', label: 'Tamamlandı' }
-    : { bg: '#f3f4f6', text: '#6b7280', label: 'İptal' };
+    : s === 'cancelled'
+    ? { bg: '#f3f4f6', text: '#6b7280', label: 'İptal' }
+    : { bg: '#fef3c7', text: '#b45309', label: 'Onay Bekliyor' };
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: Colors.background }}>
@@ -30,33 +96,43 @@ export default function AppointmentsListScreen({ navigation }: any) {
           </TouchableOpacity>
         ))}
       </View>
-      <FlatList
-        data={filtered}
-        keyExtractor={i => i.id}
-        contentContainerStyle={{ padding: 16, gap: 12 }}
-        renderItem={({ item }) => {
-          const badge = badgeStyle(item.status);
-          return (
-            <View style={styles.card}>
-              <View style={styles.icon}><Text style={{ fontSize: 22 }}>💈</Text></View>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.shopName}>{item.shop}</Text>
-                <Text style={styles.sub}>{item.service} · {item.staff}</Text>
-                <Text style={styles.date}>📅 {item.date} · {item.time}</Text>
-                <View style={[styles.badge, { backgroundColor: badge.bg }]}>
-                  <Text style={[styles.badgeText, { color: badge.text }]}>{badge.label}</Text>
+      {loading ? (
+        <ActivityIndicator style={{ marginTop: 40 }} color={Colors.primary} />
+      ) : (
+        <FlatList
+          data={filtered}
+          keyExtractor={i => i.id}
+          contentContainerStyle={{ padding: 16, gap: 12 }}
+          renderItem={({ item }) => {
+            const badge = badgeStyle(item.status);
+            return (
+              <View style={styles.card}>
+                <View style={styles.icon}><Text style={{ fontSize: 22 }}>💈</Text></View>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.shopName}>{shopNames[item.barberId] ?? 'Berber'}</Text>
+                  <Text style={styles.sub}>{item.serviceName} · {item.staffName}</Text>
+                  <Text style={styles.date}>📅 {formatDate(item.date.toDate())} · {item.timeSlot}</Text>
+                  <View style={[styles.badge, { backgroundColor: badge.bg }]}>
+                    <Text style={[styles.badgeText, { color: badge.text }]}>{badge.label}</Text>
+                  </View>
+                  {item.status === 'completed' && (
+                    <TouchableOpacity onPress={() => navigation.navigate('Rating', { appointmentId: item.id })}>
+                      <Text style={styles.rateLink}>Değerlendir →</Text>
+                    </TouchableOpacity>
+                  )}
+                  {(item.status === 'pending' || item.status === 'confirmed') &&
+                    item.date.toDate().getTime() > now && (
+                      <TouchableOpacity onPress={() => handleCancel(item)}>
+                        <Text style={styles.cancelLink}>İptal Et</Text>
+                      </TouchableOpacity>
+                    )}
                 </View>
-                {item.status === 'completed' && (
-                  <TouchableOpacity onPress={() => (navigation as any).navigate('Rating', { appointmentId: item.id })}>
-                    <Text style={styles.rateLink}>Değerlendir →</Text>
-                  </TouchableOpacity>
-                )}
               </View>
-            </View>
-          );
-        }}
-        ListEmptyComponent={<Text style={styles.empty}>Randevu bulunamadı.</Text>}
-      />
+            );
+          }}
+          ListEmptyComponent={<Text style={styles.empty}>Randevu bulunamadı.</Text>}
+        />
+      )}
     </SafeAreaView>
   );
 }
@@ -77,5 +153,6 @@ const styles = StyleSheet.create({
   badge: { alignSelf: 'flex-start', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 20, marginTop: 6 },
   badgeText: { fontSize: 11, fontWeight: '700' },
   rateLink: { color: Colors.secondary, fontSize: 12, marginTop: 6, fontWeight: '600' },
+  cancelLink: { color: Colors.danger, fontSize: 12, marginTop: 6, fontWeight: '600' },
   empty: { textAlign: 'center', color: Colors.textMuted, marginTop: 40 },
 });
