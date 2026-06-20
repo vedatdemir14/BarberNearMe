@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { User } from 'firebase/auth';
 import { auth } from '../services/firebase';
 import { onAuthChange, getUserProfile, UserProfile } from '../services/authService';
+import { registerForPushNotifications } from '../services/notificationService';
 
 interface AuthState {
   user: User | null;
@@ -28,6 +29,7 @@ export function useAuth(): AuthState {
         try {
           const profile = await getUserProfile(user.uid);
           setState({ user, profile, loading: false });
+          registerForPushNotifications(user.uid).catch(() => {});
         } catch {
           setState({ user, profile: null, loading: false });
         }

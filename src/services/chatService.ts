@@ -4,6 +4,7 @@ import {
   Timestamp, updateDoc,
 } from 'firebase/firestore';
 import { db } from './firebase';
+import { getUserPushToken, sendPushNotification } from './notificationService';
 
 export interface ChatMessage {
   id: string;
@@ -54,10 +55,20 @@ export async function sendMessage(
 ): Promise<void> {
   const msgRef = collection(db, 'chats', cId, 'messages');
   await addDoc(msgRef, { senderId, text, createdAt: serverTimestamp() });
-  await updateDoc(doc(db, 'chats', cId), {
-    lastMessage: text,
-    lastMessageAt: serverTimestamp(),
-  });
+
+  const chatRef = doc(db, 'chats', cId);
+  await updateDoc(chatRef, { lastMessage: text, lastMessageAt: serverTimestamp() });
+
+  // Alıcıya bildirim gönder
+  const chatSnap = await getDoc(chatRef);
+  if (chatSnap.exists()) {
+    const chat = chatSnap.data();
+    const recipientId = senderId === chat.barberId ? chat.customerId : chat.barberId;
+    const senderName  = senderId === chat.barberId ? chat.barberName : chat.customerName;
+    getUserPushToken(recipientId).then(token => {
+      if (token) sendPushNotification(token, `💬 ${senderName}`, text.length > 60 ? text.slice(0, 60) + '…' : text, { cId });
+    }).catch(() => {});
+  }
 }
 
 // ── Gerçek zamanlı mesaj dinleyici ───────────────────────────
