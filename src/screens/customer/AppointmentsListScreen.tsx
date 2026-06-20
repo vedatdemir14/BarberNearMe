@@ -1,14 +1,17 @@
 import { SafeAreaView } from 'react-native-safe-area-context';
 import React, { useCallback, useState } from 'react';
-import { View, Text, TouchableOpacity, FlatList, StyleSheet, ActivityIndicator } from 'react-native';
+import { View, Text, TouchableOpacity, FlatList, StyleSheet, ActivityIndicator, Alert } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { Colors } from '../../constants';
 import { useAuth } from '../../hooks/useAuth';
-import { getCustomerAppointments, Appointment } from '../../services/appointmentService';
+import { getCustomerAppointments, updateAppointmentStatus, Appointment } from '../../services/appointmentService';
 import { getBarber } from '../../services/barberService';
 
 const TABS = ['Yaklaşan', 'Geçmiş', 'İptal'];
 const MONTHS_TR = ['Ocak','Şubat','Mart','Nisan','Mayıs','Haziran','Temmuz','Ağustos','Eylül','Ekim','Kasım','Aralık'];
+
+// Randevuya en az bu kadar kalmışsa iptal edilebilir
+const CANCEL_WINDOW_MS = 2 * 60 * 60 * 1000; // 2 saat
 
 function formatDate(d: Date) {
   return `${d.getDate()} ${MONTHS_TR[d.getMonth()]} ${d.getFullYear()}`;
@@ -42,6 +45,30 @@ export default function AppointmentsListScreen({ navigation }: any) {
       return () => { active = false; };
     }, [user])
   );
+
+  function handleCancel(item: Appointment) {
+    const msLeft = item.date.toDate().getTime() - Date.now();
+    if (msLeft < CANCEL_WINDOW_MS) {
+      Alert.alert('İptal edilemez', 'Randevuya 2 saatten az kaldığı için iptal edilemez.');
+      return;
+    }
+    Alert.alert('Randevuyu iptal et', 'Bu randevuyu iptal etmek istediğinize emin misiniz?', [
+      { text: 'Vazgeç', style: 'cancel' },
+      {
+        text: 'İptal Et',
+        style: 'destructive',
+        onPress: async () => {
+          try {
+            await updateAppointmentStatus(item.id, 'cancelled');
+            // Anlık güncelle: listede durumu cancelled yap
+            setAppts(prev => prev.map(a => (a.id === item.id ? { ...a, status: 'cancelled' } : a)));
+          } catch (e: any) {
+            Alert.alert('Hata', e.message ?? 'Randevu iptal edilemedi.');
+          }
+        },
+      },
+    ]);
+  }
 
   const now = Date.now();
   const filtered = appts.filter(a => {
@@ -93,6 +120,12 @@ export default function AppointmentsListScreen({ navigation }: any) {
                       <Text style={styles.rateLink}>Değerlendir →</Text>
                     </TouchableOpacity>
                   )}
+                  {(item.status === 'pending' || item.status === 'confirmed') &&
+                    item.date.toDate().getTime() > now && (
+                      <TouchableOpacity onPress={() => handleCancel(item)}>
+                        <Text style={styles.cancelLink}>İptal Et</Text>
+                      </TouchableOpacity>
+                    )}
                 </View>
               </View>
             );
@@ -120,5 +153,6 @@ const styles = StyleSheet.create({
   badge: { alignSelf: 'flex-start', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 20, marginTop: 6 },
   badgeText: { fontSize: 11, fontWeight: '700' },
   rateLink: { color: Colors.secondary, fontSize: 12, marginTop: 6, fontWeight: '600' },
+  cancelLink: { color: Colors.danger, fontSize: 12, marginTop: 6, fontWeight: '600' },
   empty: { textAlign: 'center', color: Colors.textMuted, marginTop: 40 },
 });
