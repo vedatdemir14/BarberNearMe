@@ -5,21 +5,22 @@ import {
 } from 'react-native';
 import { Colors } from '../../constants';
 import { useAuth } from '../../hooks/useAuth';
-import { resendVerificationEmail, reloadAndCheckVerified, logout } from '../../services/authService';
+import { resendVerificationEmail, logout } from '../../services/authService';
 
 export default function EmailVerificationScreen() {
-  const { user } = useAuth();
+  const { user, refreshUser } = useAuth();
   const [checking,  setChecking]  = useState(false);
   const [resending, setResending] = useState(false);
 
   async function handleCheck() {
     setChecking(true);
     try {
-      const verified = await reloadAndCheckVerified();
-      if (!verified) {
+      await refreshUser();
+      // refreshUser reload'dan sonra state'i günceller
+      // emailVerified=true ise navigation otomatik doğru ekrana geçer
+      if (!user?.emailVerified) {
         Alert.alert('Henüz Doğrulanmadı', 'E-postanızdaki linke tıkladıktan sonra tekrar deneyin.');
       }
-      // verified=true ise onAuthStateChanged tetiklenir, navigation otomatik geçer
     } catch (e: any) {
       Alert.alert('Hata', e.message);
     } finally {
