@@ -2,19 +2,16 @@
  * BarberNearMe – Firestore Seeder (gerçek Urla/Gülbahçe berberleri)
  * Çalıştırmak için: node seed.mjs
  *
- * NOT: Bu script `barbers` ve `reviews` koleksiyonlarını ÖNCE temizler,
- * sonra aşağıdaki berberleri yazar. Yani sadece bu berberler kalır.
+ * UPSERT modu: Bu script HİÇBİR ŞEYİ SİLMEZ. Sabit id'lerle yazar; tekrar
+ * çalıştırınca var olanları günceller, yenileri ekler. Yeni berber eklemek
+ * için aşağıdaki `barbers` dizisine ekle (benzersiz bir id ver) ve çalıştır.
  */
 
 import { initializeApp } from 'firebase/app';
 import {
   getFirestore,
-  collection,
   doc,
-  getDocs,
   setDoc,
-  addDoc,
-  deleteDoc,
   serverTimestamp,
   GeoPoint,
 } from 'firebase/firestore';
@@ -32,6 +29,7 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
 // ─── Berberler (gerçek koordinatlar) ─────────────────────────────────────────
+// Yeni berber eklemek için yeni bir nesne ekle; "id" benzersiz olsun (barber_004…)
 const barbers = [
   {
     id: 'barber_001',
@@ -120,53 +118,44 @@ const barbers = [
   },
 ];
 
-// ─── Örnek yorumlar ──────────────────────────────────────────────────────────
+// ─── Örnek yorumlar (sabit id → tekrar çalışınca çoğalmaz) ───────────────────
 const reviews = [
-  { barberId: 'barber_001', customerName: 'Ali Y.', rating: 5, comment: 'Usta işini biliyor, çok memnun kaldım.' },
-  { barberId: 'barber_001', customerName: 'Kerem T.', rating: 5, comment: 'Temiz ve hızlı, kesinlikle tavsiye ederim.' },
-  { barberId: 'barber_001', customerName: 'Mert A.', rating: 4, comment: 'Fiyat/performans gayet iyi.' },
-  { barberId: 'barber_002', customerName: 'Caner B.', rating: 5, comment: 'Vedat usta efsane, sakal tıraşı çok iyi.' },
-  { barberId: 'barber_002', customerName: 'Emre K.', rating: 4, comment: 'Güzel ortam, öğrenciye uygun.' },
-  { barberId: 'barber_003', customerName: 'Hakan D.', rating: 5, comment: 'Cilt bakımı harikaydı, ferahladım.' },
-  { barberId: 'barber_003', customerName: 'Onur S.', rating: 4, comment: 'Saç sakal kombo başarılı.' },
+  { id: 'rev_001', barberId: 'barber_001', customerName: 'Ali Y.', rating: 5, comment: 'Usta işini biliyor, çok memnun kaldım.' },
+  { id: 'rev_002', barberId: 'barber_001', customerName: 'Kerem T.', rating: 5, comment: 'Temiz ve hızlı, kesinlikle tavsiye ederim.' },
+  { id: 'rev_003', barberId: 'barber_001', customerName: 'Mert A.', rating: 4, comment: 'Fiyat/performans gayet iyi.' },
+  { id: 'rev_004', barberId: 'barber_002', customerName: 'Caner B.', rating: 5, comment: 'Vedat usta efsane, sakal tıraşı çok iyi.' },
+  { id: 'rev_005', barberId: 'barber_002', customerName: 'Emre K.', rating: 4, comment: 'Güzel ortam, öğrenciye uygun.' },
+  { id: 'rev_006', barberId: 'barber_003', customerName: 'Hakan D.', rating: 5, comment: 'Cilt bakımı harikaydı, ferahladım.' },
+  { id: 'rev_007', barberId: 'barber_003', customerName: 'Onur S.', rating: 4, comment: 'Saç sakal kombo başarılı.' },
 ];
 
-async function wipe(coll) {
-  const snap = await getDocs(collection(db, coll));
-  await Promise.all(snap.docs.map(d => deleteDoc(d.ref)));
-  return snap.size;
-}
-
 async function seed() {
-  console.log('🔥 Firestore seed başlatılıyor...\n');
-
-  const bDel = await wipe('barbers');
-  const rDel = await wipe('reviews');
-  console.log(`🧹 Temizlendi: ${bDel} berber, ${rDel} yorum\n`);
+  console.log('🔥 Firestore seed (upsert) başlatılıyor...\n');
 
   for (const barber of barbers) {
     const { id, ...data } = barber;
-    await setDoc(doc(db, 'barbers', id), { ...data, createdAt: serverTimestamp() });
+    await setDoc(doc(db, 'barbers', id), { ...data, createdAt: serverTimestamp() }, { merge: true });
     console.log(`✅ ${barber.shopName} (${id})`);
   }
 
   for (const r of reviews) {
-    await addDoc(collection(db, 'reviews'), {
-      customerId: 'seed_' + r.customerName,
-      customerName: r.customerName,
-      barberId: r.barberId,
+    const { id, ...rest } = r;
+    await setDoc(doc(db, 'reviews', id), {
+      customerId: 'seed_' + rest.customerName,
+      customerName: rest.customerName,
+      barberId: rest.barberId,
       appointmentId: 'seed',
-      rating: r.rating,
-      qualityRating: r.rating,
-      cleanlinessRating: r.rating,
-      timelinessRating: r.rating,
-      comment: r.comment,
+      rating: rest.rating,
+      qualityRating: rest.rating,
+      cleanlinessRating: rest.rating,
+      timelinessRating: rest.rating,
+      comment: rest.comment,
       createdAt: serverTimestamp(),
-    });
+    }, { merge: true });
   }
-  console.log(`\n💬 ${reviews.length} yorum eklendi`);
+  console.log(`\n💬 ${reviews.length} yorum (upsert)`);
 
-  console.log(`\n🎉 ${barbers.length} berber başarıyla yüklendi!`);
+  console.log(`\n🎉 ${barbers.length} berber yazıldı (hiçbir şey silinmedi).`);
   process.exit(0);
 }
 
