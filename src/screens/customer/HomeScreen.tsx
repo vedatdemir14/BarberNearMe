@@ -167,7 +167,7 @@ export default function HomeScreen({ navigation }: Props) {
           <Text style={styles.greeting}>Merhaba 👋</Text>
           <Text style={styles.title}>Berber Bul</Text>
         </View>
-        <TouchableOpacity onPress={() => navigation.navigate('Messaging', { barberId: '', barberName: '' })}>
+        <TouchableOpacity onPress={() => (navigation as any).navigate('Messages')}>
           <Text style={styles.msgIcon}>💬</Text>
         </TouchableOpacity>
       </View>
