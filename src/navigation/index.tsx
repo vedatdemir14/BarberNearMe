@@ -21,6 +21,7 @@ import AppointmentConfirmScreen from '../screens/customer/AppointmentConfirmScre
 import PaymentScreen from '../screens/customer/PaymentScreen';
 import AppointmentsListScreen from '../screens/customer/AppointmentsListScreen';
 import MessagingScreen from '../screens/customer/MessagingScreen';
+import MessagesListScreen from '../screens/customer/MessagesListScreen';
 import RatingScreen from '../screens/customer/RatingScreen';
 import ProfileScreen from '../screens/customer/ProfileScreen';
 
@@ -56,7 +57,7 @@ export type RootStackParamList = {
     staffName: string;
     staffId: string;
   };
-  Messaging: { barberId: string; barberName: string };
+  Messaging: { barberId: string; barberName: string; conversationId?: string };
   Rating: { appointmentId: string };
   BarberRegStep1: undefined;
   BarberRegStep2: { uid: string };
@@ -113,7 +114,7 @@ function CustomerTabs() {
     >
       <Tab.Screen name="Home" component={HomeScreen} options={{ title: 'Ana Sayfa' }} />
       <Tab.Screen name="Appointments" component={AppointmentsListScreen} options={{ title: 'Randevular' }} />
-      <Tab.Screen name="Messages" component={MessagingScreen} options={{ title: 'Mesajlar' }} />
+      <Tab.Screen name="Messages" component={MessagesListScreen} options={{ title: 'Mesajlar' }} />
       <Tab.Screen name="Profile" component={ProfileScreen} options={{ title: 'Profil' }} />
     </Tab.Navigator>
   );

@@ -30,6 +30,7 @@ export interface Appointment {
   status: AppointmentStatus;
   createdAt: any;
   notes?: string;
+  // Kapora ödeme (Payment ekranı)
   kaporaPaid?: boolean;
   kaporaAmount?: number;
   totalPrice?: number;
@@ -79,10 +80,16 @@ export async function getBarberAppointments(barberId: string): Promise<Appointme
 }
 
 // ── Get booked slots for a specific day ───────────────────────
+// Süre bilgisiyle döner ki süreye göre çakışma hesaplanabilsin.
+export interface BookedSlot {
+  timeSlot: string;     // "10:30"
+  durationMin: number;
+}
+
 export async function getBookedSlots(
   barberId: string,
   date: Date
-): Promise<string[]> {
+): Promise<BookedSlot[]> {
   const startOfDay = new Date(date);
   startOfDay.setHours(0, 0, 0, 0);
   const endOfDay = new Date(date);
@@ -102,7 +109,7 @@ export async function getBookedSlots(
       const t = a.date?.toDate?.();
       return t && t >= startOfDay && t <= endOfDay;
     })
-    .map(a => a.timeSlot);
+    .map(a => ({ timeSlot: a.timeSlot, durationMin: a.durationMin ?? 30 }));
 }
 
 // ── Update appointment status ─────────────────────────────────
