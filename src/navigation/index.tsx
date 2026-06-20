@@ -24,6 +24,9 @@ import MessagingScreen from '../screens/customer/MessagingScreen';
 import MessagesListScreen from '../screens/customer/MessagesListScreen';
 import RatingScreen from '../screens/customer/RatingScreen';
 import ProfileScreen from '../screens/customer/ProfileScreen';
+import MyReviewsScreen from '../screens/customer/MyReviewsScreen';
+import NotificationsScreen from '../screens/customer/NotificationsScreen';
+import SettingsScreen from '../screens/customer/SettingsScreen';
 
 // ── Barber screens ────────────────────────────────────────────
 import BarberDashboardScreen from '../screens/barber/BarberDashboardScreen';
@@ -59,6 +62,9 @@ export type RootStackParamList = {
   };
   Messaging: { barberId: string; barberName: string; conversationId?: string };
   Rating: { appointmentId: string };
+  MyReviews: undefined;
+  Notifications: undefined;
+  Settings: undefined;
   BarberRegStep1: undefined;
   BarberRegStep2: { uid: string };
   BarberRegStep3: { uid: string };
@@ -164,6 +170,9 @@ export default function Navigation() {
             <Stack.Screen name="Payment" component={PaymentScreen} />
             <Stack.Screen name="Messaging" component={MessagingScreen} />
             <Stack.Screen name="Rating" component={RatingScreen} />
+            <Stack.Screen name="MyReviews" component={MyReviewsScreen} />
+            <Stack.Screen name="Notifications" component={NotificationsScreen} />
+            <Stack.Screen name="Settings" component={SettingsScreen} />
           </>
         )}
       </Stack.Navigator>
