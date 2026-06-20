@@ -26,10 +26,14 @@ export interface Appointment {
   servicePrice: number;
   date: Timestamp;
   timeSlot: string;        // "10:30"
-  durationMin: number;
+  durationMin?: number;
   status: AppointmentStatus;
   createdAt: any;
   notes?: string;
+  // Kapora ödeme (Payment ekranı)
+  kaporaPaid?: boolean;
+  kaporaAmount?: number;
+  totalPrice?: number;
 }
 
 // ── Create appointment ────────────────────────────────────────

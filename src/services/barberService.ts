@@ -5,6 +5,7 @@ import {
   getDocs,
   setDoc,
   updateDoc,
+  increment,
   query,
   where,
   orderBy,
@@ -98,6 +99,13 @@ export async function updateBarberLocation(
   }
 ): Promise<void> {
   await updateDoc(doc(db, 'barbers', barberId), data);
+}
+
+// ── Cüzdan: kapora tutarını berberin bakiyesine ekle ─────────
+export async function addToWallet(barberId: string, amount: number): Promise<void> {
+  await updateDoc(doc(db, 'barbers', barberId), {
+    walletBalance: increment(amount),
+  });
 }
 
 // ── Update working hours & activate ──────────────────────────

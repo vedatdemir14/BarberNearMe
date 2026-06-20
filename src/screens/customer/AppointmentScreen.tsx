@@ -104,27 +104,18 @@ export default function AppointmentScreen({ navigation, route }: Props) {
 
     if (date.getTime() < Date.now()) { Alert.alert('Geçmiş saat', 'Geçmiş bir saate randevu alınamaz.'); return; }
 
-    setBooking(true);
-    try {
-      const id = await createAppointment({
-        customerId: user.uid,
-        barberId,
-        staffId: stf.id,
-        staffName: stf.name,
-        serviceId: svc.id,
-        serviceName: svc.name,
-        servicePrice: svc.price,
-        date: Timestamp.fromDate(date),
-        timeSlot: selectedTime,
-        durationMin: svc.durationMin,
-        status: 'pending',
-      });
-      navigation.navigate('AppointmentConfirm', { appointmentId: id });
-    } catch (e: any) {
-      Alert.alert('Hata', e.message ?? 'Randevu oluşturulamadı.');
-    } finally {
-      setBooking(false);
-    }
+    // Ödeme (kapora) ekranına yönlendir; randevu orada oluşturulur
+    navigation.navigate('Payment', {
+      barberId,
+      barberName: barber?.shopName ?? 'Berber',
+      serviceName: svc.name,
+      servicePrice: svc.price,
+      serviceId: svc.id,
+      date: date.toISOString(),
+      timeSlot: selectedTime,
+      staffName: stf.name,
+      staffId: stf.id,
+    });
   }
 
   if (loading) {

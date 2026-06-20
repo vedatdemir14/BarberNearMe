@@ -50,11 +50,15 @@ export default function AppointmentConfirmScreen({ navigation, route }: Props) {
   const rows: [string, string][] = appt
     ? [
         ['Berber', shopName],
-        ['Çalışan', appt.staffName],
-        ['Hizmet', appt.serviceName],
+        ['Çalışan', appt.staffName ?? '—'],
+        ['Hizmet', appt.serviceName ?? '—'],
         ['Tarih', formatDate(appt.date.toDate())],
         ['Saat', appt.timeSlot],
-        ['Ücret', `₺${appt.servicePrice}`],
+        ['Hizmet Bedeli', `₺${appt.servicePrice ?? appt.totalPrice ?? '—'}`],
+        ...(appt.kaporaAmount ? [['Ödenen Kapora', `₺${appt.kaporaAmount} ✓`] as [string, string]] : []),
+        ...(appt.kaporaAmount && appt.servicePrice
+          ? [['Kalan (Berberde)', `₺${appt.servicePrice - appt.kaporaAmount}`] as [string, string]]
+          : []),
       ]
     : [];
 
