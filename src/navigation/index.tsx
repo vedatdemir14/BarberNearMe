@@ -12,6 +12,7 @@ import { Colors } from '../constants';
 import IntroScreen from '../screens/auth/IntroScreen';
 import LoginScreen from '../screens/auth/LoginScreen';
 import SignUpScreen from '../screens/auth/SignUpScreen';
+import EmailVerificationScreen from '../screens/auth/EmailVerificationScreen';
 
 // ── Customer screens ──────────────────────────────────────────
 import HomeScreen from '../screens/customer/HomeScreen';
@@ -39,6 +40,7 @@ import BarberRegStep3Screen from '../screens/barber/BarberRegStep3Screen';
 import BarberRegStep4Screen from '../screens/barber/BarberRegStep4Screen';
 
 export type RootStackParamList = {
+  EmailVerification: undefined;
   Intro: undefined;
   Login: undefined;
   SignUp: undefined;
@@ -145,10 +147,14 @@ export default function Navigation() {
       <Stack.Navigator screenOptions={{ headerShown: false }}>
         {!user ? (
           <>
-            <Stack.Screen name="Intro"         component={IntroScreen} />
-            <Stack.Screen name="Login"         component={LoginScreen} />
-            <Stack.Screen name="SignUp"        component={SignUpScreen} />
+            <Stack.Screen name="Intro"          component={IntroScreen} />
+            <Stack.Screen name="Login"          component={LoginScreen} />
+            <Stack.Screen name="SignUp"         component={SignUpScreen} />
             <Stack.Screen name="BarberRegStep1" component={BarberRegStep1Screen} />
+          </>
+        ) : !user.emailVerified ? (
+          <>
+            <Stack.Screen name="EmailVerification" component={EmailVerificationScreen} />
           </>
         ) : profile?.role === 'barber' ? (
           <>

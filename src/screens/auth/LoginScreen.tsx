@@ -5,7 +5,7 @@ import {
 } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../navigation';
-import { login } from '../../services/authService';
+import { login, sendPasswordReset } from '../../services/authService';
 import { Colors } from '../../constants';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Login'>;
@@ -14,6 +14,19 @@ export default function LoginScreen({ navigation }: Props) {
   const [email, setEmail]       = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading]   = useState(false);
+
+  async function handleForgotPassword() {
+    if (!email.trim()) {
+      Alert.alert('E-posta Girin', 'Lütfen önce e-posta adresinizi yukarıya girin.');
+      return;
+    }
+    try {
+      await sendPasswordReset(email.trim());
+      Alert.alert('Gönderildi ✓', 'Şifre sıfırlama linki e-posta adresinize gönderildi.');
+    } catch (e: any) {
+      Alert.alert('Hata', e.message);
+    }
+  }
 
   async function handleLogin() {
     if (!email || !password) {
@@ -67,7 +80,7 @@ export default function LoginScreen({ navigation }: Props) {
               value={password}
               onChangeText={setPassword}
             />
-            <TouchableOpacity style={{ alignSelf: 'flex-end', marginTop: 6 }}>
+            <TouchableOpacity style={{ alignSelf: 'flex-end', marginTop: 6 }} onPress={handleForgotPassword}>
               <Text style={styles.link}>Şifremi unuttum</Text>
             </TouchableOpacity>
           </View>
