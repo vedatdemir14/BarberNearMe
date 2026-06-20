@@ -4,7 +4,7 @@ import {
   View, Text, TextInput, TouchableOpacity, ScrollView,
   StyleSheet, FlatList, ActivityIndicator, Dimensions,
 } from 'react-native';
-import MapView, { Marker, UrlTile, Region } from 'react-native-maps';
+import MapView, { Marker, Region } from 'react-native-maps';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../navigation';
 import { getBarbers, BarberShop } from '../../services/barberService';
@@ -221,11 +221,6 @@ export default function HomeScreen({ navigation }: Props) {
             style={styles.map}
             initialRegion={ISTANBUL_REGION}
           >
-            <UrlTile
-              urlTemplate="https://tile.openstreetmap.org/{z}/{x}/{y}.png"
-              maximumZ={19}
-              flipY={false}
-            />
             {filtered.map(b => {
               const loc = b.location as any;
               if (!loc) return null;
