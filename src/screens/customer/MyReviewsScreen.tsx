@@ -1,10 +1,10 @@
 import { SafeAreaView } from 'react-native-safe-area-context';
 import React, { useCallback, useState } from 'react';
-import { View, Text, TouchableOpacity, FlatList, StyleSheet, ActivityIndicator } from 'react-native';
+import { View, Text, TouchableOpacity, FlatList, StyleSheet, ActivityIndicator, Alert } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { Colors } from '../../constants';
 import { useAuth } from '../../hooks/useAuth';
-import { getCustomerReviews, Review } from '../../services/reviewService';
+import { getCustomerReviews, deleteReview, Review } from '../../services/reviewService';
 import { getBarber } from '../../services/barberService';
 
 const MONTHS_TR = ['Ocak','Şubat','Mart','Nisan','Mayıs','Haziran','Temmuz','Ağustos','Eylül','Ekim','Kasım','Aralık'];
@@ -41,6 +41,24 @@ export default function MyReviewsScreen({ navigation }: any) {
     }, [user])
   );
 
+  function handleDelete(item: Review) {
+    Alert.alert('Değerlendirmeyi kaldır', 'Bu değerlendirmeyi silmek istiyor musunuz? Silersen aynı randevuyu tekrar değerlendirebilirsin.', [
+      { text: 'Vazgeç', style: 'cancel' },
+      {
+        text: 'Sil',
+        style: 'destructive',
+        onPress: async () => {
+          try {
+            await deleteReview(item.id);
+            setItems(prev => prev.filter(x => x.id !== item.id));
+          } catch (e: any) {
+            Alert.alert('Hata', e.message ?? 'Değerlendirme silinemedi.');
+          }
+        },
+      },
+    ]);
+  }
+
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: Colors.background }}>
       <View style={styles.header}>
@@ -55,14 +73,19 @@ export default function MyReviewsScreen({ navigation }: any) {
           keyExtractor={i => i.id}
           contentContainerStyle={{ padding: 16, gap: 12 }}
           renderItem={({ item }) => (
-            <View style={styles.card}>
+            <TouchableOpacity style={styles.card} activeOpacity={0.9} onLongPress={() => handleDelete(item)}>
               <View style={styles.cardTop}>
                 <Text style={styles.shopName}>{shopNames[item.barberId] ?? 'Berber'}</Text>
                 <Text style={styles.stars}>{'⭐'.repeat(item.rating)}</Text>
               </View>
               {!!item.comment && <Text style={styles.comment}>{item.comment}</Text>}
-              <Text style={styles.date}>{formatDate(item.createdAt)}</Text>
-            </View>
+              <View style={styles.cardBottom}>
+                <Text style={styles.date}>{formatDate(item.createdAt)}</Text>
+                <TouchableOpacity onPress={() => handleDelete(item)} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+                  <Text style={styles.deleteLink}>🗑 Kaldır</Text>
+                </TouchableOpacity>
+              </View>
+            </TouchableOpacity>
           )}
           ListEmptyComponent={
             <View style={styles.empty}>
@@ -85,7 +108,9 @@ const styles = StyleSheet.create({
   shopName: { fontSize: 15, fontWeight: '700', color: Colors.primary, flex: 1, marginRight: 8 },
   stars: { fontSize: 13, color: Colors.warning },
   comment: { fontSize: 13, color: Colors.textSecondary, marginTop: 6, lineHeight: 19 },
-  date: { fontSize: 11, color: Colors.textMuted, marginTop: 8 },
+  date: { fontSize: 11, color: Colors.textMuted },
+  cardBottom: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 8 },
+  deleteLink: { fontSize: 12, color: Colors.danger, fontWeight: '700' },
   empty: { alignItems: 'center', marginTop: 80, paddingHorizontal: 32, gap: 8 },
   emptyText: { fontSize: 16, fontWeight: '700', color: Colors.primary },
   emptyHint: { fontSize: 13, color: Colors.textMuted, textAlign: 'center' },

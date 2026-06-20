@@ -1,0 +1,32 @@
+name: CI
+
+# dev / main'e PR veya push olunca çalışır.
+# Amaç: bozuk bağımlılık / build / tip hatalarını MERGE'den ÖNCE yakalamak.
+on:
+  pull_request:
+    branches: [dev, main]
+  push:
+    branches: [dev, main]
+
+jobs:
+  build-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Bağımlılıkları kur
+        run: npm install --legacy-peer-deps
+
+      - name: Expo Doctor (sürüm/uyumluluk kontrolü)
+        # SDK sürüm karışıklığı, yanlış paket sürümü vb. burada yakalanır
+        run: npx expo-doctor
+
+      - name: TypeScript kontrolü
+        run: npx tsc --noEmit
+
+      - name: Bundle/Build kontrolü (Android JS bundle)
+        run: npx expo export --platform android

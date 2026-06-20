@@ -2,13 +2,13 @@ import {
   collection,
   doc,
   addDoc,
+  getDoc,
   getDocs,
   updateDoc,
+  deleteDoc,
   query,
   where,
-  orderBy,
   serverTimestamp,
-  increment,
 } from 'firebase/firestore';
 import { db } from './firebase';
 
@@ -26,20 +26,38 @@ export interface Review {
   createdAt: any;
 }
 
+// Berberin ortalama puanını (1–5) ve yorum sayısını gerçek yorumlardan yeniden hesapla
+export async function recomputeBarberRating(barberId: string): Promise<void> {
+  const q = query(collection(db, 'reviews'), where('barberId', '==', barberId));
+  const snap = await getDocs(q);
+  const ratings = snap.docs
+    .map(d => (d.data() as Review).rating)
+    .filter(r => typeof r === 'number' && r > 0);
+  const count = ratings.length;
+  const avg = count ? ratings.reduce((a, b) => a + b, 0) / count : 0;
+  await updateDoc(doc(db, 'barbers', barberId), {
+    rating: count ? Math.round(avg * 10) / 10 : 0, // yorum yoksa 0, varsa 1–5 ortalama
+    reviewCount: count,
+  });
+}
+
 // ── Add review ────────────────────────────────────────────────
 export async function addReview(data: Omit<Review, 'id' | 'createdAt'>): Promise<void> {
   await addDoc(collection(db, 'reviews'), {
     ...data,
     createdAt: serverTimestamp(),
   });
+  // Berberin ortalama puanını gerçek yorumlardan güncelle
+  await recomputeBarberRating(data.barberId);
+}
 
-  // Update barber's aggregate rating (simple running average approximation)
-  const barberRef = doc(db, 'barbers', data.barberId);
-  await updateDoc(barberRef, {
-    reviewCount: increment(1),
-    // NOTE: proper avg calculation should use a Cloud Function;
-    // this is a placeholder for the prototype.
-  });
+// ── Yorumu sil (+ berber ortalamasını güncelle) ───────────────
+export async function deleteReview(reviewId: string): Promise<void> {
+  const ref = doc(db, 'reviews', reviewId);
+  const snap = await getDoc(ref);
+  const barberId = snap.exists() ? (snap.data() as Review).barberId : null;
+  await deleteDoc(ref);
+  if (barberId) await recomputeBarberRating(barberId);
 }
 
 // ── Get reviews for barber ────────────────────────────────────
