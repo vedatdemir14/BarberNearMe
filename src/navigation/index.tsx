@@ -111,4 +111,60 @@ function CustomerTabs() {
       })}
     >
       <Tab.Screen name="Home" component={HomeScreen} options={{ title: 'Ana Sayfa' }} />
-      <Tab.Screen name="Appointments" component={AppointmentsListScreen} options={{ title: 'R
+      <Tab.Screen name="Appointments" component={AppointmentsListScreen} options={{ title: 'Randevular' }} />
+      <Tab.Screen name="Messages" component={MessagingScreen} options={{ title: 'Mesajlar' }} />
+      <Tab.Screen name="Profile" component={ProfileScreen} options={{ title: 'Profil' }} />
+    </Tab.Navigator>
+  );
+}
+
+export default function Navigation() {
+  const { user, profile, loading } = useAuth();
+
+  if (loading) {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+        <ActivityIndicator size="large" color={Colors.primary} />
+      </View>
+    );
+  }
+
+  return (
+    <NavigationContainer>
+      <Stack.Navigator screenOptions={{ headerShown: false }}>
+        {!user ? (
+          // Auth stack
+          <>
+            <Stack.Screen name="Intro" component={IntroScreen} />
+            <Stack.Screen name="Login" component={LoginScreen} />
+            <Stack.Screen name="SignUp" component={SignUpScreen} />
+            <Stack.Screen name="BarberRegStep1" component={BarberRegStep1Screen} />
+            <Stack.Screen name="BarberRegStep2" component={BarberRegStep2Screen} />
+            <Stack.Screen name="BarberRegStep3" component={BarberRegStep3Screen} />
+            <Stack.Screen name="BarberRegStep4" component={BarberRegStep4Screen} />
+          </>
+        ) : profile?.role === 'barber' ? (
+          // Barber app stack
+          <>
+            <Stack.Screen name="BarberTabs" component={BarberTabs} />
+            <Stack.Screen name="BarberAppointments" component={BarberAppointmentsScreen} />
+            <Stack.Screen name="BarberRegStep2" component={BarberRegStep2Screen} />
+            <Stack.Screen name="BarberRegStep3" component={BarberRegStep3Screen} />
+            <Stack.Screen name="BarberRegStep4" component={BarberRegStep4Screen} />
+          </>
+        ) : (
+          // Customer app stack
+          <>
+            <Stack.Screen name="CustomerTabs" component={CustomerTabs} />
+            <Stack.Screen name="BarberDetail" component={BarberDetailScreen} />
+            <Stack.Screen name="Appointment" component={AppointmentScreen} />
+            <Stack.Screen name="AppointmentConfirm" component={AppointmentConfirmScreen} />
+            <Stack.Screen name="Payment" component={PaymentScreen} />
+            <Stack.Screen name="Messaging" component={MessagingScreen} />
+            <Stack.Screen name="Rating" component={RatingScreen} />
+          </>
+        )}
+      </Stack.Navigator>
+    </NavigationContainer>
+  );
+}

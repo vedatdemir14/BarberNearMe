@@ -72,6 +72,44 @@ export default function BarberDashboardScreen() {
     );
   }
 
+  // Kurulum tamamlanmamış
+  if (user && shop && !shop.isActive) {
+    const hasServices = (shop.services?.length ?? 0) > 0;
+    const hasHours    = !!shop.workingHours?.openTime;
+    const nextStep    = !hasServices ? 'BarberRegStep2' : !hasHours ? 'BarberRegStep3' : 'BarberRegStep4';
+    const steps = [
+      { label: 'Hesap oluşturuldu',     done: true },
+      { label: 'Hizmet & çalışan ekle', done: hasServices },
+      { label: 'Çalışma saatleri',      done: hasHours },
+      { label: 'Dükkanı aç',            done: false },
+    ];
+    return (
+      <SafeAreaView style={{ flex: 1, backgroundColor: Colors.background }}>
+        <View style={{ flex: 1, padding: 28, justifyContent: 'center', alignItems: 'center', gap: 16 }}>
+          <Text style={{ fontSize: 48 }}>✂️</Text>
+          <Text style={{ fontSize: 22, fontWeight: '800', color: Colors.primary, textAlign: 'center' }}>Dükkan Kurulumu</Text>
+          <Text style={{ fontSize: 14, color: Colors.textSecondary, textAlign: 'center', lineHeight: 20 }}>
+            Müşterilere görünmek için kurulumu tamamla.
+          </Text>
+          <View style={{ width: '100%', backgroundColor: Colors.surface, borderRadius: 14, padding: 16, gap: 12, borderWidth: 1, borderColor: Colors.borderLight }}>
+            {steps.map(s => (
+              <View key={s.label} style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+                <Text style={{ fontSize: 16 }}>{s.done ? '✅' : '⬜'}</Text>
+                <Text style={{ fontSize: 14, color: s.done ? Colors.textSecondary : Colors.primary, fontWeight: s.done ? '400' : '700' }}>{s.label}</Text>
+              </View>
+            ))}
+          </View>
+          <TouchableOpacity
+            style={{ backgroundColor: Colors.primary, borderRadius: 14, paddingVertical: 15, paddingHorizontal: 40 }}
+            onPress={() => navigation.navigate(nextStep, { uid: user.uid })}
+          >
+            <Text style={{ color: '#fff', fontSize: 16, fontWeight: '700' }}>Devam Et →</Text>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView
