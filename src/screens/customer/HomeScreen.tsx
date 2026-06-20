@@ -16,9 +16,10 @@ type Props = NativeStackScreenProps<RootStackParamList, 'CustomerTabs'>;
 
 const FILTERS = ['Tümü', 'Yakın', 'En İyi', 'Açık', 'Uygun Fiyat'];
 
-const ISTANBUL_REGION: Region = {
-  latitude: 41.0082, longitude: 28.9784,
-  latitudeDelta: 0.12, longitudeDelta: 0.12,
+// Urla / Gülbahçe (İYTE çevresi) — berberlerin bulunduğu bölge
+const DEFAULT_REGION: Region = {
+  latitude: 38.330, longitude: 26.705,
+  latitudeDelta: 0.10, longitudeDelta: 0.16,
 };
 
 // Extract lat/lng from a Firestore GeoPoint or plain object
@@ -34,8 +35,8 @@ function getLatLng(b: BarberShop): { lat: number; lng: number } | null {
 function distToCenter(b: BarberShop): number {
   const c = getLatLng(b);
   if (!c) return Number.POSITIVE_INFINITY;
-  const dLat = c.lat - ISTANBUL_REGION.latitude;
-  const dLng = c.lng - ISTANBUL_REGION.longitude;
+  const dLat = c.lat - DEFAULT_REGION.latitude;
+  const dLng = c.lng - DEFAULT_REGION.longitude;
   return dLat * dLat + dLng * dLng;
 }
 
@@ -118,19 +119,18 @@ const MOCK_BARBERS: BarberShop[] = [
 ];
 
 export default function HomeScreen({ navigation }: Props) {
-  const [barbers, setBarbers]         = useState<BarberShop[]>(MOCK_BARBERS);
+  const [barbers, setBarbers]         = useState<BarberShop[]>([]);
   const [search, setSearch]           = useState('');
   const [activeFilter, setFilter]     = useState('Tümü');
-  const [loading, setLoading]         = useState(false);
+  const [loading, setLoading]         = useState(true);
   const [selectedId, setSelectedId]   = useState<string | null>(null);
   const [showMap, setShowMap]         = useState(true);
   const mapRef = useRef<MapView>(null);
 
   useEffect(() => {
-    setLoading(true);
     getBarbers()
-      .then(data => { if (data.length) setBarbers(data); })
-      .catch(() => { /* use mock */ })
+      .then(data => setBarbers(data.length ? data : MOCK_BARBERS))
+      .catch(() => setBarbers(MOCK_BARBERS)) // sadece Firestore'a ulaşılamazsa
       .finally(() => setLoading(false));
   }, []);
 
@@ -219,7 +219,7 @@ export default function HomeScreen({ navigation }: Props) {
           <MapView
             ref={mapRef}
             style={styles.map}
-            initialRegion={ISTANBUL_REGION}
+            initialRegion={DEFAULT_REGION}
           >
             {filtered.map(b => {
               const loc = b.location as any;
