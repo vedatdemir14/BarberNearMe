@@ -8,10 +8,9 @@ import { useAuth } from '../../hooks/useAuth';
 const MENU = [
   { icon: '📅', label: 'Randevularım', screen: 'Appointments' },
   { icon: '💬', label: 'Mesajlarım', screen: 'Messages' },
-  { icon: '❤️', label: 'Favori Berberlerim', screen: null },
-  { icon: '⭐', label: 'Değerlendirmelerim', screen: null },
-  { icon: '🔔', label: 'Bildirimler', screen: null },
-  { icon: '⚙', label: 'Ayarlar', screen: null },
+  { icon: '⭐', label: 'Değerlendirmelerim', screen: 'MyReviews' },
+  { icon: '🔔', label: 'Bildirimler', screen: 'Notifications' },
+  { icon: '⚙', label: 'Ayarlar', screen: 'Settings' },
 ];
 
 export default function ProfileScreen({ navigation }: any) {

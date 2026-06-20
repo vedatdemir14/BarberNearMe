@@ -77,7 +77,7 @@ export default function AppointmentConfirmScreen({ navigation, route }: Props) {
           <Text style={styles.btnText}>Randevularıma Git</Text>
         </TouchableOpacity>
         {appt && (
-          <TouchableOpacity style={styles.btnSecondary} onPress={() => navigation.navigate('Messaging', { barberId: appt.barberId, barberName: shopName })}>
+          <TouchableOpacity style={styles.btnSecondary} onPress={() => navigation.navigate('Chat', { barberId: appt.barberId, barberName: shopName })}>
             <Text style={styles.btnSecText}>Berberle Mesajlaş</Text>
           </TouchableOpacity>
         )}

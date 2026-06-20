@@ -55,6 +55,15 @@ export async function getBarberReviews(barberId: string): Promise<Review[]> {
     .sort((a, b) => (b.createdAt?.toMillis?.() ?? 0) - (a.createdAt?.toMillis?.() ?? 0));
 }
 
+// ── Kullanıcının kendi yorumları (Değerlendirmelerim) ────────
+export async function getCustomerReviews(customerId: string): Promise<Review[]> {
+  const q = query(collection(db, 'reviews'), where('customerId', '==', customerId));
+  const snap = await getDocs(q);
+  return snap.docs
+    .map(d => ({ id: d.id, ...d.data() } as Review))
+    .sort((a, b) => (b.createdAt?.toMillis?.() ?? 0) - (a.createdAt?.toMillis?.() ?? 0));
+}
+
 // ── Bir randevuya ait yorum var mı? (mükerrer değerlendirmeyi önlemek için)
 export async function getReviewByAppointment(appointmentId: string): Promise<Review | null> {
   const q = query(collection(db, 'reviews'), where('appointmentId', '==', appointmentId));
