@@ -316,8 +316,8 @@ const styles = StyleSheet.create({
     marginRight: 8,
   },
   chipActive: { backgroundColor: Colors.primary, borderColor: Colors.primary },
-  chipText: { fontSize: 13, color: Colors.textSecondary, fontWeight: '500' },
-  chipTextActive: { color: '#fff' },
+  chipText: { fontSize: 13, color: Colors.text, fontWeight: '600' },
+  chipTextActive: { color: '#fff', fontWeight: '700' },
   toggleRow: {
     flexDirection: 'row', marginHorizontal: 16, marginBottom: 10,
     backgroundColor: Colors.surface, borderRadius: 10,

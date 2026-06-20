@@ -7,7 +7,7 @@ import { Colors } from '../../constants';
 import { useAuth } from '../../hooks/useAuth';
 import { getAppointment, Appointment } from '../../services/appointmentService';
 import { getBarber } from '../../services/barberService';
-import { addReview } from '../../services/reviewService';
+import { addReview, getReviewByAppointment } from '../../services/reviewService';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Rating'>;
 
@@ -22,14 +22,24 @@ export default function RatingScreen({ navigation, route }: Props) {
   const [shopName, setShopName] = useState('Berber');
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [alreadyReviewed, setAlreadyReviewed] = useState(false);
 
   useEffect(() => {
     let active = true;
     (async () => {
       try {
-        const a = await getAppointment(appointmentId);
+        const [a, existing] = await Promise.all([
+          getAppointment(appointmentId),
+          getReviewByAppointment(appointmentId).catch(() => null),
+        ]);
         if (!active) return;
         setAppt(a);
+        if (existing) {
+          // Daha önce değerlendirilmiş → mevcut değerlendirmeyi göster, tekrar engelle
+          setAlreadyReviewed(true);
+          setStars(existing.rating ?? 4);
+          setComment(existing.comment ?? '');
+        }
         if (a) {
           const b = await getBarber(a.barberId).catch(() => null);
           if (active && b) setShopName(b.shopName);
@@ -43,7 +53,16 @@ export default function RatingScreen({ navigation, route }: Props) {
 
   async function submit() {
     if (!appt) { Alert.alert('Hata', 'Randevu bulunamadı.'); return; }
+    if (alreadyReviewed) { Alert.alert('Bilgi', 'Bu randevuyu zaten değerlendirdiniz.'); return; }
     setSubmitting(true);
+    // Yarış durumuna karşı son bir kontrol
+    const dup = await getReviewByAppointment(appointmentId).catch(() => null);
+    if (dup) {
+      setAlreadyReviewed(true);
+      setSubmitting(false);
+      Alert.alert('Bilgi', 'Bu randevuyu zaten değerlendirdiniz.');
+      return;
+    }
     try {
       await addReview({
         customerId: appt.customerId,
@@ -95,10 +114,15 @@ export default function RatingScreen({ navigation, route }: Props) {
             {!!appt?.staffName && <Text style={styles.apptInfo}>{appt.staffName}</Text>}
           </View>
         </View>
+        {alreadyReviewed && (
+          <View style={styles.reviewedBanner}>
+            <Text style={styles.reviewedText}>✓ Bu randevuyu zaten değerlendirdiniz.</Text>
+          </View>
+        )}
         <Text style={styles.sectionTitle}>Genel Puan</Text>
         <View style={styles.starRow}>
           {[1,2,3,4,5].map(n => (
-            <TouchableOpacity key={n} onPress={() => setStars(n)}>
+            <TouchableOpacity key={n} onPress={() => setStars(n)} disabled={alreadyReviewed}>
               <Text style={[styles.star, n <= stars && styles.starActive]}>⭐</Text>
             </TouchableOpacity>
           ))}
@@ -113,9 +137,16 @@ export default function RatingScreen({ navigation, route }: Props) {
           value={comment}
           onChangeText={setComment}
           textAlignVertical="top"
+          editable={!alreadyReviewed}
         />
-        <TouchableOpacity style={[styles.btnPrimary, submitting && { opacity: 0.6 }]} onPress={submit} disabled={submitting}>
-          {submitting ? <ActivityIndicator color="#fff" /> : <Text style={styles.btnText}>Değerlendirmeyi Gönder</Text>}
+        <TouchableOpacity
+          style={[styles.btnPrimary, (submitting || alreadyReviewed) && { opacity: 0.5 }]}
+          onPress={submit}
+          disabled={submitting || alreadyReviewed}
+        >
+          {submitting
+            ? <ActivityIndicator color="#fff" />
+            : <Text style={styles.btnText}>{alreadyReviewed ? 'Zaten Değerlendirildi' : 'Değerlendirmeyi Gönder'}</Text>}
         </TouchableOpacity>
       </ScrollView>
     </SafeAreaView>
@@ -137,4 +168,6 @@ const styles = StyleSheet.create({
   textarea: { borderWidth: 1.5, borderColor: Colors.border, borderRadius: 10, padding: 12, fontSize: 14, backgroundColor: '#fafafa', height: 100 },
   btnPrimary: { backgroundColor: Colors.primary, borderRadius: 12, paddingVertical: 15, alignItems: 'center' },
   btnText: { color: '#fff', fontSize: 16, fontWeight: '700' },
+  reviewedBanner: { backgroundColor: '#dcfce7', borderRadius: 10, padding: 12, borderWidth: 1, borderColor: '#86efac' },
+  reviewedText: { color: '#16a34a', fontSize: 13, fontWeight: '700', textAlign: 'center' },
 });
