@@ -12,7 +12,8 @@ const PROJECT_ID: string =
 // Foreground'da bildirim göster
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
-    shouldShowAlert: true,
+    shouldShowBanner: true,
+    shouldShowList: true,
     shouldPlaySound: true,
     shouldSetBadge: false,
   }),

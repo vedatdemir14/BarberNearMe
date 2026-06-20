@@ -1,6 +1,6 @@
 import { SafeAreaView } from 'react-native-safe-area-context';
 import React, { useEffect, useState } from 'react';
-import { View, Text, TouchableOpacity, TextInput, ScrollView, StyleSheet, Alert, ActivityIndicator } from 'react-native';
+import { View, Text, TouchableOpacity, TextInput, ScrollView, StyleSheet, Alert, ActivityIndicator, KeyboardAvoidingView, Platform } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../navigation';
 import { Colors } from '../../constants';
@@ -101,7 +101,8 @@ export default function RatingScreen({ navigation, route }: Props) {
         <TouchableOpacity onPress={() => navigation.goBack()}><Text style={{ fontSize: 22 }}>←</Text></TouchableOpacity>
         <View><Text style={styles.title}>Değerlendirme</Text><Text style={styles.sub}>Hizmetinizi değerlendirin</Text></View>
       </View>
-      <ScrollView contentContainerStyle={{ padding: 16, gap: 16 }}>
+      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }}>
+      <ScrollView contentContainerStyle={{ padding: 16, gap: 16 }} keyboardShouldPersistTaps="handled">
         <View style={styles.card}>
           <View style={styles.avatar}><Text style={{ fontSize: 24 }}>💈</Text></View>
           <View>
@@ -149,6 +150,7 @@ export default function RatingScreen({ navigation, route }: Props) {
             : <Text style={styles.btnText}>{alreadyReviewed ? 'Zaten Değerlendirildi' : 'Değerlendirmeyi Gönder'}</Text>}
         </TouchableOpacity>
       </ScrollView>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
