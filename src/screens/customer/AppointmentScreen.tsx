@@ -23,7 +23,18 @@ export default function AppointmentScreen({ navigation }: Props) {
 
   function handleBook() {
     if (!selectedTime) { Alert.alert('Saat seçin'); return; }
-    navigation.navigate('AppointmentConfirm', { appointmentId: 'new' });
+    const svc = SERVICES[selectedSvc];
+    navigation.navigate('Payment', {
+      barberId:     (route.params as any)?.barberId ?? 'barber_001',
+      barberName:   'Sirat\'s Barber Shop',
+      serviceName:  svc.name,
+      servicePrice: svc.price,
+      serviceId:    svc.id,
+      date:         `${selectedDay} Mayıs 2025`,
+      timeSlot:     selectedTime,
+      staffName:    'Engyal T.',
+      staffId:      'st1',
+    });
   }
 
   return (

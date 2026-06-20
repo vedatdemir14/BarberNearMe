@@ -18,6 +18,7 @@ import HomeScreen from '../screens/customer/HomeScreen';
 import BarberDetailScreen from '../screens/customer/BarberDetailScreen';
 import AppointmentScreen from '../screens/customer/AppointmentScreen';
 import AppointmentConfirmScreen from '../screens/customer/AppointmentConfirmScreen';
+import PaymentScreen from '../screens/customer/PaymentScreen';
 import AppointmentsListScreen from '../screens/customer/AppointmentsListScreen';
 import MessagingScreen from '../screens/customer/MessagingScreen';
 import RatingScreen from '../screens/customer/RatingScreen';
@@ -37,6 +38,17 @@ export type RootStackParamList = {
   BarberDetail: { barberId: string };
   Appointment: { barberId: string };
   AppointmentConfirm: { appointmentId: string };
+  Payment: {
+    barberId: string;
+    barberName: string;
+    serviceName: string;
+    servicePrice: number;
+    serviceId: string;
+    date: string;
+    timeSlot: string;
+    staffName: string;
+    staffId: string;
+  };
   Messaging: { barberId: string; barberName: string };
   Rating: { appointmentId: string };
   BarberRegStep1: undefined;
@@ -107,6 +119,7 @@ export default function Navigation() {
             <Stack.Screen name="BarberDetail" component={BarberDetailScreen} />
             <Stack.Screen name="Appointment" component={AppointmentScreen} />
             <Stack.Screen name="AppointmentConfirm" component={AppointmentConfirmScreen} />
+            <Stack.Screen name="Payment" component={PaymentScreen} />
             <Stack.Screen name="Messaging" component={MessagingScreen} />
             <Stack.Screen name="Rating" component={RatingScreen} />
           </>
