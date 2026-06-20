@@ -44,11 +44,13 @@ export async function addReview(data: Omit<Review, 'id' | 'createdAt'>): Promise
 
 // ── Get reviews for barber ────────────────────────────────────
 export async function getBarberReviews(barberId: string): Promise<Review[]> {
+  // Sıralama JS'te (Firestore composite index gerektirmesin diye)
   const q = query(
     collection(db, 'reviews'),
-    where('barberId', '==', barberId),
-    orderBy('createdAt', 'desc')
+    where('barberId', '==', barberId)
   );
   const snap = await getDocs(q);
-  return snap.docs.map(d => ({ id: d.id, ...d.data() } as Review));
+  return snap.docs
+    .map(d => ({ id: d.id, ...d.data() } as Review))
+    .sort((a, b) => (b.createdAt?.toMillis?.() ?? 0) - (a.createdAt?.toMillis?.() ?? 0));
 }
