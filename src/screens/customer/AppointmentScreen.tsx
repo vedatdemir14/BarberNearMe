@@ -1,13 +1,12 @@
 import { SafeAreaView } from 'react-native-safe-area-context';
 import React, { useEffect, useMemo, useState } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Alert, ActivityIndicator } from 'react-native';
-import { Timestamp } from 'firebase/firestore';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../navigation';
 import { Colors, DAYS_TR } from '../../constants';
 import { useAuth } from '../../hooks/useAuth';
 import { getBarber, BarberShop, Service, StaffMember } from '../../services/barberService';
-import { createAppointment, getBookedSlots } from '../../services/appointmentService';
+import { getBookedSlots } from '../../services/appointmentService';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Appointment'>;
 
@@ -43,7 +42,6 @@ export default function AppointmentScreen({ navigation, route }: Props) {
 
   const [barber, setBarber] = useState<BarberShop | null>(null);
   const [loading, setLoading] = useState(true);
-  const [booking, setBooking] = useState(false);
 
   const [selectedSvc, setSelectedSvc] = useState(0);
   const [selectedStaff, setSelectedStaff] = useState(0);
@@ -98,27 +96,17 @@ export default function AppointmentScreen({ navigation, route }: Props) {
 
     if (date.getTime() < Date.now()) { Alert.alert('Geçmiş saat', 'Geçmiş bir saate randevu alınamaz.'); return; }
 
-    setBooking(true);
-    try {
-      const id = await createAppointment({
-        customerId: user.uid,
-        barberId,
-        staffId: stf.id,
-        staffName: stf.name,
-        serviceId: svc.id,
-        serviceName: svc.name,
-        servicePrice: svc.price,
-        date: Timestamp.fromDate(date),
-        timeSlot: selectedTime,
-        durationMin: svc.durationMin,
-        status: 'pending',
-      });
-      navigation.navigate('AppointmentConfirm', { appointmentId: id });
-    } catch (e: any) {
-      Alert.alert('Hata', e.message ?? 'Randevu oluşturulamadı.');
-    } finally {
-      setBooking(false);
-    }
+    navigation.navigate('Payment', {
+      barberId,
+      barberName: barber?.shopName ?? 'Berber',
+      serviceId: svc.id,
+      serviceName: svc.name,
+      servicePrice: svc.price,
+      date: date.toISOString(),
+      timeSlot: selectedTime,
+      staffId: stf.id,
+      staffName: stf.name,
+    });
   }
 
   if (loading) {
@@ -168,86 +156,4 @@ export default function AppointmentScreen({ navigation, route }: Props) {
             const date = new Date(year, month, day);
             const isPast = date < new Date(today.getFullYear(), today.getMonth(), today.getDate());
             const isSel = sameDay(selectedDate, date);
-            return (
-              <TouchableOpacity key={day} disabled={isPast}
-                style={[styles.calDay, isSel && styles.calDaySelected]}
-                onPress={() => setSelectedDate(date)}>
-                <Text style={[styles.calDayText, isPast && { color: Colors.textMuted, opacity: 0.4 }, isSel && { color: '#fff' }]}>{day}</Text>
-              </TouchableOpacity>
-            );
-          })}
-        </View>
-
-        {/* Time */}
-        <Text style={styles.sectionTitle}>Saat Seç</Text>
-        <View style={styles.timeGrid}>
-          {slots.map(t => {
-            const [h, m] = t.split(':').map(Number);
-            const slotDate = new Date(selectedDate); slotDate.setHours(h, m, 0, 0);
-            const unavail = bookedSlots.includes(t) || slotDate.getTime() < Date.now();
-            const isSel = selectedTime === t;
-            return (
-              <TouchableOpacity key={t} disabled={unavail}
-                style={[styles.timeSlot, unavail && styles.timeUnavail, isSel && styles.timeSelected]}
-                onPress={() => setSelectedTime(t)}>
-                <Text style={[styles.timeText, unavail && { color: '#ccc' }, isSel && { color: '#fff' }]}>{t}</Text>
-              </TouchableOpacity>
-            );
-          })}
-        </View>
-
-        {/* Summary */}
-        <Text style={styles.sectionTitle}>Özet</Text>
-        <View style={styles.summaryCard}>
-          {[
-            ['Hizmet', svc.name],
-            ['Berber', stf.name],
-            ['Tarih', `${selectedDate.getDate()} ${MONTHS_TR[selectedDate.getMonth()]} ${selectedDate.getFullYear()}`],
-            ['Saat', selectedTime ?? '—'],
-          ].map(([l, v]) => (
-            <View key={l} style={styles.summaryRow}><Text style={styles.summaryLabel}>{l}</Text><Text style={styles.summaryVal}>{v}</Text></View>
-          ))}
-          <View style={[styles.summaryRow, { borderTopWidth: 1.5, borderTopColor: Colors.border, marginTop: 8, paddingTop: 8 }]}>
-            <Text style={[styles.summaryLabel, { fontWeight: '700', fontSize: 15 }]}>Toplam</Text>
-            <Text style={[styles.summaryVal, { fontSize: 15 }]}>₺{svc.price}</Text>
-          </View>
-        </View>
-
-        <TouchableOpacity style={[styles.btnPrimary, booking && { opacity: 0.6 }]} onPress={handleBook} disabled={booking}>
-          {booking ? <ActivityIndicator color="#fff" /> : <Text style={styles.btnText}>Randevu Oluştur →</Text>}
-        </TouchableOpacity>
-        <View style={{ height: 16 }} />
-      </ScrollView>
-    </SafeAreaView>
-  );
-}
-
-const styles = StyleSheet.create({
-  header: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 16, backgroundColor: Colors.surface, borderBottomWidth: 1, borderBottomColor: Colors.border },
-  back: { fontSize: 22, color: Colors.primary },
-  headerTitle: { fontSize: 18, fontWeight: '700', color: Colors.primary },
-  headerSub: { fontSize: 12, color: Colors.textSecondary },
-  sectionTitle: { fontSize: 14, fontWeight: '700', color: Colors.primary },
-  serviceCard: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 14, backgroundColor: Colors.surface, borderRadius: 12, borderWidth: 1.5, borderColor: Colors.border },
-  serviceCardActive: { borderColor: Colors.secondary, backgroundColor: '#eff6ff' },
-  serviceName: { fontSize: 14, fontWeight: '600', color: Colors.primary },
-  serviceSub: { fontSize: 12, color: Colors.textSecondary },
-  servicePrice: { fontSize: 15, fontWeight: '700', color: Colors.primary },
-  staffChip: { paddingVertical: 10, paddingHorizontal: 16, borderWidth: 1.5, borderColor: Colors.border, borderRadius: 10, alignItems: 'center' },
-  calGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 4 },
-  calHeader: { width: '13%', textAlign: 'center', fontSize: 10, fontWeight: '600', color: Colors.textMuted, paddingVertical: 4 },
-  calDay: { width: '13%', aspectRatio: 1, alignItems: 'center', justifyContent: 'center', borderRadius: 8 },
-  calDaySelected: { backgroundColor: Colors.secondary, borderRadius: 999 },
-  calDayText: { fontSize: 12, color: Colors.text },
-  timeGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  timeSlot: { width: '30%', paddingVertical: 10, borderWidth: 1.5, borderColor: Colors.border, borderRadius: 10, alignItems: 'center' },
-  timeSelected: { backgroundColor: Colors.secondary, borderColor: Colors.secondary },
-  timeUnavail: { backgroundColor: Colors.borderLight },
-  timeText: { fontSize: 13, color: Colors.text },
-  summaryCard: { backgroundColor: Colors.surface, borderRadius: 12, padding: 14, borderWidth: 1, borderColor: Colors.borderLight },
-  summaryRow: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 7, borderBottomWidth: 1, borderBottomColor: Colors.borderLight },
-  summaryLabel: { fontSize: 13, color: Colors.textSecondary },
-  summaryVal: { fontSize: 13, fontWeight: '600', color: Colors.primary },
-  btnPrimary: { backgroundColor: Colors.primary, borderRadius: 12, paddingVertical: 15, alignItems: 'center' },
-  btnText: { color: '#fff', fontSize: 16, fontWeight: '700' },
-});
+        

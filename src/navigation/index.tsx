@@ -24,6 +24,10 @@ import MessagingScreen from '../screens/customer/MessagingScreen';
 import RatingScreen from '../screens/customer/RatingScreen';
 import ProfileScreen from '../screens/customer/ProfileScreen';
 
+// ── Barber screens ────────────────────────────────────────────
+import BarberDashboardScreen from '../screens/barber/BarberDashboardScreen';
+import BarberAppointmentsScreen from '../screens/barber/BarberAppointmentsScreen';
+
 // ── Barber registration screens ───────────────────────────────
 import BarberRegStep1Screen from '../screens/barber/BarberRegStep1Screen';
 import BarberRegStep2Screen from '../screens/barber/BarberRegStep2Screen';
@@ -35,6 +39,8 @@ export type RootStackParamList = {
   Login: undefined;
   SignUp: undefined;
   CustomerTabs: undefined;
+  BarberTabs: undefined;
+  BarberAppointments: undefined;
   BarberDetail: { barberId: string };
   Appointment: { barberId: string };
   AppointmentConfirm: { appointmentId: string };
@@ -60,6 +66,31 @@ export type RootStackParamList = {
 const Stack = createNativeStackNavigator<RootStackParamList>();
 const Tab = createBottomTabNavigator();
 
+function BarberTabs() {
+  return (
+    <Tab.Navigator
+      screenOptions={({ route }) => ({
+        headerShown: false,
+        tabBarActiveTintColor: Colors.secondary,
+        tabBarInactiveTintColor: Colors.textMuted,
+        tabBarStyle: { borderTopColor: Colors.border },
+        tabBarIcon: ({ focused, color, size }) => {
+          const icons: Record<string, string> = {
+            BarberDashboard: focused ? 'grid' : 'grid-outline',
+            BarberAppointments: focused ? 'calendar' : 'calendar-outline',
+            Profile: focused ? 'person' : 'person-outline',
+          };
+          return <Ionicons name={icons[route.name] as any} size={size} color={color} />;
+        },
+      })}
+    >
+      <Tab.Screen name="BarberDashboard" component={BarberDashboardScreen} options={{ title: 'Dashboard' }} />
+      <Tab.Screen name="BarberAppointments" component={BarberAppointmentsScreen} options={{ title: 'Randevular' }} />
+      <Tab.Screen name="Profile" component={ProfileScreen} options={{ title: 'Profil' }} />
+    </Tab.Navigator>
+  );
+}
+
 function CustomerTabs() {
   return (
     <Tab.Navigator
@@ -80,51 +111,4 @@ function CustomerTabs() {
       })}
     >
       <Tab.Screen name="Home" component={HomeScreen} options={{ title: 'Ana Sayfa' }} />
-      <Tab.Screen name="Appointments" component={AppointmentsListScreen} options={{ title: 'Randevular' }} />
-      <Tab.Screen name="Messages" component={MessagingScreen} options={{ title: 'Mesajlar' }} />
-      <Tab.Screen name="Profile" component={ProfileScreen} options={{ title: 'Profil' }} />
-    </Tab.Navigator>
-  );
-}
-
-export default function Navigation() {
-  const { user, profile, loading } = useAuth();
-
-  if (loading) {
-    return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-        <ActivityIndicator size="large" color={Colors.primary} />
-      </View>
-    );
-  }
-
-  return (
-    <NavigationContainer>
-      <Stack.Navigator screenOptions={{ headerShown: false }}>
-        {!user ? (
-          // Auth stack
-          <>
-            <Stack.Screen name="Intro" component={IntroScreen} />
-            <Stack.Screen name="Login" component={LoginScreen} />
-            <Stack.Screen name="SignUp" component={SignUpScreen} />
-            <Stack.Screen name="BarberRegStep1" component={BarberRegStep1Screen} />
-            <Stack.Screen name="BarberRegStep2" component={BarberRegStep2Screen} />
-            <Stack.Screen name="BarberRegStep3" component={BarberRegStep3Screen} />
-            <Stack.Screen name="BarberRegStep4" component={BarberRegStep4Screen} />
-          </>
-        ) : (
-          // App stack
-          <>
-            <Stack.Screen name="CustomerTabs" component={CustomerTabs} />
-            <Stack.Screen name="BarberDetail" component={BarberDetailScreen} />
-            <Stack.Screen name="Appointment" component={AppointmentScreen} />
-            <Stack.Screen name="AppointmentConfirm" component={AppointmentConfirmScreen} />
-            <Stack.Screen name="Payment" component={PaymentScreen} />
-            <Stack.Screen name="Messaging" component={MessagingScreen} />
-            <Stack.Screen name="Rating" component={RatingScreen} />
-          </>
-        )}
-      </Stack.Navigator>
-    </NavigationContainer>
-  );
-}
+      <Tab.Screen name="Appointments" component={AppointmentsListScreen} options={{ title: 'R
