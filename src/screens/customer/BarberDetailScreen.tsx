@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { View, Text, ScrollView, TouchableOpacity, StyleSheet, ActivityIndicator, Linking, Alert } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../navigation';
 import { Colors } from '../../constants';
@@ -66,21 +66,6 @@ export default function BarberDetailScreen({ navigation, route }: Props) {
   const wh = data.workingHours ?? MOCK.workingHours!;
   const services = (data.services?.length ? data.services : MOCK.services);
   const staff = (data.staff?.length ? data.staff : MOCK.staff);
-  const fullAddress = [data.address, data.neighborhood, data.city].filter(Boolean).join(', ');
-
-  // Harita uygulamasında yol tarifi aç (konum varsa koordinata, yoksa adrese)
-  function openDirections() {
-    const loc: any = data.location;
-    const lat = loc?.latitude ?? loc?._lat;
-    const lng = loc?.longitude ?? loc?._long;
-    const url = (lat && lng)
-      ? `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`
-      : fullAddress
-        ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(fullAddress)}`
-        : null;
-    if (!url) { Alert.alert('Konum yok', 'Bu berber için konum bilgisi bulunamadı.'); return; }
-    Linking.openURL(url).catch(() => Alert.alert('Hata', 'Harita uygulaması açılamadı.'));
-  }
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: Colors.background }}>
@@ -143,22 +128,11 @@ export default function BarberDetailScreen({ navigation, route }: Props) {
             ))}
           </View>
 
-          {/* Address + directions */}
-          {!!fullAddress && (
-            <View style={styles.card}>
-              <Text style={styles.sectionTitle}>Konum</Text>
-              <Text style={styles.addressText}>📍 {fullAddress}</Text>
-              <TouchableOpacity style={styles.directionsBtn} onPress={openDirections}>
-                <Text style={styles.directionsText}>🧭 Yol Tarifi Al</Text>
-              </TouchableOpacity>
-            </View>
-          )}
-
           {/* Buttons */}
           <TouchableOpacity style={styles.btnPrimary} onPress={() => navigation.navigate('Appointment', { barberId })}>
             <Text style={styles.btnPrimaryText}>Randevu Al</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.btnSecondary} onPress={() => navigation.navigate('Messaging', { barberId, barberName: data.shopName })}>
+          <TouchableOpacity style={styles.btnSecondary} onPress={() => navigation.navigate('Chat', { barberId, barberName: data.shopName })}>
             <Text style={styles.btnSecondaryText}>Mesaj Gönder</Text>
           </TouchableOpacity>
           <View style={{ height: 16 }} />
@@ -191,7 +165,4 @@ const styles = StyleSheet.create({
   btnPrimaryText: { color: '#fff', fontSize: 16, fontWeight: '700' },
   btnSecondary: { borderWidth: 1.5, borderColor: Colors.border, borderRadius: 12, paddingVertical: 14, alignItems: 'center' },
   btnSecondaryText: { fontSize: 15, color: Colors.primary },
-  addressText: { fontSize: 13, color: Colors.textSecondary, marginTop: 6, marginBottom: 10, lineHeight: 18 },
-  directionsBtn: { backgroundColor: '#eff6ff', borderWidth: 1.5, borderColor: Colors.secondary, borderRadius: 10, paddingVertical: 11, alignItems: 'center' },
-  directionsText: { fontSize: 14, fontWeight: '700', color: Colors.secondary },
 });
