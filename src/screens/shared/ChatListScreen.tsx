@@ -70,7 +70,7 @@ export default function ChatListScreen({ navigation }: any) {
         contentContainerStyle={{ flexGrow: 1 }}
         ListEmptyComponent={
           <View style={styles.empty}>
-            <Text style={{ fontSize: 32 }}>💬</Text>
+            <Text style={{ fontSize: 28, color: Colors.secondary }}>✉</Text>
             <Text style={styles.emptyTitle}>Henüz mesaj yok</Text>
             <Text style={styles.emptySub}>
               {isBarber
@@ -85,7 +85,7 @@ export default function ChatListScreen({ navigation }: any) {
           return (
             <TouchableOpacity style={styles.row} onPress={() => openChat(item)}>
               <View style={styles.avatar}>
-                <Text style={{ fontSize: 20 }}>{isBarber ? '👤' : '💈'}</Text>
+                <Text style={{ fontSize: 16, color: Colors.primary }}>{isBarber ? 'M' : '✂'}</Text>
               </View>
               <View style={{ flex: 1 }}>
                 <View style={styles.rowTop}>
@@ -113,7 +113,7 @@ const styles = StyleSheet.create({
   title:   { fontSize: 20, fontWeight: '800', color: Colors.primary },
 
   row:     { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 16, backgroundColor: Colors.surface },
-  avatar:  { width: 48, height: 48, borderRadius: 24, backgroundColor: '#eff6ff', alignItems: 'center', justifyContent: 'center' },
+  avatar:  { width: 48, height: 48, borderRadius: 24, backgroundColor: '#F5F5F5', alignItems: 'center', justifyContent: 'center' },
   rowTop:  { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 3 },
   name:    { fontSize: 15, fontWeight: '700', color: Colors.primary },
   time:    { fontSize: 11, color: Colors.textMuted },

@@ -103,11 +103,10 @@ export default function ChatScreen({ navigation, route }: Props) {
           <Text style={styles.back}>←</Text>
         </TouchableOpacity>
         <View style={styles.avatar}>
-          <Text style={{ fontSize: 18 }}>💈</Text>
+          <Text style={{ fontSize: 16, color: Colors.primary }}>✂</Text>
         </View>
         <View style={{ flex: 1 }}>
           <Text style={styles.headerName}>{otherName}</Text>
-          <Text style={styles.headerSub}>● Çevrimiçi</Text>
         </View>
       </View>
 
@@ -125,7 +124,7 @@ export default function ChatScreen({ navigation, route }: Props) {
           onContentSizeChange={() => flatRef.current?.scrollToEnd({ animated: false })}
           ListEmptyComponent={
             <View style={styles.emptyWrap}>
-              <Text style={styles.emptyText}>Henüz mesaj yok. İlk mesajı sen gönder! 👋</Text>
+              <Text style={styles.emptyText}>Henüz mesaj yok. İlk mesajı sen gönder.</Text>
             </View>
           }
           renderItem={({ item }) => {
@@ -133,7 +132,7 @@ export default function ChatScreen({ navigation, route }: Props) {
             return (
               <View style={{ alignItems: isMine ? 'flex-end' : 'flex-start' }}>
                 <View style={[styles.bubble, isMine ? styles.bubbleMine : styles.bubbleOther]}>
-                  <Text style={[styles.bubbleText, isMine && { color: '#fff' }]}>
+                  <Text style={[styles.bubbleText, isMine && { color: '#020000' }]}>
                     {item.text}
                   </Text>
                 </View>
@@ -164,8 +163,8 @@ export default function ChatScreen({ navigation, route }: Props) {
             disabled={!text.trim() || sending}
           >
             {sending
-              ? <ActivityIndicator color="#fff" size="small" />
-              : <Text style={{ color: '#fff', fontSize: 16 }}>➤</Text>
+              ? <ActivityIndicator color="#020000" size="small" />
+              : <Text style={{ color: '#020000', fontSize: 16 }}>➤</Text>
             }
           </TouchableOpacity>
         </View>
@@ -181,9 +180,8 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.surface,
   },
   back:       { fontSize: 22, color: Colors.primary },
-  avatar:     { width: 40, height: 40, borderRadius: 20, backgroundColor: '#e8e0ff', alignItems: 'center', justifyContent: 'center' },
+  avatar:     { width: 40, height: 40, borderRadius: 20, backgroundColor: '#F5F5F5', alignItems: 'center', justifyContent: 'center' },
   headerName: { fontSize: 15, fontWeight: '700', color: Colors.primary },
-  headerSub:  { fontSize: 11, color: '#22c55e' },
 
   emptyWrap: { paddingTop: 60, alignItems: 'center' },
   emptyText: { fontSize: 14, color: Colors.textMuted, textAlign: 'center' },

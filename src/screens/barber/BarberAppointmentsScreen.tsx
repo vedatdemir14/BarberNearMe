@@ -135,10 +135,10 @@ export default function BarberAppointmentsScreen() {
               <View style={styles.cardTop}>
                 <View style={{ flex: 1 }}>
                   <Text style={styles.serviceName}>{a.serviceName || a.serviceId}</Text>
-                  <Text style={styles.meta}>👤 {a.staffName || '—'}</Text>
-                  <Text style={styles.meta}>📅 {dateStr}  🕐 {a.timeSlot}</Text>
+                  <Text style={styles.meta}>{a.staffName || '—'}</Text>
+                  <Text style={styles.meta}>{dateStr}  {a.timeSlot}</Text>
                   {a.kaporaAmount ? (
-                    <Text style={styles.kapora}>💰 Kapora alındı: ₺{a.kaporaAmount}</Text>
+                    <Text style={styles.kapora}>Kapora alındı: ₺{a.kaporaAmount}</Text>
                   ) : null}
                   {a.servicePrice ? (
                     <Text style={styles.price}>Toplam: ₺{a.servicePrice}</Text>
@@ -193,9 +193,9 @@ const styles = StyleSheet.create({
   count:       { fontSize: 13, color: Colors.textSecondary },
   filterScroll:{ flexGrow: 0, marginBottom: 4 },
   chip:        { paddingHorizontal: 14, paddingVertical: 7, borderRadius: 20, borderWidth: 1.5, borderColor: Colors.border, backgroundColor: Colors.surface },
-  chipActive:  { backgroundColor: Colors.primary, borderColor: Colors.primary },
+  chipActive:  { backgroundColor: Colors.secondary, borderColor: Colors.secondary },
   chipText:    { fontSize: 13, color: Colors.textSecondary, fontWeight: '500' },
-  chipTextActive: { color: '#fff' },
+  chipTextActive: { color: '#020000' },
 
   card:        { backgroundColor: Colors.surface, borderRadius: 14, padding: 14, borderWidth: 1, borderColor: Colors.borderLight },
   cardTop:     { flexDirection: 'row', gap: 10 },

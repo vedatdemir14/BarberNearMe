@@ -44,7 +44,7 @@ export default function EmailVerificationScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.inner}>
-        <Text style={styles.icon}>✉️</Text>
+        <Text style={styles.icon}>✉</Text>
         <Text style={styles.title}>E-postanı Doğrula</Text>
         <Text style={styles.sub}>
           <Text style={{ fontWeight: '700' }}>{user?.email}</Text>
@@ -92,10 +92,10 @@ const styles = StyleSheet.create({
   title: { fontSize: 24, fontWeight: '800', color: Colors.primary, textAlign: 'center' },
   sub:   { fontSize: 15, color: Colors.textSecondary, textAlign: 'center', lineHeight: 22 },
   btnPrimary: {
-    width: '100%', backgroundColor: Colors.primary,
+    width: '100%', backgroundColor: Colors.secondary,
     borderRadius: 12, paddingVertical: 15, alignItems: 'center',
   },
-  btnPrimaryText: { color: '#fff', fontSize: 16, fontWeight: '700' },
+  btnPrimaryText: { color: '#020000', fontSize: 16, fontWeight: '700' },
   btnOutline: {
     width: '100%', borderWidth: 1.5, borderColor: Colors.border,
     borderRadius: 12, paddingVertical: 14, alignItems: 'center',

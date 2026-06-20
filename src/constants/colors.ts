@@ -1,21 +1,20 @@
 export const Colors = {
-  primary: '#111111',
-  secondary: '#2563EB',
-  accent: '#22C55E',
-  warning: '#F59E0B',
-  danger: '#EF4444',
+  primary:   '#020000',   // brand siyah — başlıklar, yazılar
+  secondary: '#FFCE38',   // brand sarı  — butonlar, aktif durumlar
+  accent:    '#22C55E',   // yeşil       — mesafe, başarı göstergeleri
+  warning:   '#FFCE38',   // sarı        — yıldız puanlar
+  danger:    '#EF4444',
 
-  background: '#F8F8F8',
-  surface: '#FFFFFF',
-  border: '#E5E7EB',
-  borderLight: '#F3F4F6',
+  background:  '#FFFFFF',
+  surface:     '#FFFFFF',
+  border:      '#E8E8E8',
+  borderLight: '#F2F2F2',
 
-  text: '#111111',
+  text:          '#020000',
   textSecondary: '#6B7280',
-  textMuted: '#9CA3AF',
-  textInverse: '#FFFFFF',
+  textMuted:     '#9CA3AF',
+  textInverse:   '#FFFFFF',
 
-  // Dark header gradient
-  headerStart: '#0F0F1E',
-  headerEnd: '#1A1A3E',
+  headerStart: '#020000',
+  headerEnd:   '#111111',
 };

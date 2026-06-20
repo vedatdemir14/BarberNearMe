@@ -98,10 +98,10 @@ export default function LoginScreen({ navigation }: Props) {
           {/* Social buttons (UI only for prototype) */}
           <View style={styles.socialRow}>
             <TouchableOpacity style={styles.socialBtn}>
-              <Text style={styles.socialBtnText}>🇬  Google</Text>
+              <Text style={styles.socialBtnText}>Google</Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.socialBtn}>
-              <Text style={styles.socialBtnText}> Apple</Text>
+              <Text style={styles.socialBtnText}>Apple</Text>
             </TouchableOpacity>
           </View>
 
@@ -139,10 +139,10 @@ const styles = StyleSheet.create({
     padding: 13, fontSize: 15, color: Colors.text, backgroundColor: '#fafafa',
   },
   btnPrimary: {
-    backgroundColor: Colors.primary, borderRadius: 12,
+    backgroundColor: Colors.secondary, borderRadius: 12,
     paddingVertical: 15, alignItems: 'center',
   },
-  btnPrimaryText: { color: '#fff', fontSize: 16, fontWeight: '700' },
+  btnPrimaryText: { color: '#020000', fontSize: 16, fontWeight: '700' },
   orText: { textAlign: 'center', color: Colors.textMuted, fontSize: 13 },
   socialRow: { flexDirection: 'row', gap: 12 },
   socialBtn: {
@@ -152,9 +152,9 @@ const styles = StyleSheet.create({
   socialBtnText: { fontSize: 14, color: Colors.text },
   divider: { height: 1, backgroundColor: Colors.border },
   btnOutline: {
-    borderWidth: 1.5, borderColor: Colors.secondary, borderRadius: 12,
-    paddingVertical: 14, alignItems: 'center', backgroundColor: '#eff6ff',
+    borderWidth: 1.5, borderColor: Colors.primary, borderRadius: 12,
+    paddingVertical: 14, alignItems: 'center',
   },
-  btnOutlineText: { color: Colors.secondary, fontSize: 15, fontWeight: '600' },
-  link: { color: Colors.secondary, fontSize: 13 },
+  btnOutlineText: { color: Colors.primary, fontSize: 15, fontWeight: '600' },
+  link: { color: Colors.primary, fontSize: 13 },
 });

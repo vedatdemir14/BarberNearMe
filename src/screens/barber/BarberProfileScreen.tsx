@@ -70,7 +70,7 @@ export default function BarberProfileScreen({ navigation }: any) {
         {/* Hero */}
         <View style={styles.hero}>
           <View style={styles.avatar}>
-            <Text style={{ fontSize: 32 }}>✂️</Text>
+            <Text style={{ fontSize: 28, color: Colors.secondary }}>✂</Text>
           </View>
           <Text style={styles.shopName}>{shop?.shopName ?? 'Dükkanım'}</Text>
           <Text style={styles.ownerName}>{fullName}</Text>
@@ -79,7 +79,7 @@ export default function BarberProfileScreen({ navigation }: any) {
           </Text>
           {/* Rating */}
           <View style={styles.ratingRow}>
-            <Text style={styles.ratingVal}>⭐ {shop?.rating?.toFixed(1) ?? '—'}</Text>
+            <Text style={styles.ratingVal}>★ {shop?.rating?.toFixed(1) ?? '—'}</Text>
             <Text style={styles.ratingCount}>({shop?.reviewCount ?? 0} değerlendirme)</Text>
           </View>
         </View>
@@ -109,12 +109,11 @@ export default function BarberProfileScreen({ navigation }: any) {
         {/* İstatistik kartları */}
         <View style={styles.statsRow}>
           {[
-            { label: 'Hizmet', value: shop?.services?.length ?? 0, icon: '✂️' },
-            { label: 'Çalışan', value: shop?.staff?.length ?? 0, icon: '👤' },
-            { label: 'Puan', value: shop?.rating?.toFixed(1) ?? '—', icon: '⭐' },
+            { label: 'Hizmet', value: shop?.services?.length ?? 0 },
+            { label: 'Çalışan', value: shop?.staff?.length ?? 0 },
+            { label: 'Puan', value: shop?.rating?.toFixed(1) ?? '—' },
           ].map(s => (
             <View key={s.label} style={styles.statCard}>
-              <Text style={styles.statIcon}>{s.icon}</Text>
               <Text style={styles.statVal}>{s.value}</Text>
               <Text style={styles.statLabel}>{s.label}</Text>
             </View>
@@ -123,7 +122,7 @@ export default function BarberProfileScreen({ navigation }: any) {
 
         {/* Çalışma bilgisi */}
         <View style={styles.infoCard}>
-          <Text style={styles.infoTitle}>📅 Çalışma Saatleri</Text>
+          <Text style={styles.infoTitle}>Çalışma Saatleri</Text>
           <View style={styles.infoRow}>
             <Text style={styles.infoLabel}>Günler</Text>
             <Text style={styles.infoVal}>{openDaysStr}</Text>
@@ -146,7 +145,6 @@ export default function BarberProfileScreen({ navigation }: any) {
             style={styles.menuItem}
             onPress={() => navigation.navigate('BarberRegStep2', { uid: user?.uid })}
           >
-            <Text style={styles.menuIcon}>✂️</Text>
             <Text style={styles.menuLabel}>Hizmetleri & Çalışanları Düzenle</Text>
             <Text style={styles.menuArrow}>›</Text>
           </TouchableOpacity>
@@ -155,7 +153,6 @@ export default function BarberProfileScreen({ navigation }: any) {
             style={styles.menuItem}
             onPress={() => navigation.navigate('BarberRegStep3', { uid: user?.uid })}
           >
-            <Text style={styles.menuIcon}>🕐</Text>
             <Text style={styles.menuLabel}>Çalışma Saatlerini Düzenle</Text>
             <Text style={styles.menuArrow}>›</Text>
           </TouchableOpacity>
@@ -163,7 +160,6 @@ export default function BarberProfileScreen({ navigation }: any) {
           <View style={styles.divider} />
 
           <TouchableOpacity style={styles.menuItem} onPress={handleLogout}>
-            <Text style={styles.menuIcon}>🚪</Text>
             <Text style={[styles.menuLabel, { color: Colors.danger }]}>Çıkış Yap</Text>
           </TouchableOpacity>
         </View>
@@ -182,7 +178,7 @@ const styles = StyleSheet.create({
   },
   avatar: {
     width: 72, height: 72, borderRadius: 36,
-    backgroundColor: '#fef3c7',
+    backgroundColor: '#F5F5F5',
     alignItems: 'center', justifyContent: 'center', marginBottom: 8,
   },
   shopName:   { fontSize: 20, fontWeight: '800', color: Colors.primary },
@@ -207,7 +203,6 @@ const styles = StyleSheet.create({
     flex: 1, backgroundColor: Colors.surface, borderRadius: 14, padding: 14,
     alignItems: 'center', borderWidth: 1, borderColor: Colors.borderLight, gap: 3,
   },
-  statIcon:  { fontSize: 18 },
   statVal:   { fontSize: 20, fontWeight: '800', color: Colors.primary },
   statLabel: { fontSize: 11, color: Colors.textSecondary },
 
@@ -225,7 +220,6 @@ const styles = StyleSheet.create({
     borderRadius: 14, borderWidth: 1, borderColor: Colors.borderLight,
   },
   menuItem:  { flexDirection: 'row', alignItems: 'center', padding: 16, borderBottomWidth: 1, borderBottomColor: Colors.borderLight },
-  menuIcon:  { fontSize: 20, width: 32 },
   menuLabel: { flex: 1, fontSize: 15, color: Colors.primary },
   menuArrow: { color: Colors.textMuted, fontSize: 18 },
   divider:   { height: 1, backgroundColor: Colors.border },

@@ -115,7 +115,7 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.surface },
   inner: { padding: 24, gap: 14 },
   backBtn: { marginBottom: 4 },
-  backText: { fontSize: 15, color: Colors.secondary },
+  backText: { fontSize: 15, color: Colors.primary },
   title: { fontSize: 24, fontWeight: '800', color: Colors.primary, marginBottom: 4 },
   row: { flexDirection: 'row', gap: 12 },
   label: { fontSize: 12, fontWeight: '600', color: Colors.textSecondary, marginBottom: 4 },
@@ -124,11 +124,11 @@ const styles = StyleSheet.create({
     padding: 12, fontSize: 15, color: Colors.text, backgroundColor: '#fafafa',
   },
   btnPrimary: {
-    backgroundColor: Colors.primary, borderRadius: 12,
+    backgroundColor: Colors.secondary, borderRadius: 12,
     paddingVertical: 15, alignItems: 'center', marginTop: 4,
   },
-  btnPrimaryText: { color: '#fff', fontSize: 16, fontWeight: '700' },
+  btnPrimaryText: { color: '#020000', fontSize: 16, fontWeight: '700' },
   loginRow: { flexDirection: 'row', justifyContent: 'center' },
   loginText: { fontSize: 13, color: Colors.textSecondary },
-  link: { fontSize: 13, color: Colors.secondary, fontWeight: '600' },
+  link: { fontSize: 13, color: Colors.primary, fontWeight: '600' },
 });

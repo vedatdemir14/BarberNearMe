@@ -86,7 +86,7 @@ export default function BarberDashboardScreen() {
     return (
       <SafeAreaView style={{ flex: 1, backgroundColor: Colors.background }}>
         <View style={{ flex: 1, padding: 28, justifyContent: 'center', alignItems: 'center', gap: 16 }}>
-          <Text style={{ fontSize: 48 }}>✂️</Text>
+          <Text style={{ fontSize: 48, color: Colors.secondary }}>✂</Text>
           <Text style={{ fontSize: 22, fontWeight: '800', color: Colors.primary, textAlign: 'center' }}>Dükkan Kurulumu</Text>
           <Text style={{ fontSize: 14, color: Colors.textSecondary, textAlign: 'center', lineHeight: 20 }}>
             Müşterilere görünmek için kurulumu tamamla.
@@ -94,16 +94,16 @@ export default function BarberDashboardScreen() {
           <View style={{ width: '100%', backgroundColor: Colors.surface, borderRadius: 14, padding: 16, gap: 12, borderWidth: 1, borderColor: Colors.borderLight }}>
             {steps.map(s => (
               <View key={s.label} style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-                <Text style={{ fontSize: 16 }}>{s.done ? '✅' : '⬜'}</Text>
+                <Text style={{ fontSize: 14, color: s.done ? Colors.secondary : Colors.border }}>{s.done ? '●' : '○'}</Text>
                 <Text style={{ fontSize: 14, color: s.done ? Colors.textSecondary : Colors.primary, fontWeight: s.done ? '400' : '700' }}>{s.label}</Text>
               </View>
             ))}
           </View>
           <TouchableOpacity
-            style={{ backgroundColor: Colors.primary, borderRadius: 14, paddingVertical: 15, paddingHorizontal: 40 }}
+            style={{ backgroundColor: Colors.secondary, borderRadius: 14, paddingVertical: 15, paddingHorizontal: 40 }}
             onPress={() => navigation.navigate(nextStep, { uid: user.uid })}
           >
-            <Text style={{ color: '#fff', fontSize: 16, fontWeight: '700' }}>Devam Et →</Text>
+            <Text style={{ color: '#020000', fontSize: 16, fontWeight: '700' }}>Devam Et →</Text>
           </TouchableOpacity>
         </View>
       </SafeAreaView>
@@ -119,7 +119,7 @@ export default function BarberDashboardScreen() {
         {/* Header */}
         <View style={styles.header}>
           <View>
-            <Text style={styles.greeting}>Hoş geldin 👋</Text>
+            <Text style={styles.greeting}>Hoş geldin</Text>
             <Text style={styles.shopName}>{shop?.shopName ?? 'Dükkanım'}</Text>
           </View>
           <View style={[styles.activeBadge, { backgroundColor: shop?.isActive ? '#dcfce7' : '#fee2e2' }]}>
@@ -139,12 +139,11 @@ export default function BarberDashboardScreen() {
         {/* İstatistikler */}
         <View style={styles.statsRow}>
           {[
-            { label: 'Bugün', value: today.length, icon: '📅' },
-            { label: 'Bekleyen', value: pending.length, icon: '⏳' },
-            { label: 'Toplam', value: appointments.length, icon: '📊' },
+            { label: 'Bugün', value: today.length },
+            { label: 'Bekleyen', value: pending.length },
+            { label: 'Toplam', value: appointments.length },
           ].map(s => (
             <View key={s.label} style={styles.statCard}>
-              <Text style={styles.statIcon}>{s.icon}</Text>
               <Text style={styles.statVal}>{s.value}</Text>
               <Text style={styles.statLabel}>{s.label}</Text>
             </View>
@@ -154,7 +153,7 @@ export default function BarberDashboardScreen() {
         {/* Bekleyen randevular */}
         {pending.length > 0 && (
           <>
-            <Text style={styles.sectionTitle}>⏳ Onay Bekleyen ({pending.length})</Text>
+            <Text style={styles.sectionTitle}>Onay Bekleyen ({pending.length})</Text>
             {pending.slice(0, 3).map(a => (
               <AppointmentCard key={a.id} appt={a} onPress={() => navigation.navigate('BarberAppointments')} />
             ))}
@@ -169,7 +168,7 @@ export default function BarberDashboardScreen() {
         {/* Bugünkü randevular */}
         {today.length > 0 && (
           <>
-            <Text style={styles.sectionTitle}>📅 Bugünün Randevuları</Text>
+            <Text style={styles.sectionTitle}>Bugünün Randevuları</Text>
             {today.map(a => (
               <AppointmentCard key={a.id} appt={a} onPress={() => navigation.navigate('BarberAppointments')} />
             ))}
@@ -178,7 +177,7 @@ export default function BarberDashboardScreen() {
 
         {appointments.length === 0 && (
           <View style={styles.emptyBox}>
-            <Text style={{ fontSize: 32 }}>✂️</Text>
+            <Text style={{ fontSize: 28, color: Colors.secondary }}>✂</Text>
             <Text style={styles.emptyText}>Henüz randevu yok</Text>
             <Text style={styles.emptySub}>Müşteriler randevu aldığında burada görünecek</Text>
           </View>
@@ -198,7 +197,7 @@ function AppointmentCard({ appt, onPress }: { appt: Appointment; onPress: () => 
     <TouchableOpacity style={styles.apptCard} onPress={onPress}>
       <View style={{ flex: 1 }}>
         <Text style={styles.apptService}>{appt.serviceName ?? appt.serviceId}</Text>
-        <Text style={styles.apptMeta}>📅 {dateStr}  🕐 {appt.timeSlot}</Text>
+        <Text style={styles.apptMeta}>{dateStr}  {appt.timeSlot}</Text>
         {appt.kaporaAmount ? (
           <Text style={styles.apptKapora}>Kapora: ₺{appt.kaporaAmount}</Text>
         ) : null}
@@ -216,14 +215,13 @@ const styles = StyleSheet.create({
   shopName:    { fontSize: 22, fontWeight: '800', color: Colors.primary },
   activeBadge: { borderRadius: 10, paddingHorizontal: 10, paddingVertical: 5 },
 
-  walletCard:   { backgroundColor: Colors.primary, borderRadius: 16, padding: 20 },
-  walletLabel:  { fontSize: 13, color: 'rgba(255,255,255,0.7)', marginBottom: 4 },
-  walletAmount: { fontSize: 36, fontWeight: '900', color: '#fff' },
-  walletSub:    { fontSize: 12, color: 'rgba(255,255,255,0.6)', marginTop: 6 },
+  walletCard:   { backgroundColor: Colors.secondary, borderRadius: 16, padding: 20 },
+  walletLabel:  { fontSize: 13, color: 'rgba(0,0,0,0.6)', marginBottom: 4 },
+  walletAmount: { fontSize: 36, fontWeight: '900', color: '#020000' },
+  walletSub:    { fontSize: 12, color: 'rgba(0,0,0,0.5)', marginTop: 6 },
 
   statsRow:  { flexDirection: 'row', gap: 10 },
   statCard:  { flex: 1, backgroundColor: Colors.surface, borderRadius: 14, padding: 14, alignItems: 'center', borderWidth: 1, borderColor: Colors.borderLight },
-  statIcon:  { fontSize: 20, marginBottom: 4 },
   statVal:   { fontSize: 22, fontWeight: '800', color: Colors.primary },
   statLabel: { fontSize: 11, color: Colors.textSecondary, marginTop: 2 },
 

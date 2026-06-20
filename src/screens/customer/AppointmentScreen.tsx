@@ -152,9 +152,9 @@ export default function AppointmentScreen({ navigation, route }: Props) {
             const sel = selectedStaff === i;
             return (
               <TouchableOpacity key={s.id} style={[styles.staffCard, sel && styles.staffCardActive]} onPress={() => setSelectedStaff(i)}>
-                <View style={styles.staffAvatar}><Text style={{ fontSize: 18 }}>✂</Text></View>
-                <Text style={[styles.staffCardName, sel && { color: '#fff' }]} numberOfLines={1}>{s.name}</Text>
-                {!!s.title && <Text style={[styles.staffCardTitle, sel && { color: '#dbe4ff' }]} numberOfLines={1}>{s.title}</Text>}
+                <View style={styles.staffAvatar}><Text style={{ fontSize: 16, color: Colors.primary }}>✂</Text></View>
+                <Text style={[styles.staffCardName, sel && { color: '#020000' }]} numberOfLines={1}>{s.name}</Text>
+                {!!s.title && <Text style={[styles.staffCardTitle, sel && { color: '#555555' }]} numberOfLines={1}>{s.title}</Text>}
               </TouchableOpacity>
             );
           })}
@@ -200,7 +200,7 @@ export default function AppointmentScreen({ navigation, route }: Props) {
                 <TouchableOpacity key={t} disabled={unavail}
                   style={[styles.timeSlot, unavail && styles.timeUnavail, isSel && styles.timeSelected]}
                   onPress={() => setSelectedTime(t)}>
-                  <Text style={[styles.timeText, unavail && { color: '#ccc' }, isSel && { color: '#fff' }]}>{t}</Text>
+                  <Text style={[styles.timeText, unavail && { color: '#ccc' }, isSel && { color: '#020000' }]}>{t}</Text>
                 </TouchableOpacity>
               );
             });
@@ -243,11 +243,11 @@ const styles = StyleSheet.create({
   staffRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   staffCard: { width: '31%', alignItems: 'center', paddingVertical: 12, borderWidth: 1.5, borderColor: Colors.border, borderRadius: 12, backgroundColor: Colors.surface, gap: 5 },
   staffCardActive: { borderColor: Colors.secondary, backgroundColor: Colors.secondary },
-  staffAvatar: { width: 38, height: 38, borderRadius: 19, backgroundColor: '#e8e0ff', alignItems: 'center', justifyContent: 'center' },
+  staffAvatar: { width: 38, height: 38, borderRadius: 19, backgroundColor: '#F5F5F5', alignItems: 'center', justifyContent: 'center' },
   staffCardName: { fontSize: 12, fontWeight: '700', color: Colors.primary },
   staffCardTitle: { fontSize: 10, color: Colors.textSecondary },
   serviceCard: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 14, backgroundColor: Colors.surface, borderRadius: 12, borderWidth: 1.5, borderColor: Colors.border },
-  serviceCardActive: { borderColor: Colors.secondary, backgroundColor: '#eff6ff' },
+  serviceCardActive: { borderColor: Colors.secondary, backgroundColor: '#FFFBEB' },
   serviceName: { fontSize: 14, fontWeight: '600', color: Colors.primary },
   serviceSub: { fontSize: 12, color: Colors.textSecondary },
   servicePrice: { fontSize: 15, fontWeight: '700', color: Colors.primary },
@@ -266,6 +266,6 @@ const styles = StyleSheet.create({
   summaryRow: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 7, borderBottomWidth: 1, borderBottomColor: Colors.borderLight },
   summaryLabel: { fontSize: 13, color: Colors.textSecondary },
   summaryVal: { fontSize: 13, fontWeight: '600', color: Colors.primary },
-  btnPrimary: { backgroundColor: Colors.primary, borderRadius: 12, paddingVertical: 15, alignItems: 'center' },
-  btnText: { color: '#fff', fontSize: 16, fontWeight: '700' },
+  btnPrimary: { backgroundColor: Colors.secondary, borderRadius: 12, paddingVertical: 15, alignItems: 'center' },
+  btnText: { color: '#020000', fontSize: 16, fontWeight: '700' },
 });
