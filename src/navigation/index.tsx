@@ -149,9 +149,6 @@ export default function Navigation() {
             <Stack.Screen name="Login"         component={LoginScreen} />
             <Stack.Screen name="SignUp"        component={SignUpScreen} />
             <Stack.Screen name="BarberRegStep1" component={BarberRegStep1Screen} />
-            <Stack.Screen name="BarberRegStep2" component={BarberRegStep2Screen} />
-            <Stack.Screen name="BarberRegStep3" component={BarberRegStep3Screen} />
-            <Stack.Screen name="BarberRegStep4" component={BarberRegStep4Screen} />
           </>
         ) : profile?.role === 'barber' ? (
           <>
