@@ -1,5 +1,9 @@
 import { initializeApp, getApps, getApp } from 'firebase/app';
-import { initializeAuth, getAuth, getReactNativePersistence } from 'firebase/auth';
+import { initializeAuth, getAuth } from 'firebase/auth';
+// getReactNativePersistence yalnızca firebase'in React Native build'inde var;
+// tipleri dışa açmıyor ama runtime'da mevcut.
+import * as firebaseAuth from 'firebase/auth';
+const getReactNativePersistence = (firebaseAuth as any).getReactNativePersistence;
 import { getFirestore } from 'firebase/firestore';
 import ReactNativeAsyncStorage from '@react-native-async-storage/async-storage';
 
