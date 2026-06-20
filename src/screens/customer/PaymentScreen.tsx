@@ -3,6 +3,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import {
   View, Text, TextInput, TouchableOpacity,
   StyleSheet, ScrollView, Alert, ActivityIndicator,
+  KeyboardAvoidingView, Platform,
 } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../navigation';
@@ -29,10 +30,11 @@ export default function PaymentScreen({ route, navigation }: Props) {
 
   const kapora = Math.round(servicePrice * 0.1);
 
-  const [cardNumber, setCardNumber] = useState('');
-  const [expiry, setExpiry]         = useState('');
-  const [cvv, setCvv]               = useState('');
-  const [cardName, setCardName]     = useState('');
+  // Demo: kart bilgileri önceden dolu gelir (sunumda hızlı "Öde")
+  const [cardNumber, setCardNumber] = useState('4242 4242 4242 4242');
+  const [expiry, setExpiry]         = useState('12/30');
+  const [cvv, setCvv]               = useState('123');
+  const [cardName, setCardName]     = useState('Demo Kullanıcı');
   const [loading, setLoading]       = useState(false);
 
   function isFormValid() {
@@ -96,7 +98,8 @@ export default function PaymentScreen({ route, navigation }: Props) {
         </View>
       </View>
 
-      <ScrollView contentContainerStyle={styles.scroll}>
+      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }}>
+      <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
 
         {/* Özet kartı */}
         <View style={styles.summaryCard}>
@@ -201,6 +204,7 @@ export default function PaymentScreen({ route, navigation }: Props) {
 
         <View style={{ height: 24 }} />
       </ScrollView>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }

@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
   View, Text, TextInput, TouchableOpacity, StyleSheet,
-  ScrollView, Alert, ActivityIndicator,
+  ScrollView, Alert, ActivityIndicator, KeyboardAvoidingView, Platform,
 } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../navigation';
@@ -70,6 +70,7 @@ export default function BarberRegStep3Screen({ navigation, route }: Props) {
 
   return (
     <SafeAreaView style={styles.container}>
+      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }}>
       <ScrollView contentContainerStyle={styles.inner} keyboardShouldPersistTaps="handled">
 
         {/* Progress */}
@@ -148,6 +149,7 @@ export default function BarberRegStep3Screen({ navigation, route }: Props) {
         <View style={{ height: 24 }} />
 
       </ScrollView>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
