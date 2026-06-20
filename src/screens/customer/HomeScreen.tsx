@@ -17,8 +17,8 @@ type Props = NativeStackScreenProps<RootStackParamList, 'CustomerTabs'>;
 const FILTERS = ['Tümü', 'Yakın', 'En İyi', 'Açık', 'Uygun Fiyat'];
 
 const ISTANBUL_REGION: Region = {
-  latitude: 41.0082, longitude: 28.9784,
-  latitudeDelta: 0.12, longitudeDelta: 0.12,
+  latitude: 38.3217, longitude: 26.7635,
+  latitudeDelta: 0.08, longitudeDelta: 0.08,
 };
 
 // Extract lat/lng from a Firestore GeoPoint or plain object
@@ -60,8 +60,8 @@ function isOpenNow(b: BarberShop): boolean {
 const MOCK_BARBERS: BarberShop[] = [
   {
     id: 'barber_001', ownerId: 'a', shopName: "Sirat's Barber Shop", email: '', phone: '',
-    address: 'Bağdat Cad. No:12', neighborhood: 'Kadıköy', city: 'İstanbul', country: 'TR',
-    location: { latitude: 40.9905, longitude: 29.0467 } as any,
+    address: 'Atatürk Cad. No:12', neighborhood: 'Urla Merkez', city: 'İzmir', country: 'TR',
+    location: { latitude: 38.3217, longitude: 26.7635 } as any,
     photoURLs: [], services: [
       { id: 's1', name: 'Saç Kesimi', price: 500, durationMin: 30 },
       { id: 's2', name: 'Sakal Düzeltme', price: 350, durationMin: 20 },
@@ -72,8 +72,8 @@ const MOCK_BARBERS: BarberShop[] = [
   },
   {
     id: 'barber_003', ownerId: 'b', shopName: "Brian's Barber", email: '', phone: '',
-    address: 'İstiklal Cad. No:45', neighborhood: 'Beyoğlu', city: 'İstanbul', country: 'TR',
-    location: { latitude: 41.0328, longitude: 28.9772 } as any,
+    address: 'İskele Mah. No:45', neighborhood: 'Urla İskele', city: 'İzmir', country: 'TR',
+    location: { latitude: 38.3150, longitude: 26.7520 } as any,
     photoURLs: [], services: [
       { id: 's3', name: 'Saç Kesimi', price: 350, durationMin: 30 },
     ],
@@ -83,8 +83,8 @@ const MOCK_BARBERS: BarberShop[] = [
   },
   {
     id: 'barber_002', ownerId: 'c', shopName: 'Classic Cut Studio', email: '', phone: '',
-    address: 'Nişantaşı Mah. No:7', neighborhood: 'Şişli', city: 'İstanbul', country: 'TR',
-    location: { latitude: 41.0490, longitude: 28.9948 } as any,
+    address: 'Barbaros Mah. No:7', neighborhood: 'Urla Merkez', city: 'İzmir', country: 'TR',
+    location: { latitude: 38.3280, longitude: 26.7700 } as any,
     photoURLs: [], services: [
       { id: 's4', name: 'Saç Kesimi', price: 300, durationMin: 30 },
       { id: 's5', name: 'Full Tıraş', price: 400, durationMin: 45 },
@@ -95,8 +95,8 @@ const MOCK_BARBERS: BarberShop[] = [
   },
   {
     id: 'barber_004', ownerId: 'd', shopName: 'Royal Erkek Kuaförü', email: '', phone: '',
-    address: 'Bağlarbaşı Cad. No:22', neighborhood: 'Üsküdar', city: 'İstanbul', country: 'TR',
-    location: { latitude: 41.0250, longitude: 29.0150 } as any,
+    address: 'Çeşmealtı Mah. No:22', neighborhood: 'Urla', city: 'İzmir', country: 'TR',
+    location: { latitude: 38.3100, longitude: 26.7400 } as any,
     photoURLs: [], services: [
       { id: 's6', name: 'Saç Kesimi', price: 250, durationMin: 30 },
     ],
@@ -106,8 +106,8 @@ const MOCK_BARBERS: BarberShop[] = [
   },
   {
     id: 'barber_005', ownerId: 'e', shopName: 'Prestige Hair & Beard', email: '', phone: '',
-    address: 'Bagdat Cad. No:89', neighborhood: 'Beşiktaş', city: 'İstanbul', country: 'TR',
-    location: { latitude: 41.0422, longitude: 29.0093 } as any,
+    address: 'Cumhuriyet Mah. No:89', neighborhood: 'Urla', city: 'İzmir', country: 'TR',
+    location: { latitude: 38.3350, longitude: 26.7800 } as any,
     photoURLs: [], services: [
       { id: 's7', name: 'Saç & Sakal Kombo', price: 1000, durationMin: 60 },
     ],

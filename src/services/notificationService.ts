@@ -1,10 +1,13 @@
 import * as Notifications from 'expo-notifications';
 import * as Device from 'expo-device';
 import { Platform } from 'react-native';
+import Constants from 'expo-constants';
 import { doc, updateDoc, getDoc } from 'firebase/firestore';
 import { db } from './firebase';
 
-const PROJECT_ID = 'fe54ceee-0eb7-46e6-a31b-c948fdb8f4ac';
+// app.json'daki extra.eas.projectId'yi oku; yoksa fallback
+const PROJECT_ID: string =
+  Constants.expoConfig?.extra?.eas?.projectId ?? 'fe54ceee-0eb7-46e6-a31b-c948fdb8f4ac';
 
 // Foreground'da bildirim göster
 Notifications.setNotificationHandler({

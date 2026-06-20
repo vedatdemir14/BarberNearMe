@@ -4,6 +4,7 @@ import {
   View, Text, TextInput, TouchableOpacity, StyleSheet,
   ScrollView, Alert, ActivityIndicator,
 } from 'react-native';
+import MapView, { Marker, MapPressEvent, Region } from 'react-native-maps';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../navigation';
 import { Colors } from '../../constants';
@@ -12,39 +13,45 @@ import { db } from '../../services/firebase';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'BarberRegStep3'>;
 
-const DAYS = ['Pzt', 'Sal', 'Çar', 'Per', 'Cum', 'Cmt', 'Paz'];
+const DAYS  = ['Pzt', 'Sal', 'Çar', 'Per', 'Cum', 'Cmt', 'Paz'];
+const SLOTS = ['15', '20', '30', '45', '60'];
+
+const URLA: Region = {
+  latitude: 38.3217, longitude: 26.7635,
+  latitudeDelta: 0.06, longitudeDelta: 0.06,
+};
+
+function timeValid(t: string) { return /^\d{2}:\d{2}$/.test(t); }
 
 export default function BarberRegStep3Screen({ navigation, route }: Props) {
   const { uid } = route.params;
 
-  const [openDays,  setOpenDays]  = useState<number[]>([0, 1, 2, 3, 4, 5]);
+  // Çalışma saatleri
+  const [openDays,  setOpenDays]  = useState<number[]>([0,1,2,3,4,5]);
   const [openTime,  setOpenTime]  = useState('09:00');
   const [closeTime, setCloseTime] = useState('21:00');
   const [slotMin,   setSlotMin]   = useState('30');
-  const [address,   setAddress]   = useState('');
-  const [city,      setCity]      = useState('');
-  const [loading,   setLoading]   = useState(false);
 
-  function toggleDay(d: number) {
-    setOpenDays(prev =>
-      prev.includes(d) ? prev.filter(x => x !== d) : [...prev, d].sort()
-    );
-  }
+  // Konum — haritada seçilen pin
+  const [pin, setPin] = useState<{ latitude: number; longitude: number } | null>(null);
 
-  function validateTime(t: string) {
-    return /^\d{2}:\d{2}$/.test(t);
+  // Adres (opsiyonel açıklama)
+  const [address, setAddress] = useState('');
+  const [city,    setCity]    = useState('İzmir');
+
+  const [loading, setLoading] = useState(false);
+
+  function toggleDay(i: number) {
+    setOpenDays(prev => prev.includes(i) ? prev.filter(d => d !== i) : [...prev, i].sort());
   }
 
   async function handleNext() {
     if (openDays.length === 0) { Alert.alert('Hata', 'En az 1 çalışma günü seçin.'); return; }
-    if (!validateTime(openTime) || !validateTime(closeTime)) {
-      Alert.alert('Hata', 'Saatleri SS:DD formatında girin. Örn: 09:00');
-      return;
+    if (!timeValid(openTime) || !timeValid(closeTime)) {
+      Alert.alert('Hata', 'Saatleri SS:DD formatında girin. Örn: 09:00'); return;
     }
-    if (!address.trim() || !city.trim()) {
-      Alert.alert('Hata', 'Adres ve şehir zorunludur.');
-      return;
-    }
+    if (!pin) { Alert.alert('Hata', 'Haritadan dükkan konumunu seçin.'); return; }
+    if (!city.trim()) { Alert.alert('Hata', 'Şehir zorunludur.'); return; }
 
     setLoading(true);
     try {
@@ -53,6 +60,7 @@ export default function BarberRegStep3Screen({ navigation, route }: Props) {
         city,
         neighborhood: '',
         country: 'Türkiye',
+        location: { latitude: pin.latitude, longitude: pin.longitude },
         workingHours: {
           days: openDays,
           openTime,
@@ -74,31 +82,79 @@ export default function BarberRegStep3Screen({ navigation, route }: Props) {
 
         {/* Progress */}
         <View style={styles.progress}>
-          {[1, 2, 3, 4].map(n => (
+          {[1,2,3,4].map(n => (
             <View key={n} style={[styles.dot, n <= 3 && styles.dotActive]}>
               <Text style={[styles.dotText, n <= 3 && styles.dotTextActive]}>{n}</Text>
             </View>
           ))}
         </View>
 
-        <Text style={styles.title}>Çalışma Saatleri & Adres</Text>
+        <Text style={styles.title}>Konum & Çalışma Saatleri</Text>
         <Text style={styles.sub}>Müşteriler randevu alırken bu bilgileri görecek.</Text>
 
-        {/* Çalışma günleri */}
+        {/* ── Harita Konum Seçici ── */}
+        <Text style={styles.sectionTitle}>📍 Dükkan Konumu</Text>
+        <Text style={styles.hint}>Haritaya dokunarak dükkanın konumunu işaretle</Text>
+
+        <View style={styles.mapWrap}>
+          <MapView
+            style={styles.map}
+            initialRegion={URLA}
+            onPress={(e: MapPressEvent) => setPin(e.nativeEvent.coordinate)}
+          >
+            {pin && (
+              <Marker coordinate={pin} title="Dükkanım" pinColor={Colors.secondary} />
+            )}
+          </MapView>
+          {!pin && (
+            <View style={styles.mapOverlay} pointerEvents="none">
+              <Text style={styles.mapOverlayText}>📍 Konuma dokun</Text>
+            </View>
+          )}
+        </View>
+
+        {pin ? (
+          <Text style={styles.coordText}>
+            ✓ Konum seçildi: {pin.latitude.toFixed(4)}, {pin.longitude.toFixed(4)}
+          </Text>
+        ) : (
+          <Text style={[styles.coordText, { color: Colors.danger }]}>
+            Henüz konum seçilmedi
+          </Text>
+        )}
+
+        {/* Adres (opsiyonel) */}
+        <Text style={styles.label}>Açık Adres (opsiyonel)</Text>
+        <TextInput
+          style={[styles.input, { minHeight: 64 }]}
+          placeholder="Sokak, bina no, daire…"
+          placeholderTextColor={Colors.textMuted}
+          multiline value={address} onChangeText={setAddress}
+        />
+
+        <Text style={styles.label}>Şehir</Text>
+        <TextInput
+          style={styles.input}
+          placeholder="İzmir"
+          placeholderTextColor={Colors.textMuted}
+          value={city} onChangeText={setCity}
+        />
+
+        {/* ── Çalışma Günleri ── */}
         <Text style={styles.sectionTitle}>📅 Çalışma Günleri</Text>
-        <View style={styles.daysRow}>
+        <View style={styles.chipRow}>
           {DAYS.map((d, i) => (
             <TouchableOpacity
               key={d}
-              style={[styles.dayChip, openDays.includes(i) && styles.dayChipActive]}
+              style={[styles.chip, openDays.includes(i) && styles.chipActive]}
               onPress={() => toggleDay(i)}
             >
-              <Text style={[styles.dayText, openDays.includes(i) && styles.dayTextActive]}>{d}</Text>
+              <Text style={[styles.chipText, openDays.includes(i) && styles.chipTextActive]}>{d}</Text>
             </TouchableOpacity>
           ))}
         </View>
 
-        {/* Saatler */}
+        {/* ── Saatler ── */}
         <Text style={styles.sectionTitle}>🕐 Çalışma Saatleri</Text>
         <View style={styles.row}>
           <View style={{ flex: 1 }}>
@@ -116,31 +172,19 @@ export default function BarberRegStep3Screen({ navigation, route }: Props) {
           </View>
         </View>
 
+        {/* ── Slot Süresi ── */}
         <Text style={styles.label}>Randevu Aralığı</Text>
-        <View style={styles.slotRow}>
-          {['15', '20', '30', '45', '60'].map(m => (
+        <View style={styles.chipRow}>
+          {SLOTS.map(s => (
             <TouchableOpacity
-              key={m}
-              style={[styles.slotChip, slotMin === m && styles.slotChipActive]}
-              onPress={() => setSlotMin(m)}
+              key={s}
+              style={[styles.chip, slotMin === s && styles.chipActive]}
+              onPress={() => setSlotMin(s)}
             >
-              <Text style={[styles.slotText, slotMin === m && styles.slotTextActive]}>{m} dk</Text>
+              <Text style={[styles.chipText, slotMin === s && styles.chipTextActive]}>{s} dk</Text>
             </TouchableOpacity>
           ))}
         </View>
-
-        {/* Adres */}
-        <Text style={styles.sectionTitle}>📍 Konum</Text>
-
-        <Text style={styles.label}>Adres</Text>
-        <TextInput style={[styles.input, { minHeight: 70 }]}
-          placeholder="Atatürk Cad. No:12, Kadıköy"
-          placeholderTextColor={Colors.textMuted}
-          multiline value={address} onChangeText={setAddress} />
-
-        <Text style={styles.label}>Şehir</Text>
-        <TextInput style={styles.input} placeholder="İstanbul" placeholderTextColor={Colors.textMuted}
-          value={city} onChangeText={setCity} />
 
         <TouchableOpacity style={[styles.btn, loading && { opacity: 0.6 }]} onPress={handleNext} disabled={loading}>
           {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.btnText}>Devam Et →</Text>}
@@ -154,7 +198,7 @@ export default function BarberRegStep3Screen({ navigation, route }: Props) {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.background },
-  inner:     { padding: 20, gap: 12 },
+  inner:     { padding: 20, gap: 10 },
 
   progress:     { flexDirection: 'row', gap: 8, marginBottom: 4 },
   dot:          { width: 28, height: 28, borderRadius: 14, backgroundColor: Colors.borderLight, alignItems: 'center', justifyContent: 'center' },
@@ -164,23 +208,30 @@ const styles = StyleSheet.create({
 
   title:        { fontSize: 22, fontWeight: '800', color: Colors.primary },
   sub:          { fontSize: 13, color: Colors.textSecondary },
-  sectionTitle: { fontSize: 14, fontWeight: '700', color: Colors.primary, marginTop: 4 },
+  sectionTitle: { fontSize: 14, fontWeight: '700', color: Colors.primary, marginTop: 8 },
+  hint:         { fontSize: 12, color: Colors.textMuted },
+  label:        { fontSize: 12, fontWeight: '600', color: Colors.textSecondary },
 
-  daysRow:      { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  dayChip:      { paddingHorizontal: 14, paddingVertical: 9, borderRadius: 10, borderWidth: 1.5, borderColor: Colors.border, backgroundColor: Colors.surface },
-  dayChipActive:{ backgroundColor: Colors.primary, borderColor: Colors.primary },
-  dayText:      { fontSize: 13, fontWeight: '600', color: Colors.textSecondary },
-  dayTextActive:{ color: '#fff' },
+  mapWrap: {
+    height: 220, borderRadius: 14, overflow: 'hidden',
+    borderWidth: 1.5, borderColor: Colors.border, marginTop: 4,
+  },
+  map: { flex: 1 },
+  mapOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    alignItems: 'center', justifyContent: 'center',
+    backgroundColor: 'rgba(0,0,0,0.18)',
+  },
+  mapOverlayText: { color: '#fff', fontWeight: '700', fontSize: 15 },
+  coordText:      { fontSize: 12, color: Colors.secondary, textAlign: 'center' },
 
-  row: { flexDirection: 'row', gap: 10, alignItems: 'flex-start' },
+  row:      { flexDirection: 'row', gap: 10, alignItems: 'flex-start' },
+  chipRow:  { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  chip:         { paddingHorizontal: 14, paddingVertical: 9, borderRadius: 10, borderWidth: 1.5, borderColor: Colors.border, backgroundColor: Colors.surface },
+  chipActive:   { backgroundColor: Colors.secondary, borderColor: Colors.secondary },
+  chipText:     { fontSize: 13, fontWeight: '600', color: Colors.textSecondary },
+  chipTextActive:{ color: '#fff' },
 
-  slotRow:       { flexDirection: 'row', gap: 8, flexWrap: 'wrap' },
-  slotChip:      { paddingHorizontal: 14, paddingVertical: 9, borderRadius: 10, borderWidth: 1.5, borderColor: Colors.border, backgroundColor: Colors.surface },
-  slotChipActive:{ backgroundColor: Colors.secondary, borderColor: Colors.secondary },
-  slotText:      { fontSize: 13, color: Colors.textSecondary, fontWeight: '600' },
-  slotTextActive:{ color: '#fff' },
-
-  label: { fontSize: 12, fontWeight: '600', color: Colors.textSecondary },
   input: {
     borderWidth: 1.5, borderColor: Colors.border, borderRadius: 10,
     paddingHorizontal: 12, paddingVertical: 10, fontSize: 14, color: Colors.text, backgroundColor: Colors.surface,
