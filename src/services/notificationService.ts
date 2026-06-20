@@ -9,7 +9,8 @@ const PROJECT_ID = 'fe54ceee-0eb7-46e6-a31b-c948fdb8f4ac';
 // Foreground'da bildirim göster
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
-    shouldShowAlert: true,
+    shouldShowBanner: true,
+    shouldShowList: true,
     shouldPlaySound: true,
     shouldSetBadge: false,
   }),

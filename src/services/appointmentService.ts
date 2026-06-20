@@ -141,11 +141,3 @@ export async function getBookedSlots(
     })
     .map(a => ({ timeSlot: a.timeSlot, durationMin: a.durationMin ?? 30 }));
 }
-
-// ── Update appointment status ─────────────────────────────────
-export async function updateAppointmentStatus(
-  appointmentId: string,
-  status: AppointmentStatus
-): Promise<void> {
-  await updateDoc(doc(db, 'appointments', appointmentId), { status });
-}
