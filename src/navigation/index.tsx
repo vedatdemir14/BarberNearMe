@@ -27,6 +27,7 @@ import ProfileScreen from '../screens/customer/ProfileScreen';
 // ── Barber screens ────────────────────────────────────────────
 import BarberDashboardScreen from '../screens/barber/BarberDashboardScreen';
 import BarberAppointmentsScreen from '../screens/barber/BarberAppointmentsScreen';
+import BarberProfileScreen from '../screens/barber/BarberProfileScreen';
 
 // ── Barber registration screens ───────────────────────────────
 import BarberRegStep1Screen from '../screens/barber/BarberRegStep1Screen';
@@ -78,7 +79,7 @@ function BarberTabs() {
           const icons: Record<string, string> = {
             BarberDashboard: focused ? 'grid' : 'grid-outline',
             BarberAppointments: focused ? 'calendar' : 'calendar-outline',
-            Profile: focused ? 'person' : 'person-outline',
+            Profile: focused ? 'storefront' : 'storefront-outline',
           };
           return <Ionicons name={icons[route.name] as any} size={size} color={color} />;
         },
@@ -86,7 +87,7 @@ function BarberTabs() {
     >
       <Tab.Screen name="BarberDashboard" component={BarberDashboardScreen} options={{ title: 'Dashboard' }} />
       <Tab.Screen name="BarberAppointments" component={BarberAppointmentsScreen} options={{ title: 'Randevular' }} />
-      <Tab.Screen name="Profile" component={ProfileScreen} options={{ title: 'Profil' }} />
+      <Tab.Screen name="Profile" component={BarberProfileScreen} options={{ title: 'Dükkan' }} />
     </Tab.Navigator>
   );
 }
