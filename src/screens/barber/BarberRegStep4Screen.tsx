@@ -70,6 +70,10 @@ export default function BarberRegStep4Screen({ navigation, route }: Props) {
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.inner}>
 
+        <TouchableOpacity onPress={() => navigation.goBack()} style={{ marginBottom: 8 }}>
+          <Text style={{ fontSize: 15, color: Colors.secondary }}>← Geri</Text>
+        </TouchableOpacity>
+
         {/* Progress */}
         <View style={styles.progress}>
           {[1, 2, 3, 4].map(n => (

@@ -117,13 +117,13 @@ export default function AppointmentsListScreen({ navigation }: any) {
                     <Text style={[styles.badgeText, { color: badge.text }]}>{badge.label}</Text>
                   </View>
                   {item.status === 'completed' && (
-                    <TouchableOpacity onPress={() => navigation.navigate('Rating', { appointmentId: item.id })}>
+                    <TouchableOpacity style={styles.actionBtn} onPress={() => navigation.navigate('Rating', { appointmentId: item.id })}>
                       <Text style={styles.rateLink}>Değerlendir →</Text>
                     </TouchableOpacity>
                   )}
                   {(item.status === 'pending' || item.status === 'confirmed') &&
                     item.date.toDate().getTime() > now && (
-                      <TouchableOpacity onPress={() => handleCancel(item)}>
+                      <TouchableOpacity style={styles.actionBtn} onPress={() => handleCancel(item)}>
                         <Text style={styles.cancelLink}>İptal Et</Text>
                       </TouchableOpacity>
                     )}
@@ -153,7 +153,8 @@ const styles = StyleSheet.create({
   date: { fontSize: 12, color: Colors.secondary, fontWeight: '600', marginTop: 4 },
   badge: { alignSelf: 'flex-start', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 20, marginTop: 6 },
   badgeText: { fontSize: 11, fontWeight: '700' },
-  rateLink: { color: Colors.secondary, fontSize: 12, marginTop: 6, fontWeight: '600' },
-  cancelLink: { color: Colors.danger, fontSize: 12, marginTop: 6, fontWeight: '600' },
+  actionBtn: { alignSelf: 'flex-end', marginTop: 6, paddingHorizontal: 12, paddingVertical: 6, borderRadius: 8, borderWidth: 1, borderColor: Colors.borderLight },
+  rateLink: { color: Colors.secondary, fontSize: 12, fontWeight: '700' },
+  cancelLink: { color: Colors.danger, fontSize: 12, fontWeight: '700' },
   empty: { textAlign: 'center', color: Colors.textMuted, marginTop: 40 },
 });

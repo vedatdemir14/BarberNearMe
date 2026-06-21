@@ -146,7 +146,7 @@ export default function PaymentScreen({ route, navigation }: Props) {
           <View style={styles.inputRow}>
             <Text style={styles.cardIcon}>💳</Text>
             <TextInput
-              style={[styles.input, { flex: 1, marginBottom: 0 }]}
+              style={{ flex: 1, paddingVertical: 12, fontSize: 15, color: Colors.text }}
               placeholder="0000 0000 0000 0000"
               placeholderTextColor={Colors.textMuted}
               value={cardNumber}

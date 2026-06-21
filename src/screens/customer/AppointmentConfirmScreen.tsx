@@ -55,7 +55,7 @@ export default function AppointmentConfirmScreen({ navigation, route }: Props) {
         ['Tarih', formatDate(appt.date.toDate())],
         ['Saat', appt.timeSlot],
         ['Hizmet Bedeli', `₺${appt.servicePrice ?? appt.totalPrice ?? '—'}`],
-        ...(appt.kaporaAmount ? [['Ödenen Kapora', `₺${appt.kaporaAmount} ✓`] as [string, string]] : []),
+        ...(appt.kaporaAmount ? [['Ödenen Kapora', `₺${appt.kaporaAmount}`] as [string, string]] : []),
         ...(appt.kaporaAmount && appt.servicePrice
           ? [['Kalan (Berberde)', `₺${appt.servicePrice - appt.kaporaAmount}`] as [string, string]]
           : []),
@@ -65,7 +65,6 @@ export default function AppointmentConfirmScreen({ navigation, route }: Props) {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.inner}>
-        <View style={styles.checkCircle}><Text style={{ fontSize: 40 }}>✓</Text></View>
         <Text style={styles.title}>Randevu Oluşturuldu!</Text>
         <Text style={styles.sub}>Berberiniz onayladıktan sonra bildirim alacaksınız.</Text>
         <View style={styles.card}>

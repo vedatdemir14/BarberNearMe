@@ -9,6 +9,12 @@ import { getBarberReviews, Review } from '../../services/reviewService';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'BarberDetail'>;
 
+const MONTHS_TR = ['Ocak','Şubat','Mart','Nisan','Mayıs','Haziran','Temmuz','Ağustos','Eylül','Ekim','Kasım','Aralık'];
+function formatReviewDate(at: any): string {
+  const d = at?.toDate?.();
+  return d ? `${d.getDate()} ${MONTHS_TR[d.getMonth()]} ${d.getFullYear()}` : '';
+}
+
 // Fallback used when the barber doc cannot be loaded (e.g. offline / mock data)
 const MOCK: Partial<BarberShop> & { services: any[]; staff: any[] } = {
   shopName: "Sirat's Barber Shop",
@@ -81,7 +87,7 @@ export default function BarberDetailScreen({ navigation, route }: Props) {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: Colors.background }}>
-      <ScrollView>
+      <ScrollView style={{ flex: 1 }}>
         {/* Header */}
         <View style={styles.header}>
           <TouchableOpacity onPress={() => navigation.goBack()}>
@@ -135,24 +141,31 @@ export default function BarberDetailScreen({ navigation, route }: Props) {
                   <Text style={{ fontWeight: '700', fontSize: 13 }}>{r.customerName}</Text>
                   <Text style={{ color: Colors.warning }}>{'★'.repeat(r.rating)}</Text>
                 </View>
+                {!!formatReviewDate(r.createdAt) && (
+                  <Text style={{ fontSize: 11, color: Colors.textMuted, marginTop: 2 }}>{formatReviewDate(r.createdAt)}</Text>
+                )}
                 <Text style={{ fontSize: 12, color: Colors.textSecondary, marginTop: 4 }}>{r.comment}</Text>
               </View>
             ))}
           </View>
 
           {/* Buttons */}
-          <TouchableOpacity style={styles.btnPrimary} onPress={() => navigation.navigate('Appointment', { barberId })}>
-            <Text style={styles.btnPrimaryText}>Randevu Al</Text>
-          </TouchableOpacity>
           <TouchableOpacity style={styles.btnSecondary} onPress={() => navigation.navigate('Chat', { barberId, barberName: data.shopName })}>
             <Text style={styles.btnSecondaryText}>Mesaj Gönder</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.btnSecondary} onPress={openDirections}>
             <Text style={styles.btnSecondaryText}>📍 Yol Tarifi</Text>
           </TouchableOpacity>
-          <View style={{ height: 16 }} />
+          <View style={{ height: 8 }} />
         </View>
       </ScrollView>
+
+      {/* Sabit alt çubuk — Randevu Al her zaman erişilebilir */}
+      <View style={styles.footer}>
+        <TouchableOpacity style={styles.btnPrimary} onPress={() => navigation.navigate('Appointment', { barberId })}>
+          <Text style={styles.btnPrimaryText}>Randevu Al</Text>
+        </TouchableOpacity>
+      </View>
     </SafeAreaView>
   );
 }
@@ -176,6 +189,7 @@ const styles = StyleSheet.create({
   serviceDesc: { fontSize: 12, color: Colors.textSecondary, marginTop: 2 },
   servicePrice: { fontSize: 15, fontWeight: '700', color: Colors.primary },
   reviewItem: { paddingVertical: 10 },
+  footer: { padding: 16, backgroundColor: Colors.surface, borderTopWidth: 1, borderTopColor: Colors.border },
   btnPrimary: { backgroundColor: Colors.secondary, borderRadius: 12, paddingVertical: 15, alignItems: 'center' },
   btnPrimaryText: { color: '#020000', fontSize: 16, fontWeight: '700' },
   btnSecondary: { borderWidth: 1.5, borderColor: Colors.border, borderRadius: 12, paddingVertical: 14, alignItems: 'center' },

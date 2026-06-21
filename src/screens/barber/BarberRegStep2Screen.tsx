@@ -78,6 +78,10 @@ export default function BarberRegStep2Screen({ navigation, route }: Props) {
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }}>
         <ScrollView contentContainerStyle={styles.inner} keyboardShouldPersistTaps="handled">
 
+          <TouchableOpacity onPress={() => navigation.goBack()} style={{ marginBottom: 8 }}>
+            <Text style={{ fontSize: 15, color: Colors.secondary }}>← Geri</Text>
+          </TouchableOpacity>
+
           {/* Progress */}
           <View style={styles.progress}>
             {[1, 2, 3, 4].map(n => (
