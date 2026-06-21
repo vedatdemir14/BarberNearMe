@@ -259,7 +259,8 @@ export default function HomeScreen({ navigation }: Props) {
           <Text style={styles.title}>Berber Bul</Text>
         </View>
         <TouchableOpacity style={styles.prefBtn} onPress={() => setShowFilters(true)}>
-          <Ionicons name="options-outline" size={24} color={Colors.primary} />
+          <Ionicons name="options-outline" size={20} color={Colors.primary} />
+          <Text style={styles.prefBtnText}>Filtrele</Text>
           {activeFilterCount > 0 && (
             <View style={styles.prefBadge}><Text style={styles.prefBadgeText}>{activeFilterCount}</Text></View>
           )}
@@ -478,7 +479,8 @@ const styles = StyleSheet.create({
   greeting: { fontSize: 13, color: Colors.textSecondary },
   title: { fontSize: 22, fontWeight: '800', color: Colors.primary },
   msgIcon: { fontSize: 24 },
-  prefBtn: { width: 42, height: 42, borderRadius: 12, borderWidth: 1.5, borderColor: Colors.border, backgroundColor: Colors.surface, alignItems: 'center', justifyContent: 'center' },
+  prefBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, height: 42, paddingHorizontal: 14, borderRadius: 12, borderWidth: 1.5, borderColor: Colors.border, backgroundColor: Colors.surface },
+  prefBtnText: { fontSize: 14, fontWeight: '700', color: Colors.primary },
   prefBadge: { position: 'absolute', top: -6, right: -6, minWidth: 18, height: 18, borderRadius: 9, backgroundColor: Colors.secondary, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 4 },
   prefBadgeText: { color: '#020000', fontSize: 11, fontWeight: '800' },
   activeRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, marginBottom: 8, gap: 8 },
