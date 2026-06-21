@@ -116,6 +116,62 @@ const barbers = [
     reviewCount: 2,
     isActive: true,
   },
+  {
+    id: 'barber_004',
+    ownerId: 'owner_baris',
+    shopName: 'Barış Ergin Barber Shop',
+    email: '',
+    phone: '0505 207 11 95',
+    address: 'Çay Sk. 7A',
+    neighborhood: 'Yeni, Urla',
+    city: 'İzmir',
+    country: 'TR',
+    location: new GeoPoint(38.324330473387555, 26.764087923592623),
+    photoURLs: [],
+    licenseURL: '',
+    services: [
+      { id: 's1', name: 'Saç', price: 750, durationMin: 30 },
+      { id: 's2', name: 'Sakal', price: 300, durationMin: 20 },
+      { id: 's3', name: 'Saç & Sakal', price: 850, durationMin: 50 },
+    ],
+    staff: [
+      { id: 'st1', name: 'Emirhan', title: 'Usta Berber' },
+      { id: 'st2', name: 'Denizhan', title: 'Berber' },
+    ],
+    // Çalışma günü belirtilmemiş → varsayım: her gün 09:00–20:00
+    workingHours: { days: [0, 1, 2, 3, 4, 5, 6], openTime: '09:00', closeTime: '20:00', slotDurationMin: 30 },
+    rating: 4.5,
+    reviewCount: 2,
+    isActive: true,
+  },
+  {
+    id: 'barber_005',
+    ownerId: 'owner_kardesler',
+    shopName: 'Urla Kardeşler Erkek Kuaförü',
+    email: '',
+    phone: '0506 689 58 65',
+    address: 'Hacı İsa, Çelen Sk. 34/C',
+    neighborhood: 'Hacı İsa, Urla',
+    city: 'İzmir',
+    country: 'TR',
+    location: new GeoPoint(38.32398491953397, 26.76562677428621),
+    photoURLs: [],
+    licenseURL: '',
+    services: [
+      { id: 's1', name: 'Saç', price: 500, durationMin: 30 },
+      { id: 's2', name: 'Sakal', price: 300, durationMin: 20 },
+      { id: 's3', name: 'Saç + Sakal', price: 700, durationMin: 50 },
+    ],
+    staff: [
+      { id: 'st1', name: 'Fatih', title: 'Usta Berber' },
+      { id: 'st2', name: 'Yılmaz', title: 'Berber' },
+    ],
+    // Her gün 10:00–20:00, Pazartesi kapalı (0=Pzt)
+    workingHours: { days: [1, 2, 3, 4, 5, 6], openTime: '10:00', closeTime: '20:00', slotDurationMin: 30 },
+    rating: 4.6,
+    reviewCount: 2,
+    isActive: true,
+  },
 ];
 
 // ─── Örnek yorumlar (sabit id → tekrar çalışınca çoğalmaz) ───────────────────
@@ -127,6 +183,10 @@ const reviews = [
   { id: 'rev_005', barberId: 'barber_002', customerName: 'Emre K.', rating: 4, comment: 'Güzel ortam, öğrenciye uygun.' },
   { id: 'rev_006', barberId: 'barber_003', customerName: 'Hakan D.', rating: 5, comment: 'Cilt bakımı harikaydı, ferahladım.' },
   { id: 'rev_007', barberId: 'barber_003', customerName: 'Onur S.', rating: 4, comment: 'Saç sakal kombo başarılı.' },
+  { id: 'rev_008', barberId: 'barber_004', customerName: 'Tolga M.', rating: 5, comment: 'Modern kesim, ustalar işini biliyor.' },
+  { id: 'rev_009', barberId: 'barber_004', customerName: 'Sinan K.', rating: 4, comment: 'Biraz pahalı ama kalite var.' },
+  { id: 'rev_010', barberId: 'barber_005', customerName: 'Burak E.', rating: 5, comment: 'Mahallenin en iyisi, hızlı ve temiz.' },
+  { id: 'rev_011', barberId: 'barber_005', customerName: 'Deniz A.', rating: 4, comment: 'Fiyat uygun, sakal tıraşı güzeldi.' },
 ];
 
 async function seed() {
