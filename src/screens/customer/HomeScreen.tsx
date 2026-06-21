@@ -6,7 +6,6 @@ import {
 } from 'react-native';
 import MapView, { Marker, Region } from 'react-native-maps';
 import * as Location from 'expo-location';
-import Slider from '@react-native-community/slider';
 import { Ionicons } from '@expo/vector-icons';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../navigation';
@@ -20,7 +19,8 @@ type Props = { navigation: any };
 
 const SORT_OPTIONS = ['Önerilen', 'Yakın', 'Uygun Fiyat'];
 const SERVICE_KEYWORDS = ['Saç', 'Sakal', 'Çocuk', 'Cilt'];
-const MAX_RADIUS = 50; // km — slider sonu = "Tümü" (mesafe filtresi yok)
+const MAX_RADIUS = 50; // km — "Tümü" (mesafe filtresi yok)
+const RADIUS_OPTIONS = [1, 3, 5, 10, 25, MAX_RADIUS]; // mesafe seçim butonları
 
 // İki coğrafi nokta arası mesafe (km) — Haversine
 function haversineKm(lat1: number, lng1: number, lat2: number, lng2: number): number {
@@ -429,23 +429,23 @@ export default function HomeScreen({ navigation }: Props) {
 
             </ScrollView>
 
-            {/* Mesafe — ScrollView DIŞINDA: Android'de dikey kaydırma jesti
-                slider'ın sürüklenmesini çalmasın diye sabit alanda */}
+            {/* Mesafe — butonlu seçim (slider Android'de sürüklenemiyordu) */}
             <View style={{ marginTop: 8 }}>
               <Text style={styles.modalSection}>
                 Mesafe: {radiusKm >= MAX_RADIUS ? 'Tümü' : `${radiusKm} km içinde`}
               </Text>
-              <Slider
-                style={{ width: '100%', height: 40 }}
-                minimumValue={1}
-                maximumValue={MAX_RADIUS}
-                step={1}
-                value={radiusKm}
-                onValueChange={setRadiusKm}
-                minimumTrackTintColor={Colors.secondary}
-                maximumTrackTintColor={Colors.borderLight}
-                thumbTintColor={Colors.secondary}
-              />
+              <View style={styles.chipWrap}>
+                {RADIUS_OPTIONS.map(km => {
+                  const on = radiusKm === km;
+                  return (
+                    <TouchableOpacity key={km} style={[styles.chip, on && styles.chipActive]} onPress={() => setRadiusKm(km)}>
+                      <Text style={[styles.chipText, on && styles.chipTextActive]}>
+                        {km >= MAX_RADIUS ? 'Tümü' : `${km} km`}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
               {radiusKm < MAX_RADIUS && !userLoc && (
                 <Text style={styles.radiusHint}>Konum alınamadı — mesafe filtresi için konum iznine izin ver.</Text>
               )}
