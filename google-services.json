@@ -1,0 +1,82 @@
+{
+  "project_info": {
+    "project_number": "1099137442128",
+    "project_id": "barbernearme-b86c8",
+    "storage_bucket": "barbernearme-b86c8.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1099137442128:android:27a715a955ce87082ecc55",
+        "android_client_info": {
+          "package_name": "com.barbernearme.barbernearme"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1099137442128-opu8j1ohehonca97jt9tkip9urrovnqa.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDhID9zZMOIVLO_VVZM8iZKWr6ELsSLkfI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1099137442128-opu8j1ohehonca97jt9tkip9urrovnqa.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "1099137442128-v40c2cuhc2mr1quf67rn7e4ck3ko19l2.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "barbernearme"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1099137442128:android:a17efda9b61d4fe52ecc55",
+        "android_client_info": {
+          "package_name": "com.group19.barbernearme"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1099137442128-opu8j1ohehonca97jt9tkip9urrovnqa.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDhID9zZMOIVLO_VVZM8iZKWr6ELsSLkfI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1099137442128-opu8j1ohehonca97jt9tkip9urrovnqa.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "1099137442128-v40c2cuhc2mr1quf67rn7e4ck3ko19l2.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "barbernearme"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
