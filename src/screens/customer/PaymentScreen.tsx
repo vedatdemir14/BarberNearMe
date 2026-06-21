@@ -10,6 +10,7 @@ import { Colors } from '../../constants';
 import { addToWallet } from '../../services/barberService';
 import { createAppointment } from '../../services/appointmentService';
 import { auth } from '../../services/firebase';
+import { isValidLuhn } from '../../utils/luhn';
 import { Timestamp } from 'firebase/firestore';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Payment'>;
@@ -37,7 +38,7 @@ export default function PaymentScreen({ route, navigation }: Props) {
 
   function isFormValid() {
     return (
-      cardNumber.replace(/\s/g, '').length === 16 &&
+      isValidLuhn(cardNumber) &&        // 16 hane + Luhn (mod 10) kontrolü
       expiry.length === 5 &&
       cvv.length === 3 &&
       cardName.trim().length > 2
