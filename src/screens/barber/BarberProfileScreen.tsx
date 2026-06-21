@@ -72,7 +72,7 @@ export default function BarberProfileScreen({ navigation }: any) {
         {/* Hero */}
         <View style={styles.hero}>
           <View style={styles.avatar}>
-            <Text style={{ fontSize: 28, color: Colors.secondary }}>✂</Text>
+            <Ionicons name="storefront" size={34} color="#020000" />
           </View>
           <Text style={styles.shopName}>{shop?.shopName ?? 'Dükkanım'}</Text>
           <Text style={styles.ownerName}>{fullName}</Text>
@@ -184,9 +184,9 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1, borderBottomColor: Colors.border, gap: 4,
   },
   avatar: {
-    width: 72, height: 72, borderRadius: 36,
-    backgroundColor: '#F5F5F5',
-    alignItems: 'center', justifyContent: 'center', marginBottom: 8,
+    width: 80, height: 80, borderRadius: 40,
+    backgroundColor: Colors.secondary,
+    alignItems: 'center', justifyContent: 'center', marginBottom: 10,
   },
   shopName:   { fontSize: 20, fontWeight: '800', color: Colors.primary },
   ownerName:  { fontSize: 13, color: Colors.textSecondary },
