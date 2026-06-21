@@ -1,7 +1,7 @@
 import {
   collection, doc, setDoc, addDoc, getDoc, getDocs,
   query, where, orderBy, onSnapshot, serverTimestamp,
-  Timestamp, updateDoc,
+  Timestamp, updateDoc, deleteDoc,
 } from 'firebase/firestore';
 import { db } from './firebase';
 import { getUserPushToken, sendPushNotification } from './notificationService';
@@ -69,6 +69,15 @@ export async function sendMessage(
       if (token) sendPushNotification(token, `💬 ${senderName}`, text.length > 60 ? text.slice(0, 60) + '…' : text, { cId });
     }).catch(() => {});
   }
+}
+
+// ── Sohbeti (bir dükkanla tüm konuşmayı) sil ─────────────────
+export async function deleteChat(cId: string): Promise<void> {
+  // Önce alt koleksiyondaki mesajları sil
+  const msgs = await getDocs(collection(db, 'chats', cId, 'messages'));
+  await Promise.all(msgs.docs.map(d => deleteDoc(doc(db, 'chats', cId, 'messages', d.id))));
+  // Sonra sohbet dokümanını sil
+  await deleteDoc(doc(db, 'chats', cId));
 }
 
 // ── Gerçek zamanlı mesaj dinleyici ───────────────────────────

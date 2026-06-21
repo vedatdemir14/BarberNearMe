@@ -2,12 +2,12 @@ import React, { useCallback, useState } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
   View, Text, FlatList, TouchableOpacity,
-  StyleSheet, ActivityIndicator, RefreshControl,
+  StyleSheet, ActivityIndicator, RefreshControl, Alert,
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { Colors } from '../../constants';
 import { useAuth } from '../../hooks/useAuth';
-import { Chat, getChatsForBarber, getChatsForCustomer } from '../../services/chatService';
+import { Chat, getChatsForBarber, getChatsForCustomer, deleteChat } from '../../services/chatService';
 
 function formatTime(ts: any): string {
   const d = ts?.toDate?.();
@@ -40,6 +40,24 @@ export default function ChatListScreen({ navigation }: any) {
 
   useFocusEffect(useCallback(() => { load(); }, [load]));
 
+  function handleDelete(chat: Chat) {
+    const who = isBarber ? chat.customerName : chat.barberName;
+    Alert.alert('Konuşmayı sil', `${who} ile olan tüm konuşma silinsin mi?`, [
+      { text: 'Vazgeç', style: 'cancel' },
+      {
+        text: 'Sil', style: 'destructive',
+        onPress: async () => {
+          try {
+            await deleteChat(chat.id);
+            setChats(prev => prev.filter(c => c.id !== chat.id));
+          } catch {
+            Alert.alert('Hata', 'Konuşma silinemedi.');
+          }
+        },
+      },
+    ]);
+  }
+
   function openChat(chat: Chat) {
     navigation.navigate('Chat', {
       barberId:     chat.barberId,
@@ -61,6 +79,7 @@ export default function ChatListScreen({ navigation }: any) {
     <SafeAreaView style={{ flex: 1, backgroundColor: Colors.background }}>
       <View style={styles.header}>
         <Text style={styles.title}>Mesajlar</Text>
+        {chats.length > 0 && <Text style={styles.hint}>Silmek için konuşmaya basılı tut</Text>}
       </View>
 
       <FlatList
@@ -83,7 +102,7 @@ export default function ChatListScreen({ navigation }: any) {
           const otherName = isBarber ? item.customerName : item.barberName;
           const hasMsg    = !!item.lastMessage;
           return (
-            <TouchableOpacity style={styles.row} onPress={() => openChat(item)}>
+            <TouchableOpacity style={styles.row} onPress={() => openChat(item)} onLongPress={() => handleDelete(item)} delayLongPress={350}>
               <View style={styles.avatar}>
                 <Text style={{ fontSize: 16, color: Colors.primary }}>{isBarber ? 'M' : '✂'}</Text>
               </View>
@@ -111,6 +130,7 @@ export default function ChatListScreen({ navigation }: any) {
 const styles = StyleSheet.create({
   header:  { padding: 16, backgroundColor: Colors.surface, borderBottomWidth: 1, borderBottomColor: Colors.border },
   title:   { fontSize: 20, fontWeight: '800', color: Colors.primary },
+  hint:    { fontSize: 11, color: Colors.textMuted, marginTop: 2 },
 
   row:     { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 16, backgroundColor: Colors.surface },
   avatar:  { width: 48, height: 48, borderRadius: 24, backgroundColor: '#F5F5F5', alignItems: 'center', justifyContent: 'center' },

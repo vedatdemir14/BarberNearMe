@@ -18,7 +18,7 @@ const { width: SCREEN_W } = Dimensions.get('window');
 // Tab ekranı; root stack'e de yönlendirdiği için esnek navigation tipi
 type Props = { navigation: any };
 
-const SORT_OPTIONS = ['Önerilen', 'Yakın', 'Uygun Fiyat'];
+const SORT_OPTIONS = ['Puana Göre', 'Yakın', 'Uygun Fiyat'];
 const SERVICE_KEYWORDS = ['Saç', 'Sakal', 'Çocuk', 'Cilt'];
 const MAX_RADIUS = 50; // km — "Tümü" (mesafe filtresi yok)
 
@@ -145,14 +145,14 @@ export default function HomeScreen({ navigation }: Props) {
 
   // ── Filtre/tercih durumları (Tercihler panelinde) ──
   const [showFilters, setShowFilters]     = useState(false);
-  const [sortBy, setSortBy]               = useState('Önerilen');
+  const [sortBy, setSortBy]               = useState('Puana Göre');
   const [serviceFilters, setServiceFilters] = useState<string[]>([]);
   const [openOnly, setOpenOnly]           = useState(false);
   const [radiusKm, setRadiusKm]           = useState<number>(MAX_RADIUS); // MAX = Tümü (uygulanan değer)
   const [dragKm, setDragKm]               = useState<number>(MAX_RADIUS); // slider sürüklenirken canlı etiket
 
   const activeFilterCount =
-    (sortBy !== 'Önerilen' ? 1 : 0) +
+    (sortBy !== 'Puana Göre' ? 1 : 0) +
     serviceFilters.length +
     (openOnly ? 1 : 0) +
     (radiusKm < MAX_RADIUS ? 1 : 0);
@@ -161,7 +161,7 @@ export default function HomeScreen({ navigation }: Props) {
     setServiceFilters(prev => prev.includes(kw) ? prev.filter(x => x !== kw) : [...prev, kw]);
   }
   function resetFilters() {
-    setSortBy('Önerilen'); setServiceFilters([]); setOpenOnly(false); setRadiusKm(MAX_RADIUS); setDragKm(MAX_RADIUS);
+    setSortBy('Puana Göre'); setServiceFilters([]); setOpenOnly(false); setRadiusKm(MAX_RADIUS); setDragKm(MAX_RADIUS);
   }
 
   useEffect(() => {
@@ -237,15 +237,12 @@ export default function HomeScreen({ navigation }: Props) {
       case 'Yakın':
         list = [...list].sort((a, b) => distOf(a) - distOf(b));
         break;
-      case 'En İyi':
-        list = [...list].sort((a, b) => (b.rating ?? 0) - (a.rating ?? 0));
-        break;
       case 'Uygun Fiyat':
         list = [...list].sort((a, b) => minPrice(a) - minPrice(b));
         break;
       default:
-        // Önerilen: yarıçap seçiliyse yakından uzağa sırala
-        if (userLoc && radiusKm < MAX_RADIUS) list = [...list].sort((a, b) => distOf(a) - distOf(b));
+        // Önerilen = en yüksek puanlılar önce
+        list = [...list].sort((a, b) => (b.rating ?? 0) - (a.rating ?? 0));
     }
     return list;
   }, [barbers, search, sortBy, serviceFilters, openOnly, radiusKm, userLoc]);
@@ -284,7 +281,7 @@ export default function HomeScreen({ navigation }: Props) {
         <View style={styles.activeRow}>
           <Text style={styles.activeText} numberOfLines={1}>
             {[
-              sortBy !== 'Önerilen' ? sortBy : null,
+              sortBy !== 'Puana Göre' ? sortBy : null,
               ...serviceFilters,
               openOnly ? 'Açık' : null,
               radiusKm < MAX_RADIUS ? `${radiusKm} km` : null,
@@ -431,7 +428,8 @@ export default function HomeScreen({ navigation }: Props) {
               <View style={styles.switchRow}>
                 <Text style={styles.switchLabel}>Sadece şu an açık olanlar</Text>
                 <Switch value={openOnly} onValueChange={setOpenOnly}
-                  trackColor={{ true: Colors.secondary }} thumbColor="#fff" />
+                  trackColor={{ false: '#D1D5DB', true: Colors.secondary }}
+                  thumbColor="#ffffff" ios_backgroundColor="#D1D5DB" />
               </View>
 
             </ScrollView>
