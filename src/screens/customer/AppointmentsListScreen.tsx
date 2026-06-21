@@ -60,7 +60,7 @@ export default function AppointmentsListScreen({ navigation }: any) {
         style: 'destructive',
         onPress: async () => {
           try {
-            await updateAppointmentStatus(item.id, 'cancelled');
+            await updateAppointmentStatus(item.id, 'cancelled', 'customer');
             // Anlık güncelle: listede durumu cancelled yap
             setAppts(prev => prev.map(a => (a.id === item.id ? { ...a, status: 'cancelled' } : a)));
           } catch (e: any) {

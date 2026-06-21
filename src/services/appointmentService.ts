@@ -29,6 +29,7 @@ export interface Appointment {
   timeSlot: string;        // "10:30"
   durationMin?: number;
   status: AppointmentStatus;
+  cancelledBy?: 'customer' | 'barber';
   createdAt: any;
   notes?: string;
   // Kapora ödeme (Payment ekranı)
@@ -58,18 +59,30 @@ export async function createAppointment(
 export async function updateAppointmentStatus(
   id: string,
   status: AppointmentStatus,
+  cancelledBy?: 'customer' | 'barber',
 ): Promise<void> {
-  await updateDoc(doc(db, 'appointments', id), { status });
+  await updateDoc(doc(db, 'appointments', id), {
+    status,
+    ...(status === 'cancelled' && cancelledBy ? { cancelledBy } : {}),
+  });
 
-  // Müşteriye bildirim gönder
   const appt = await getAppointment(id);
   if (!appt) return;
+
+  // Müşteri kendi iptal ettiyse → bildirim BERBERE gider (müşteri zaten biliyor)
+  if (status === 'cancelled' && cancelledBy === 'customer') {
+    const bToken = await getUserPushToken(appt.barberId).catch(() => null);
+    if (bToken) sendPushNotification(bToken, '❌ Randevu İptal Edildi', 'Bir müşteri randevusunu iptal etti.', { appointmentId: id }).catch(() => {});
+    return;
+  }
+
+  // Diğer tüm durumlar → bildirim MÜŞTERİYE gider
   const token = await getUserPushToken(appt.customerId).catch(() => null);
   if (!token) return;
 
   const messages: Record<string, { title: string; body: string }> = {
     confirmed:  { title: '✅ Randevunuz Onaylandı', body: `${appt.timeSlot} randevunuz onaylandı.` },
-    cancelled:  { title: '❌ Randevunuz Reddedildi', body: 'Randevunuz berber tarafından reddedildi.' },
+    cancelled:  { title: '❌ Randevunuz İptal Edildi', body: 'Randevunuz berber tarafından iptal edildi.' },
     completed:  { title: '🎉 Randevunuz Tamamlandı', body: 'Randevunuzu değerlendirmeyi unutmayın!' },
   };
 

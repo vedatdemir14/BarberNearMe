@@ -29,7 +29,9 @@ function customerNotif(a: Appointment, shop: string): Notif {
   const map: Record<AppointmentStatus, Omit<Notif, 'id'>> = {
     pending:   { icon: '⏳', color: Colors.warning, title: 'Randevu talebin alındı', body: `${shop} — ${when} için berber onayı bekleniyor.` },
     confirmed: { icon: '✅', color: Colors.accent,  title: 'Randevun onaylandı', body: `${shop} — ${when} randevun onaylandı.` },
-    cancelled: { icon: '❌', color: Colors.danger,  title: 'Randevun iptal edildi', body: `${shop} — ${when} randevun iptal edildi.` },
+    cancelled: a.cancelledBy === 'customer'
+      ? { icon: '❌', color: Colors.danger, title: 'Randevunu iptal ettin', body: `${shop} — ${when} randevunu iptal ettin.` }
+      : { icon: '❌', color: Colors.danger, title: 'Randevun iptal edildi', body: `${shop} — ${when} randevun berber tarafından iptal edildi.` },
     completed: { icon: '🎉', color: Colors.primary, title: 'Randevun tamamlandı', body: `${shop} — değerlendirmeyi unutma!` },
   };
   return { id: a.id, ...map[a.status] };
@@ -41,7 +43,9 @@ function barberNotif(a: Appointment): Notif {
   const map: Record<AppointmentStatus, Omit<Notif, 'id'>> = {
     pending:   { icon: '✂️', color: Colors.warning, title: 'Yeni randevu talebi', body: `${a.serviceName} — ${when}. Onayını bekliyor.` },
     confirmed: { icon: '✅', color: Colors.accent,  title: 'Randevu onaylandı', body: `${a.serviceName} — ${when}.` },
-    cancelled: { icon: '❌', color: Colors.danger,  title: 'Randevu iptal edildi', body: `${a.serviceName} — ${when}.` },
+    cancelled: a.cancelledBy === 'customer'
+      ? { icon: '❌', color: Colors.danger, title: 'Müşteri randevuyu iptal etti', body: `${a.serviceName} — ${when}.` }
+      : { icon: '❌', color: Colors.danger, title: 'Randevu iptal edildi', body: `${a.serviceName} — ${when}.` },
     completed: { icon: '🎉', color: Colors.primary, title: 'Randevu tamamlandı', body: `${a.serviceName} — ${when}.` },
   };
   return { id: a.id, ...map[a.status] };

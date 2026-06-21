@@ -5,6 +5,7 @@ import {
   StyleSheet, ActivityIndicator, RefreshControl, Alert,
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
+import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '../../constants';
 import { useAuth } from '../../hooks/useAuth';
 import { Chat, getChatsForBarber, getChatsForCustomer, deleteChat } from '../../services/chatService';
@@ -79,7 +80,7 @@ export default function ChatListScreen({ navigation }: any) {
     <SafeAreaView style={{ flex: 1, backgroundColor: Colors.background }}>
       <View style={styles.header}>
         <Text style={styles.title}>Mesajlar</Text>
-        {chats.length > 0 && <Text style={styles.hint}>Silmek için konuşmaya basılı tut</Text>}
+        {chats.length > 0 && <Text style={styles.hint}>Konuşmayı silmek için 🗑 ikonuna dokun</Text>}
       </View>
 
       <FlatList
@@ -117,7 +118,9 @@ export default function ChatListScreen({ navigation }: any) {
                   {item.lastMessage || 'Konuşmayı başlat…'}
                 </Text>
               </View>
-              <Text style={styles.arrow}>›</Text>
+              <TouchableOpacity onPress={() => handleDelete(item)} hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }} style={styles.delBtn}>
+                <Ionicons name="trash-outline" size={20} color={Colors.textMuted} />
+              </TouchableOpacity>
             </TouchableOpacity>
           );
         }}
@@ -138,7 +141,7 @@ const styles = StyleSheet.create({
   name:    { fontSize: 15, fontWeight: '700', color: Colors.primary },
   time:    { fontSize: 11, color: Colors.textMuted },
   preview: { fontSize: 13, color: Colors.textSecondary },
-  arrow:   { fontSize: 20, color: Colors.textMuted },
+  delBtn:  { padding: 4 },
 
   separator: { height: 1, backgroundColor: Colors.borderLight, marginLeft: 76 },
 

@@ -68,7 +68,7 @@ export default function BarberAppointmentsScreen() {
           onPress: async () => {
             setActionId(appt.id);
             try {
-              await updateAppointmentStatus(appt.id, action);
+              await updateAppointmentStatus(appt.id, action, action === 'cancelled' ? 'barber' : undefined);
               setAppts(prev => prev.map(a => a.id === appt.id ? { ...a, status: action } : a));
             } catch (e: any) {
               Alert.alert('Hata', friendlyError(e));
