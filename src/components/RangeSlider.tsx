@@ -21,6 +21,7 @@ export default function RangeSlider({ min, max, step = 1, value, onChange, onCom
   const widthRef = useRef(0);
   const leftRef = useRef(0); // track'in ekrandaki x'i
   const viewRef = useRef<View>(null);
+  const [dragVal, setDragVal] = useState<number | null>(null); // sürüklerken canlı değer
 
   const toValue = (x: number) => {
     const w = widthRef.current || 1;
@@ -34,14 +35,15 @@ export default function RangeSlider({ min, max, step = 1, value, onChange, onCom
       onStartShouldSetPanResponder: () => true,
       onMoveShouldSetPanResponder: () => true,
       onPanResponderTerminationRequest: () => false,
-      onPanResponderGrant: (_e, g) => onChange?.(toValue(g.x0 - leftRef.current)),
-      onPanResponderMove: (_e, g) => onChange?.(toValue(g.moveX - leftRef.current)),
-      onPanResponderRelease: (_e, g) => onComplete?.(toValue((g.moveX || g.x0) - leftRef.current)),
+      onPanResponderGrant: (_e, g) => { const v = toValue(g.x0 - leftRef.current); setDragVal(v); onChange?.(v); },
+      onPanResponderMove: (_e, g) => { const v = toValue(g.moveX - leftRef.current); setDragVal(v); onChange?.(v); },
+      onPanResponderRelease: (_e, g) => { const v = toValue((g.moveX || g.x0) - leftRef.current); setDragVal(null); onComplete?.(v); },
     })
   ).current;
 
-  const clamped = Math.min(max, Math.max(min, value));
-  const pct = (clamped - min) / (max - min);
+  // Sürüklerken canlı değeri (dragVal), değilken dışarıdan gelen value'yu göster → thumb parmağı anında takip eder, bırakınca zıplamaz
+  const shown = dragVal !== null ? dragVal : Math.min(max, Math.max(min, value));
+  const pct = (shown - min) / (max - min);
   const thumbLeft = Math.max(0, Math.min(width - 26, pct * width - 13));
 
   return (
