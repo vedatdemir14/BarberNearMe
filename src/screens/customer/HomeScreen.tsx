@@ -21,7 +21,6 @@ type Props = { navigation: any };
 const SORT_OPTIONS = ['Önerilen', 'Yakın', 'Uygun Fiyat'];
 const SERVICE_KEYWORDS = ['Saç', 'Sakal', 'Çocuk', 'Cilt'];
 const MAX_RADIUS = 50; // km — "Tümü" (mesafe filtresi yok)
-const RADIUS_OPTIONS = [1, 3, 5, 10, 25, MAX_RADIUS]; // mesafe seçim butonları
 
 // İki coğrafi nokta arası mesafe (km) — Haversine
 function haversineKm(lat1: number, lng1: number, lat2: number, lng2: number): number {
@@ -431,7 +430,7 @@ export default function HomeScreen({ navigation }: Props) {
 
             </ScrollView>
 
-            {/* Mesafe — slider (canlı) + hızlı seçim butonları */}
+            {/* Mesafe — slider (parmakla kaydır, bıraktığın yer uygulanır) */}
             <View style={{ marginTop: 8 }}>
               <Text style={styles.modalSection}>
                 Mesafe: {dragKm >= MAX_RADIUS ? 'Tümü' : `${dragKm} km içinde`}
@@ -449,18 +448,9 @@ export default function HomeScreen({ navigation }: Props) {
                 maximumTrackTintColor={Colors.borderLight}
                 thumbTintColor={Colors.secondary}
               />
-              <View style={styles.chipWrap}>
-                {RADIUS_OPTIONS.map(km => {
-                  const on = radiusKm === km;
-                  return (
-                    <TouchableOpacity key={km} style={[styles.chip, on && styles.chipActive]}
-                      onPress={() => { setRadiusKm(km); setDragKm(km); }}>
-                      <Text style={[styles.chipText, on && styles.chipTextActive]}>
-                        {km >= MAX_RADIUS ? 'Tümü' : `${km} km`}
-                      </Text>
-                    </TouchableOpacity>
-                  );
-                })}
+              <View style={styles.radiusScale}>
+                <Text style={styles.radiusScaleText}>1 km</Text>
+                <Text style={styles.radiusScaleText}>Tümü</Text>
               </View>
               {radiusKm < MAX_RADIUS && !userLoc && (
                 <Text style={styles.radiusHint}>Konum alınamadı — mesafe filtresi için konum iznine izin ver.</Text>
@@ -526,6 +516,8 @@ const styles = StyleSheet.create({
   radiusBox: { paddingHorizontal: 16, marginBottom: 4 },
   radiusLabel: { fontSize: 13, fontWeight: '700', color: Colors.primary },
   radiusHint: { fontSize: 11, color: Colors.danger, paddingHorizontal: 16, marginBottom: 8 },
+  radiusScale: { flexDirection: 'row', justifyContent: 'space-between', marginTop: -4 },
+  radiusScaleText: { fontSize: 11, color: Colors.textMuted },
   distance: { fontSize: 12, color: Colors.accent, fontWeight: '700', marginTop: 3 },
   toggleRow: {
     flexDirection: 'row', marginHorizontal: 16, marginBottom: 10,
