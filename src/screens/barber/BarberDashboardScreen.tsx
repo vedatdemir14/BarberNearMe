@@ -60,9 +60,7 @@ export default function BarberDashboardScreen() {
     return d.toDateString() === now.toDateString();
   });
   const walletBalance = (shop as any)?.walletBalance ?? 0;
-  const totalEarnings = appointments
-    .filter(a => a.status === 'completed')
-    .reduce((sum, a) => sum + (a.kaporaAmount ?? 0), 0);
+  const completedCount = appointments.filter(a => a.status === 'completed').length;
 
   if (loading) {
     return (
@@ -131,9 +129,9 @@ export default function BarberDashboardScreen() {
 
         {/* Cüzdan kartı */}
         <View style={styles.walletCard}>
-          <Text style={styles.walletLabel}>Cüzdan Bakiyesi</Text>
+          <Text style={styles.walletLabel}>Cüzdan Bakiyesi (toplam kapora geliri)</Text>
           <Text style={styles.walletAmount}>₺{walletBalance.toLocaleString('tr-TR')}</Text>
-          <Text style={styles.walletSub}>Toplam kapora geliri: ₺{totalEarnings.toLocaleString('tr-TR')}</Text>
+          <Text style={styles.walletSub}>{appointments.length} randevu · {completedCount} tamamlandı</Text>
         </View>
 
         {/* İstatistikler */}
