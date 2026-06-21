@@ -8,6 +8,7 @@ import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../navigation';
 import { Colors } from '../../constants';
 import { registerBarber } from '../../services/authService';
+import PasswordInput from '../../components/PasswordInput';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'BarberRegStep1'>;
 
@@ -101,12 +102,12 @@ export default function BarberRegStep1Screen({ navigation }: Props) {
             keyboardType="phone-pad" value={form.phone} onChangeText={set('phone')} />
 
           <Text style={styles.label}>Şifre *</Text>
-          <TextInput style={styles.input} placeholder="••••••••" placeholderTextColor={Colors.textMuted}
-            secureTextEntry value={form.password} onChangeText={set('password')} />
+          <PasswordInput style={styles.input} placeholder="••••••••" placeholderTextColor={Colors.textMuted}
+            value={form.password} onChangeText={set('password')} />
 
           <Text style={styles.label}>Şifre Tekrar *</Text>
-          <TextInput style={styles.input} placeholder="••••••••" placeholderTextColor={Colors.textMuted}
-            secureTextEntry value={form.confirmPassword} onChangeText={set('confirmPassword')} />
+          <PasswordInput style={styles.input} placeholder="••••••••" placeholderTextColor={Colors.textMuted}
+            value={form.confirmPassword} onChangeText={set('confirmPassword')} />
 
           <TouchableOpacity style={[styles.btn, loading && { opacity: 0.6 }]} onPress={handleRegister} disabled={loading}>
             {loading ? <ActivityIndicator color="#020000" /> : <Text style={styles.btnText}>Hesap Oluştur →</Text>}

@@ -8,6 +8,7 @@ import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../navigation';
 import { registerCustomer } from '../../services/authService';
 import { Colors } from '../../constants';
+import PasswordInput from '../../components/PasswordInput';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'SignUp'>;
 
@@ -82,14 +83,14 @@ export default function SignUpScreen({ navigation }: Props) {
 
           <View>
             <Text style={styles.label}>Şifre *</Text>
-            <TextInput style={styles.input} placeholder="••••••••" placeholderTextColor={Colors.textMuted}
-              secureTextEntry value={form.password} onChangeText={set('password')} />
+            <PasswordInput style={styles.input} placeholder="••••••••" placeholderTextColor={Colors.textMuted}
+              value={form.password} onChangeText={set('password')} />
           </View>
 
           <View>
             <Text style={styles.label}>Şifre Tekrar *</Text>
-            <TextInput style={styles.input} placeholder="••••••••" placeholderTextColor={Colors.textMuted}
-              secureTextEntry value={form.confirmPassword} onChangeText={set('confirmPassword')} />
+            <PasswordInput style={styles.input} placeholder="••••••••" placeholderTextColor={Colors.textMuted}
+              value={form.confirmPassword} onChangeText={set('confirmPassword')} />
           </View>
 
           <TouchableOpacity style={styles.btnPrimary} onPress={handleRegister} disabled={loading}>

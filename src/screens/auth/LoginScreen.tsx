@@ -7,6 +7,7 @@ import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../navigation';
 import { login, sendPasswordReset } from '../../services/authService';
 import { Colors } from '../../constants';
+import PasswordInput from '../../components/PasswordInput';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Login'>;
 
@@ -72,11 +73,10 @@ export default function LoginScreen({ navigation }: Props) {
 
           <View style={styles.fieldGroup}>
             <Text style={styles.label}>Şifre</Text>
-            <TextInput
+            <PasswordInput
               style={styles.input}
               placeholder="••••••••"
               placeholderTextColor={Colors.textMuted}
-              secureTextEntry
               value={password}
               onChangeText={setPassword}
             />
