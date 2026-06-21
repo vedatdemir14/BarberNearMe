@@ -93,18 +93,6 @@ export default function LoginScreen({ navigation }: Props) {
             }
           </TouchableOpacity>
 
-          <Text style={styles.orText}>— veya —</Text>
-
-          {/* Social buttons (UI only for prototype) */}
-          <View style={styles.socialRow}>
-            <TouchableOpacity style={styles.socialBtn}>
-              <Text style={styles.socialBtnText}>Google</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.socialBtn}>
-              <Text style={styles.socialBtnText}>Apple</Text>
-            </TouchableOpacity>
-          </View>
-
           <View style={styles.divider} />
 
           <TouchableOpacity

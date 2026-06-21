@@ -427,7 +427,11 @@ export default function HomeScreen({ navigation }: Props) {
                   trackColor={{ true: Colors.secondary }} thumbColor="#fff" />
               </View>
 
-              {/* Mesafe */}
+            </ScrollView>
+
+            {/* Mesafe — ScrollView DIŞINDA: Android'de dikey kaydırma jesti
+                slider'ın sürüklenmesini çalmasın diye sabit alanda */}
+            <View style={{ marginTop: 8 }}>
               <Text style={styles.modalSection}>
                 Mesafe: {radiusKm >= MAX_RADIUS ? 'Tümü' : `${radiusKm} km içinde`}
               </Text>
@@ -445,7 +449,7 @@ export default function HomeScreen({ navigation }: Props) {
               {radiusKm < MAX_RADIUS && !userLoc && (
                 <Text style={styles.radiusHint}>Konum alınamadı — mesafe filtresi için konum iznine izin ver.</Text>
               )}
-            </ScrollView>
+            </View>
 
             <View style={styles.modalBtns}>
               <TouchableOpacity style={styles.modalReset} onPress={resetFilters}>
