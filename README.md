@@ -8,7 +8,7 @@ A cross-platform mobile app to **find nearby barbershops, book appointments, and
 
 ## Overview
 
-BarberNearMe connects customers with barbershops. Customers browse shops on a map or list, filter by proximity / rating / price / open-now, view shop details, book a time slot, manage their appointments, and rate completed visits. Barbers can register their shop (onboarding flow is in progress).
+BarberNearMe connects customers with barbershops. Customers browse shops on a map or list, filter by proximity / rating / price / open-now, view shop details, book a time slot, manage their appointments, and rate completed visits. Barbers register their shop through a four-step wizard and manage appointments from a dashboard.
 
 ## Features
 
@@ -22,11 +22,18 @@ BarberNearMe connects customers with barbershops. Customers browse shops on a ma
 - 👤 Profile backed by the signed-in account
 
 **Barber**
-- 🧾 Multi-step shop registration *(work in progress — screens are stubbed)*
+- 🧾 Four-step shop registration wizard
+- 🛠️ Role-based navigation, dashboard, and appointment management
+- 🏪 Shop profile
 
-**In progress / mocked**
-- 💬 Messaging screen (UI only, not yet backed by Firestore)
-- 🛠️ Role-based navigation & barber dashboard
+**Shared**
+- 💬 Real-time messaging backed by Firestore (`onSnapshot`)
+- 💳 Mock deposit ("kapora") payment with Luhn card validation
+
+**Mocked / future**
+- 💳 Payment is a simulated deposit — no real payment gateway (by design)
+- 🤖 AI head-shape style recommendation (future work, not yet started)
+- 📊 Usability (SUS) and performance benchmarking (planned)
 
 ## Tech Stack
 
