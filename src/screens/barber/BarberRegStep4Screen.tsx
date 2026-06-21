@@ -7,6 +7,7 @@ import {
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../navigation';
 import { Colors } from '../../constants';
+import { friendlyError } from '../../utils/errorMessage';
 import { getBarber, BarberShop } from '../../services/barberService';
 import { updateDoc, doc } from 'firebase/firestore';
 import { db } from '../../services/firebase';
@@ -37,7 +38,7 @@ export default function BarberRegStep4Screen({ navigation, route }: Props) {
       // Dashboard şimdi isActive=true görecek.
       navigation.reset({ index: 0, routes: [{ name: 'BarberTabs' }] });
     } catch (e: any) {
-      Alert.alert('Hata', e.message);
+      Alert.alert('Hata', friendlyError(e));
     } finally {
       setSaving(false);
     }

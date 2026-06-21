@@ -8,6 +8,7 @@ import { RootStackParamList } from '../../navigation';
 import { login, sendPasswordReset } from '../../services/authService';
 import { Colors } from '../../constants';
 import PasswordInput from '../../components/PasswordInput';
+import { friendlyError } from '../../utils/errorMessage';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Login'>;
 
@@ -25,7 +26,7 @@ export default function LoginScreen({ navigation }: Props) {
       await sendPasswordReset(email.trim());
       Alert.alert('Gönderildi ✓', 'Şifre sıfırlama linki e-posta adresinize gönderildi.');
     } catch (e: any) {
-      Alert.alert('Hata', e.message);
+      Alert.alert('Hata', friendlyError(e));
     }
   }
 
@@ -39,7 +40,7 @@ export default function LoginScreen({ navigation }: Props) {
       await login(email.trim(), password);
       // Navigation will auto-redirect via useAuth in Navigation component
     } catch (e: any) {
-      Alert.alert('Giriş Hatası', e.message);
+      Alert.alert('Giriş Hatası', friendlyError(e));
     } finally {
       setLoading(false);
     }

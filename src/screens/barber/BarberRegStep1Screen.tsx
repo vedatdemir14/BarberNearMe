@@ -9,6 +9,7 @@ import { RootStackParamList } from '../../navigation';
 import { Colors } from '../../constants';
 import { registerBarber } from '../../services/authService';
 import PasswordInput from '../../components/PasswordInput';
+import { friendlyError } from '../../utils/errorMessage';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'BarberRegStep1'>;
 
@@ -48,7 +49,7 @@ export default function BarberRegStep1Screen({ navigation }: Props) {
       // Auth listener tetiklenince otomatik BarberTabs'e geçer,
       // dashboard orada isActive=false görüp kurulumu yönlendirir.
     } catch (e: any) {
-      Alert.alert('Kayıt Hatası', e.message);
+      Alert.alert('Kayıt Hatası', friendlyError(e));
     } finally {
       setLoading(false);
     }

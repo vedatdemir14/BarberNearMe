@@ -5,6 +5,7 @@ import {
   ScrollView, Alert, Switch, RefreshControl, ActivityIndicator,
 } from 'react-native';
 import { Colors } from '../../constants';
+import { friendlyError } from '../../utils/errorMessage';
 import { useAuth } from '../../hooks/useAuth';
 import { logout } from '../../services/authService';
 import { getBarber, BarberShop } from '../../services/barberService';
@@ -38,7 +39,7 @@ export default function BarberProfileScreen({ navigation }: any) {
       await updateDoc(doc(db, 'barbers', user.uid), { isActive: val });
       setShop(prev => prev ? { ...prev, isActive: val } : prev);
     } catch (e: any) {
-      Alert.alert('Hata', e.message);
+      Alert.alert('Hata', friendlyError(e));
     } finally { setToggling(false); }
   }
 

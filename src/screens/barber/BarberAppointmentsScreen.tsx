@@ -5,6 +5,7 @@ import {
   TouchableOpacity, ActivityIndicator, Alert, RefreshControl,
 } from 'react-native';
 import { Colors } from '../../constants';
+import { friendlyError } from '../../utils/errorMessage';
 import { useAuth } from '../../hooks/useAuth';
 import { getBarberAppointments, updateAppointmentStatus, Appointment } from '../../services/appointmentService';
 
@@ -70,7 +71,7 @@ export default function BarberAppointmentsScreen() {
               await updateAppointmentStatus(appt.id, action);
               setAppts(prev => prev.map(a => a.id === appt.id ? { ...a, status: action } : a));
             } catch (e: any) {
-              Alert.alert('Hata', e.message);
+              Alert.alert('Hata', friendlyError(e));
             } finally { setActionId(null); }
           },
         },

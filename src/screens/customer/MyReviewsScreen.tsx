@@ -3,6 +3,7 @@ import React, { useCallback, useState } from 'react';
 import { View, Text, TouchableOpacity, FlatList, StyleSheet, ActivityIndicator, Alert } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { Colors } from '../../constants';
+import { friendlyError } from '../../utils/errorMessage';
 import { useAuth } from '../../hooks/useAuth';
 import { getCustomerReviews, deleteReview, Review } from '../../services/reviewService';
 import { getBarber } from '../../services/barberService';
@@ -52,7 +53,7 @@ export default function MyReviewsScreen({ navigation }: any) {
             await deleteReview(item.id);
             setItems(prev => prev.filter(x => x.id !== item.id));
           } catch (e: any) {
-            Alert.alert('Hata', e.message ?? 'Değerlendirme silinemedi.');
+            Alert.alert('Hata', friendlyError(e, 'Değerlendirme silinemedi.'));
           }
         },
       },

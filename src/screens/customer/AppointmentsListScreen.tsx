@@ -3,6 +3,7 @@ import React, { useCallback, useState } from 'react';
 import { View, Text, TouchableOpacity, FlatList, StyleSheet, ActivityIndicator, Alert } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { Colors } from '../../constants';
+import { friendlyError } from '../../utils/errorMessage';
 import { useAuth } from '../../hooks/useAuth';
 import { getCustomerAppointments, updateAppointmentStatus, Appointment } from '../../services/appointmentService';
 import { getBarber } from '../../services/barberService';
@@ -63,7 +64,7 @@ export default function AppointmentsListScreen({ navigation }: any) {
             // Anlık güncelle: listede durumu cancelled yap
             setAppts(prev => prev.map(a => (a.id === item.id ? { ...a, status: 'cancelled' } : a)));
           } catch (e: any) {
-            Alert.alert('Hata', e.message ?? 'Randevu iptal edilemedi.');
+            Alert.alert('Hata', friendlyError(e, 'Randevu iptal edilemedi.'));
           }
         },
       },

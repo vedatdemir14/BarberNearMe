@@ -5,6 +5,7 @@ import {
   StyleSheet, ActivityIndicator, KeyboardAvoidingView, Platform, Alert,
 } from 'react-native';
 import { Colors } from '../../constants';
+import { friendlyError } from '../../utils/errorMessage';
 import { useAuth } from '../../hooks/useAuth';
 import {
   ChatMessage, ensureChat, sendMessage, subscribeToMessages,
@@ -58,7 +59,7 @@ export default function ChatScreen({ navigation, route }: Props) {
       isBarber ? (customerName ?? myName) : myName,
     )
       .then(() => setCId(cIdLocal))
-      .catch(e => Alert.alert('Hata', e.message))
+      .catch(e => Alert.alert('Hata', friendlyError(e)))
       .finally(() => setLoading(false));
   }, [myId, barberId]);
 
@@ -80,7 +81,7 @@ export default function ChatScreen({ navigation, route }: Props) {
     try {
       await sendMessage(cId, myId, msg);
     } catch (e: any) {
-      Alert.alert('Gönderilemedi', e.message);
+      Alert.alert('Gönderilemedi', friendlyError(e));
       setText(msg);
     } finally {
       setSending(false);

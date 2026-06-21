@@ -2,6 +2,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, Alert, ActivityIndicator } from 'react-native';
 import { Colors } from '../../constants';
+import { friendlyError } from '../../utils/errorMessage';
 import { useAuth } from '../../hooks/useAuth';
 import { logout, updateUserProfile } from '../../services/authService';
 
@@ -37,7 +38,7 @@ export default function SettingsScreen({ navigation }: any) {
       await refreshUser();
       setEditing(false);
     } catch (e: any) {
-      Alert.alert('Hata', e.message ?? 'Profil güncellenemedi.');
+      Alert.alert('Hata', friendlyError(e, 'Profil güncellenemedi.'));
     } finally {
       setSaving(false);
     }

@@ -6,6 +6,7 @@ import {
 import { Colors } from '../../constants';
 import { useAuth } from '../../hooks/useAuth';
 import { resendVerificationEmail, logout } from '../../services/authService';
+import { friendlyError } from '../../utils/errorMessage';
 
 export default function EmailVerificationScreen() {
   const { user, refreshUser } = useAuth();
@@ -23,7 +24,7 @@ export default function EmailVerificationScreen() {
       }
       // emailVerified=true ise Context state güncellendi, Navigation otomatik geçer
     } catch (e: any) {
-      Alert.alert('Hata', e.message);
+      Alert.alert('Hata', friendlyError(e));
     } finally {
       setChecking(false);
     }
@@ -35,7 +36,7 @@ export default function EmailVerificationScreen() {
       await resendVerificationEmail();
       Alert.alert('Gönderildi', 'Doğrulama e-postası tekrar gönderildi.');
     } catch (e: any) {
-      Alert.alert('Hata', e.message);
+      Alert.alert('Hata', friendlyError(e));
     } finally {
       setResending(false);
     }

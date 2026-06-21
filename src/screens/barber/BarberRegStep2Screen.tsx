@@ -7,6 +7,7 @@ import {
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../navigation';
 import { Colors } from '../../constants';
+import { friendlyError } from '../../utils/errorMessage';
 import { updateBarberServices, Service, StaffMember } from '../../services/barberService';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'BarberRegStep2'>;
@@ -66,7 +67,7 @@ export default function BarberRegStep2Screen({ navigation, route }: Props) {
       await updateBarberServices(uid, services, staff);
       navigation.navigate('BarberRegStep3', { uid });
     } catch (e: any) {
-      Alert.alert('Hata', e.message);
+      Alert.alert('Hata', friendlyError(e));
     } finally {
       setLoading(false);
     }

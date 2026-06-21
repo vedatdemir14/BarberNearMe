@@ -4,6 +4,7 @@ import { View, Text, TouchableOpacity, TextInput, ScrollView, StyleSheet, Alert,
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../navigation';
 import { Colors } from '../../constants';
+import { friendlyError } from '../../utils/errorMessage';
 import { useAuth } from '../../hooks/useAuth';
 import { getAppointment, Appointment } from '../../services/appointmentService';
 import { getBarber } from '../../services/barberService';
@@ -79,7 +80,7 @@ export default function RatingScreen({ navigation, route }: Props) {
         { text: 'Tamam', onPress: () => navigation.navigate('CustomerTabs', { screen: 'Appointments' } as any) },
       ]);
     } catch (e: any) {
-      Alert.alert('Hata', e.message ?? 'Değerlendirme gönderilemedi.');
+      Alert.alert('Hata', friendlyError(e, 'Değerlendirme gönderilemedi.'));
     } finally {
       setSubmitting(false);
     }

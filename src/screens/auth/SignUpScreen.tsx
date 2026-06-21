@@ -9,6 +9,7 @@ import { RootStackParamList } from '../../navigation';
 import { registerCustomer } from '../../services/authService';
 import { Colors } from '../../constants';
 import PasswordInput from '../../components/PasswordInput';
+import { friendlyError } from '../../utils/errorMessage';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'SignUp'>;
 
@@ -39,7 +40,7 @@ export default function SignUpScreen({ navigation }: Props) {
       await registerCustomer({ ...form });
       // Auto-navigates via useAuth
     } catch (e: any) {
-      Alert.alert('Kayıt Hatası', e.message);
+      Alert.alert('Kayıt Hatası', friendlyError(e));
     } finally {
       setLoading(false);
     }

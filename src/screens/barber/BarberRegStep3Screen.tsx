@@ -8,6 +8,7 @@ import MapView, { Marker, MapPressEvent, Region } from 'react-native-maps';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../navigation';
 import { Colors } from '../../constants';
+import { friendlyError } from '../../utils/errorMessage';
 import { updateDoc, doc } from 'firebase/firestore';
 import { db } from '../../services/firebase';
 
@@ -70,7 +71,7 @@ export default function BarberRegStep3Screen({ navigation, route }: Props) {
       });
       navigation.navigate('BarberRegStep4', { uid });
     } catch (e: any) {
-      Alert.alert('Hata', e.message);
+      Alert.alert('Hata', friendlyError(e));
     } finally {
       setLoading(false);
     }
