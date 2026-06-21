@@ -1,4 +1,4 @@
-import Slider from '@react-native-community/slider';
+import RangeSlider from '../../components/RangeSlider';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
@@ -435,18 +435,13 @@ export default function HomeScreen({ navigation }: Props) {
               <Text style={styles.modalSection}>
                 Mesafe: {dragKm >= MAX_RADIUS ? 'Tümü' : `${dragKm} km içinde`}
               </Text>
-              <Slider
-                style={{ width: '100%', height: 48 }}
-                minimumValue={1}
-                maximumValue={MAX_RADIUS}
+              <RangeSlider
+                min={1}
+                max={MAX_RADIUS}
                 step={1}
                 value={radiusKm}
-                tapToSeek
-                onValueChange={setDragKm}
-                onSlidingComplete={setRadiusKm}
-                minimumTrackTintColor={Colors.secondary}
-                maximumTrackTintColor={Colors.borderLight}
-                thumbTintColor={Colors.secondary}
+                onChange={setDragKm}
+                onComplete={setRadiusKm}
               />
               <View style={styles.radiusScale}>
                 <Text style={styles.radiusScaleText}>1 km</Text>
