@@ -4,6 +4,7 @@ import {
   View, Text, TouchableOpacity, StyleSheet,
   ScrollView, Alert, Switch, RefreshControl, ActivityIndicator,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '../../constants';
 import { friendlyError } from '../../utils/errorMessage';
 import { useAuth } from '../../hooks/useAuth';
@@ -140,30 +141,35 @@ export default function BarberProfileScreen({ navigation }: any) {
           </View>
         </View>
 
-        {/* Menü — prototype'taki quick actions yapısına uygun */}
+        {/* Yönetim menüsü */}
+        <Text style={styles.menuSectionTitle}>Yönetim</Text>
         <View style={styles.menuCard}>
           <TouchableOpacity
-            style={styles.menuItem}
-            onPress={() => navigation.navigate('BarberRegStep2', { uid: user?.uid })}
+            style={[styles.menuItem, styles.menuBorder]}
+            activeOpacity={0.7}
+            onPress={() => navigation.navigate('BarberEditServices', { uid: user!.uid })}
           >
+            <View style={styles.iconChip}><Ionicons name="cut-outline" size={19} color={Colors.primary} /></View>
             <Text style={styles.menuLabel}>Hizmetleri & Çalışanları Düzenle</Text>
-            <Text style={styles.menuArrow}>›</Text>
+            <Ionicons name="chevron-forward" size={18} color={Colors.textMuted} />
           </TouchableOpacity>
 
           <TouchableOpacity
             style={styles.menuItem}
-            onPress={() => navigation.navigate('BarberRegStep3', { uid: user?.uid })}
+            activeOpacity={0.7}
+            onPress={() => navigation.navigate('BarberEditHours', { uid: user!.uid })}
           >
+            <View style={styles.iconChip}><Ionicons name="time-outline" size={19} color={Colors.primary} /></View>
             <Text style={styles.menuLabel}>Çalışma Saatlerini Düzenle</Text>
-            <Text style={styles.menuArrow}>›</Text>
-          </TouchableOpacity>
-
-          <View style={styles.divider} />
-
-          <TouchableOpacity style={styles.menuItem} onPress={handleLogout}>
-            <Text style={[styles.menuLabel, { color: Colors.danger }]}>Çıkış Yap</Text>
+            <Ionicons name="chevron-forward" size={18} color={Colors.textMuted} />
           </TouchableOpacity>
         </View>
+
+        {/* Çıkış */}
+        <TouchableOpacity style={styles.logoutBtn} activeOpacity={0.8} onPress={handleLogout}>
+          <Ionicons name="log-out-outline" size={19} color={Colors.danger} />
+          <Text style={styles.logoutText}>Çıkış Yap</Text>
+        </TouchableOpacity>
 
         <View style={{ height: 24 }} />
       </ScrollView>
@@ -216,12 +222,12 @@ const styles = StyleSheet.create({
   infoLabel: { fontSize: 13, color: Colors.textSecondary },
   infoVal:   { fontSize: 13, fontWeight: '600', color: Colors.primary, flex: 1, textAlign: 'right' },
 
-  menuCard: {
-    backgroundColor: Colors.surface, marginHorizontal: 16,
-    borderRadius: 14, borderWidth: 1, borderColor: Colors.borderLight,
-  },
-  menuItem:  { flexDirection: 'row', alignItems: 'center', padding: 16, borderBottomWidth: 1, borderBottomColor: Colors.borderLight },
-  menuLabel: { flex: 1, fontSize: 15, color: Colors.primary },
-  menuArrow: { color: Colors.textMuted, fontSize: 18 },
-  divider:   { height: 1, backgroundColor: Colors.border },
+  menuSectionTitle: { fontSize: 13, fontWeight: '700', color: Colors.textSecondary, marginHorizontal: 20, marginTop: 6, marginBottom: 8 },
+  menuCard: { backgroundColor: Colors.surface, marginHorizontal: 16, borderRadius: 16, borderWidth: 1, borderColor: Colors.borderLight, overflow: 'hidden' },
+  menuItem:  { flexDirection: 'row', alignItems: 'center', gap: 14, paddingHorizontal: 14, paddingVertical: 15 },
+  menuBorder:{ borderBottomWidth: 1, borderBottomColor: Colors.borderLight },
+  iconChip:  { width: 38, height: 38, borderRadius: 11, backgroundColor: '#FFF7DE', alignItems: 'center', justifyContent: 'center' },
+  menuLabel: { flex: 1, fontSize: 15, fontWeight: '600', color: Colors.primary },
+  logoutBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, marginHorizontal: 16, marginTop: 16, paddingVertical: 15, borderRadius: 14, borderWidth: 1.5, borderColor: Colors.danger },
+  logoutText:{ fontSize: 15, fontWeight: '700', color: Colors.danger },
 });

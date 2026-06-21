@@ -108,6 +108,14 @@ export async function addToWallet(barberId: string, amount: number): Promise<voi
   });
 }
 
+// ── Sadece çalışma saatlerini güncelle (düzenleme ekranı) ────
+export async function updateBarberWorkingHours(
+  barberId: string,
+  workingHours: WorkingHours,
+): Promise<void> {
+  await updateDoc(doc(db, 'barbers', barberId), { workingHours });
+}
+
 // ── Update working hours & activate ──────────────────────────
 export async function updateBarberHoursAndActivate(
   barberId: string,
