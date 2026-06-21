@@ -1,3 +1,4 @@
+import Slider from '@react-native-community/slider';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
@@ -148,7 +149,8 @@ export default function HomeScreen({ navigation }: Props) {
   const [sortBy, setSortBy]               = useState('Önerilen');
   const [serviceFilters, setServiceFilters] = useState<string[]>([]);
   const [openOnly, setOpenOnly]           = useState(false);
-  const [radiusKm, setRadiusKm]           = useState<number>(MAX_RADIUS); // MAX = Tümü
+  const [radiusKm, setRadiusKm]           = useState<number>(MAX_RADIUS); // MAX = Tümü (uygulanan değer)
+  const [dragKm, setDragKm]               = useState<number>(MAX_RADIUS); // slider sürüklenirken canlı etiket
 
   const activeFilterCount =
     (sortBy !== 'Önerilen' ? 1 : 0) +
@@ -160,7 +162,7 @@ export default function HomeScreen({ navigation }: Props) {
     setServiceFilters(prev => prev.includes(kw) ? prev.filter(x => x !== kw) : [...prev, kw]);
   }
   function resetFilters() {
-    setSortBy('Önerilen'); setServiceFilters([]); setOpenOnly(false); setRadiusKm(MAX_RADIUS);
+    setSortBy('Önerilen'); setServiceFilters([]); setOpenOnly(false); setRadiusKm(MAX_RADIUS); setDragKm(MAX_RADIUS);
   }
 
   useEffect(() => {
@@ -429,16 +431,29 @@ export default function HomeScreen({ navigation }: Props) {
 
             </ScrollView>
 
-            {/* Mesafe — butonlu seçim (slider Android'de sürüklenemiyordu) */}
+            {/* Mesafe — slider (canlı) + hızlı seçim butonları */}
             <View style={{ marginTop: 8 }}>
               <Text style={styles.modalSection}>
-                Mesafe: {radiusKm >= MAX_RADIUS ? 'Tümü' : `${radiusKm} km içinde`}
+                Mesafe: {dragKm >= MAX_RADIUS ? 'Tümü' : `${dragKm} km içinde`}
               </Text>
+              <Slider
+                style={{ width: '100%', height: 40 }}
+                minimumValue={1}
+                maximumValue={MAX_RADIUS}
+                step={1}
+                value={radiusKm}
+                onValueChange={setDragKm}
+                onSlidingComplete={setRadiusKm}
+                minimumTrackTintColor={Colors.secondary}
+                maximumTrackTintColor={Colors.borderLight}
+                thumbTintColor={Colors.secondary}
+              />
               <View style={styles.chipWrap}>
                 {RADIUS_OPTIONS.map(km => {
                   const on = radiusKm === km;
                   return (
-                    <TouchableOpacity key={km} style={[styles.chip, on && styles.chipActive]} onPress={() => setRadiusKm(km)}>
+                    <TouchableOpacity key={km} style={[styles.chip, on && styles.chipActive]}
+                      onPress={() => { setRadiusKm(km); setDragKm(km); }}>
                       <Text style={[styles.chipText, on && styles.chipTextActive]}>
                         {km >= MAX_RADIUS ? 'Tümü' : `${km} km`}
                       </Text>
