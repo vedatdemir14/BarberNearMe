@@ -437,11 +437,12 @@ export default function HomeScreen({ navigation }: Props) {
                 Mesafe: {dragKm >= MAX_RADIUS ? 'Tümü' : `${dragKm} km içinde`}
               </Text>
               <Slider
-                style={{ width: '100%', height: 40 }}
+                style={{ width: '100%', height: 48 }}
                 minimumValue={1}
                 maximumValue={MAX_RADIUS}
                 step={1}
                 value={radiusKm}
+                tapToSeek
                 onValueChange={setDragKm}
                 onSlidingComplete={setRadiusKm}
                 minimumTrackTintColor={Colors.secondary}
