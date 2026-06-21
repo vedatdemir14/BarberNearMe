@@ -117,7 +117,7 @@ export default function LoginScreen({ navigation }: Props) {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.surface },
   inner: { padding: 24, gap: 16 },
-  logoRow: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 8 },
+  logoRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10, marginBottom: 8 },
   logoIcon: { fontSize: 28 },
   logoText: { fontSize: 22, fontWeight: '800', color: Colors.primary },
   title: { fontSize: 24, fontWeight: '800', color: Colors.primary },
