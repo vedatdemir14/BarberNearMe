@@ -450,7 +450,7 @@ export default function HomeScreen({ navigation }: Props) {
               />
               <View style={styles.radiusScale}>
                 <Text style={styles.radiusScaleText}>1 km</Text>
-                <Text style={styles.radiusScaleText}>Tümü</Text>
+                <Text style={styles.radiusScaleText}>50 km</Text>
               </View>
               {radiusKm < MAX_RADIUS && !userLoc && (
                 <Text style={styles.radiusHint}>Konum alınamadı — mesafe filtresi için konum iznine izin ver.</Text>
@@ -516,7 +516,7 @@ const styles = StyleSheet.create({
   radiusBox: { paddingHorizontal: 16, marginBottom: 4 },
   radiusLabel: { fontSize: 13, fontWeight: '700', color: Colors.primary },
   radiusHint: { fontSize: 11, color: Colors.danger, paddingHorizontal: 16, marginBottom: 8 },
-  radiusScale: { flexDirection: 'row', justifyContent: 'space-between', marginTop: -4 },
+  radiusScale: { flexDirection: 'row', justifyContent: 'space-between', marginTop: -10, paddingHorizontal: 2 },
   radiusScaleText: { fontSize: 11, color: Colors.textMuted },
   distance: { fontSize: 12, color: Colors.accent, fontWeight: '700', marginTop: 3 },
   toggleRow: {

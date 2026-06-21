@@ -1,5 +1,5 @@
 import React, { useRef, useState } from 'react';
-import { View, PanResponder, StyleSheet } from 'react-native';
+import { View, PanResponder, StyleSheet, GestureResponderEvent } from 'react-native';
 import { Colors } from '../constants';
 
 type Props = {
@@ -13,14 +13,13 @@ type Props = {
 
 /**
  * Native bağımlılığı olmayan, PanResponder tabanlı slider.
- * @react-native-community/slider bazı Android sürümlerinde (eski mimari)
- * sürüklenmediği için bununla değiştirildi. Her cihazda çalışır.
+ * Koordinat için locationX kullanır (wrap'e göreli) — measure gerekmez,
+ * Modal içinde de doğru çalışır. Çocuk view'lar pointerEvents="none"
+ * olduğundan dokunuş hep wrap'e gelir → locationX hep wrap'e göreli.
  */
 export default function RangeSlider({ min, max, step = 1, value, onChange, onComplete }: Props) {
   const [width, setWidth] = useState(0);
   const widthRef = useRef(0);
-  const leftRef = useRef(0); // track'in ekrandaki x'i
-  const viewRef = useRef<View>(null);
   const [dragVal, setDragVal] = useState<number | null>(null); // sürüklerken canlı değer
 
   const toValue = (x: number) => {
@@ -35,34 +34,37 @@ export default function RangeSlider({ min, max, step = 1, value, onChange, onCom
       onStartShouldSetPanResponder: () => true,
       onMoveShouldSetPanResponder: () => true,
       onPanResponderTerminationRequest: () => false,
-      onPanResponderGrant: (_e, g) => { const v = toValue(g.x0 - leftRef.current); setDragVal(v); onChange?.(v); },
-      onPanResponderMove: (_e, g) => { const v = toValue(g.moveX - leftRef.current); setDragVal(v); onChange?.(v); },
-      onPanResponderRelease: (_e, g) => { const v = toValue((g.moveX || g.x0) - leftRef.current); setDragVal(null); onComplete?.(v); },
+      onShouldBlockNativeResponder: () => true,
+      onPanResponderGrant: (e: GestureResponderEvent) => {
+        const v = toValue(e.nativeEvent.locationX);
+        setDragVal(v); onChange?.(v);
+      },
+      onPanResponderMove: (e: GestureResponderEvent) => {
+        const v = toValue(e.nativeEvent.locationX);
+        setDragVal(v); onChange?.(v);
+      },
+      onPanResponderRelease: (e: GestureResponderEvent) => {
+        const v = toValue(e.nativeEvent.locationX);
+        setDragVal(null); onComplete?.(v);
+      },
     })
   ).current;
 
-  // Sürüklerken canlı değeri (dragVal), değilken dışarıdan gelen value'yu göster → thumb parmağı anında takip eder, bırakınca zıplamaz
+  // Sürüklerken canlı (dragVal), değilken dışarıdan gelen value → thumb anlık takip, bırakınca zıplamaz
   const shown = dragVal !== null ? dragVal : Math.min(max, Math.max(min, value));
   const pct = (shown - min) / (max - min);
   const thumbLeft = Math.max(0, Math.min(width - 26, pct * width - 13));
 
   return (
     <View
-      ref={viewRef}
       {...pan.panHandlers}
       style={styles.wrap}
-      onLayout={() =>
-        viewRef.current?.measure((_x, _y, w, _h, px) => {
-          widthRef.current = w;
-          leftRef.current = px;
-          setWidth(w);
-        })
-      }
+      onLayout={e => { const w = e.nativeEvent.layout.width; widthRef.current = w; setWidth(w); }}
     >
-      <View style={styles.track}>
+      <View style={styles.track} pointerEvents="none">
         <View style={[styles.fill, { width: pct * width }]} />
       </View>
-      <View style={[styles.thumb, { left: thumbLeft }]} />
+      <View style={[styles.thumb, { left: thumbLeft }]} pointerEvents="none" />
     </View>
   );
 }
