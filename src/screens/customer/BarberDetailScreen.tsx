@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { View, Text, ScrollView, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, StyleSheet, ActivityIndicator, Linking, Alert } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../navigation';
 import { Colors } from '../../constants';
@@ -64,6 +64,18 @@ export default function BarberDetailScreen({ navigation, route }: Props) {
 
   const data = barber ?? (MOCK as BarberShop);
   const wh = data.workingHours ?? MOCK.workingHours!;
+
+  function openDirections() {
+    const loc: any = data.location;
+    let dest: string;
+    if (loc?.latitude != null && loc?.longitude != null) {
+      dest = `${loc.latitude},${loc.longitude}`;
+    } else {
+      dest = encodeURIComponent([data.shopName, data.neighborhood, data.city].filter(Boolean).join(' '));
+    }
+    const url = `https://www.google.com/maps/dir/?api=1&destination=${dest}`;
+    Linking.openURL(url).catch(() => Alert.alert('Hata', 'Harita uygulaması açılamadı.'));
+  }
   const services = (data.services?.length ? data.services : MOCK.services);
   const staff = (data.staff?.length ? data.staff : MOCK.staff);
 
@@ -134,6 +146,9 @@ export default function BarberDetailScreen({ navigation, route }: Props) {
           </TouchableOpacity>
           <TouchableOpacity style={styles.btnSecondary} onPress={() => navigation.navigate('Chat', { barberId, barberName: data.shopName })}>
             <Text style={styles.btnSecondaryText}>Mesaj Gönder</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.btnSecondary} onPress={openDirections}>
+            <Text style={styles.btnSecondaryText}>📍 Yol Tarifi</Text>
           </TouchableOpacity>
           <View style={{ height: 16 }} />
         </View>
