@@ -155,12 +155,22 @@ export default function BarberProfileScreen({ navigation }: any) {
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={styles.menuItem}
+            style={[styles.menuItem, styles.menuBorder]}
             activeOpacity={0.7}
             onPress={() => navigation.navigate('BarberEditHours', { uid: user!.uid })}
           >
             <View style={styles.iconChip}><Ionicons name="time-outline" size={19} color={Colors.primary} /></View>
             <Text style={styles.menuLabel}>Çalışma Saatlerini Düzenle</Text>
+            <Ionicons name="chevron-forward" size={18} color={Colors.textMuted} />
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.menuItem}
+            activeOpacity={0.7}
+            onPress={() => navigation.navigate('BarberReviews')}
+          >
+            <View style={styles.iconChip}><Ionicons name="star-outline" size={19} color={Colors.primary} /></View>
+            <Text style={styles.menuLabel}>Müşteri Değerlendirmeleri</Text>
             <Ionicons name="chevron-forward" size={18} color={Colors.textMuted} />
           </TouchableOpacity>
         </View>
