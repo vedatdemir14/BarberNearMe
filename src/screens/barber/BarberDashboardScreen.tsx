@@ -185,7 +185,7 @@ export default function BarberDashboardScreen() {
 
         {/* Cüzdan kartı */}
         <View style={styles.walletCard}>
-          <Text style={styles.walletLabel}>Cüzdan Bakiyesi (toplam kapora geliri)</Text>
+          <Text style={styles.walletLabel}>Cüzdan Bakiyesi (kapora + tamamlanan iş geliri)</Text>
           <Text style={styles.walletAmount}>₺{walletBalance.toLocaleString('tr-TR')}</Text>
           <Text style={styles.walletSub}>{appointments.length} randevu · {completedCount} tamamlandı</Text>
         </View>
@@ -250,6 +250,7 @@ function AppointmentCard({ appt, onPress }: { appt: Appointment; onPress: () => 
   return (
     <TouchableOpacity style={styles.apptCard} onPress={onPress}>
       <View style={{ flex: 1 }}>
+        <Text style={styles.apptCustomer}>{appt.customerName ?? 'Müşteri'}</Text>
         <Text style={styles.apptService}>{appt.serviceName ?? appt.serviceId}</Text>
         <Text style={styles.apptMeta}>{dateStr}  {appt.timeSlot}</Text>
         {appt.kaporaAmount ? (
@@ -293,7 +294,8 @@ const styles = StyleSheet.create({
   sectionTitle: { fontSize: 14, fontWeight: '700', color: Colors.primary },
 
   apptCard:    { backgroundColor: Colors.surface, borderRadius: 12, padding: 14, flexDirection: 'row', alignItems: 'center', borderWidth: 1, borderColor: Colors.borderLight },
-  apptService: { fontSize: 14, fontWeight: '700', color: Colors.primary },
+  apptCustomer:{ fontSize: 14, fontWeight: '800', color: Colors.primary },
+  apptService: { fontSize: 13, fontWeight: '600', color: Colors.textSecondary, marginTop: 1 },
   apptMeta:    { fontSize: 12, color: Colors.textSecondary, marginTop: 3 },
   apptKapora:  { fontSize: 12, color: '#16a34a', fontWeight: '600', marginTop: 2 },
 

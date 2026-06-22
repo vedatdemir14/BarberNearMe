@@ -12,6 +12,7 @@ import {
   Timestamp,
 } from 'firebase/firestore';
 import { db } from './firebase';
+import { addToWallet } from './barberService';
 import { getUserPushToken, sendPushNotification } from './notificationService';
 
 export type AppointmentStatus = 'pending' | 'confirmed' | 'completed' | 'cancelled';
@@ -19,6 +20,7 @@ export type AppointmentStatus = 'pending' | 'confirmed' | 'completed' | 'cancell
 export interface Appointment {
   id: string;
   customerId: string;
+  customerName?: string;
   barberId: string;
   staffId: string;
   staffName: string;
@@ -61,10 +63,24 @@ export async function updateAppointmentStatus(
   status: AppointmentStatus,
   cancelledBy?: 'customer' | 'barber',
 ): Promise<void> {
+  // Önceki durumu al (cüzdana çift ekleme yapmamak için)
+  const prev = await getAppointment(id);
+
   await updateDoc(doc(db, 'appointments', id), {
     status,
     ...(status === 'cancelled' && cancelledBy ? { cancelledBy } : {}),
   });
+
+  // Randevu tamamlandığında kalan ücret (toplam − kapora) berberin cüzdanına eklenir.
+  // Kapora rezervasyonda zaten eklenmişti; burada sadece geri kalanı ekliyoruz.
+  if (status === 'completed' && prev && prev.status !== 'completed') {
+    const total = prev.totalPrice ?? prev.servicePrice ?? 0;
+    const kapora = prev.kaporaAmount ?? 0;
+    const remaining = Math.max(0, total - kapora);
+    if (remaining > 0) {
+      await addToWallet(prev.barberId, remaining).catch(() => {});
+    }
+  }
 
   const appt = await getAppointment(id);
   if (!appt) return;

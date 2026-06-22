@@ -106,20 +106,23 @@ async function run() {
   ];
 
   let i = 0;
+  let walletTotal = 0;
   for (const p of plan) {
     const svc = pick(services, i);
     const stf = pick(staff, i);
     const cust = pick(MOCK_CUSTOMERS, i);
-    const kapora = Math.round((svc.price ?? 0) * 0.2);
+    const price = svc.price ?? 0;
+    const kapora = Math.round(price * 0.1);
     const id = `mock_montella_appt_${i + 1}`;
     await setDoc(doc(db, 'appointments', id), {
       customerId: cust.id,
+      customerName: `${cust.firstName} ${cust.lastName}`,
       barberId: shop.id,
       staffId: stf.id,
       staffName: stf.name,
       serviceId: svc.id,
       serviceName: svc.name,
-      servicePrice: svc.price ?? 0,
+      servicePrice: price,
       date: ts(p.day, p.hour, p.min),
       timeSlot: `${String(p.hour).padStart(2, '0')}:${String(p.min).padStart(2, '0')}`,
       durationMin: svc.durationMin ?? 30,
@@ -127,12 +130,18 @@ async function run() {
       ...(p.cancelledBy ? { cancelledBy: p.cancelledBy } : {}),
       kaporaPaid: true,
       kaporaAmount: kapora,
-      totalPrice: svc.price ?? 0,
+      totalPrice: price,
       createdAt: serverTimestamp(),
     });
+    // Cüzdan: kapora rezervasyonda; tamamlananlarda kalan ücret de eklenir
+    walletTotal += kapora + (p.status === 'completed' ? (price - kapora) : 0);
     i++;
   }
   console.log(`✅ ${plan.length} randevu yazıldı (bekleyen 3, onaylı 3, tamamlandı 3, iptal 2).`);
+
+  // Montella cüzdan bakiyesini mock randevulara göre ayarla
+  await setDoc(doc(db, 'barbers', shop.id), { walletBalance: walletTotal }, { merge: true });
+  console.log(`✅ Cüzdan bakiyesi ₺${walletTotal} olarak ayarlandı (kapora + tamamlanan iş geliri).`);
   console.log('🎉 Tamamlandı.');
   process.exit(0);
 }

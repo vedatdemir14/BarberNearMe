@@ -138,6 +138,10 @@ export default function BarberAppointmentsScreen() {
               {/* Üst satır */}
               <View style={styles.cardTop}>
                 <View style={{ flex: 1 }}>
+                  <View style={styles.customerRow}>
+                    <Ionicons name="person-circle-outline" size={18} color={Colors.primary} />
+                    <Text style={styles.customerName}>{a.customerName || 'Müşteri'}</Text>
+                  </View>
                   <Text style={styles.serviceName}>{a.serviceName || a.serviceId}</Text>
                   <Text style={styles.meta}>{a.staffName || '—'}</Text>
                   <Text style={styles.meta}>{dateStr}  {a.timeSlot}</Text>
@@ -197,7 +201,9 @@ const styles = StyleSheet.create({
 
   card:        { backgroundColor: Colors.surface, borderRadius: 14, padding: 14, borderWidth: 1, borderColor: Colors.borderLight },
   cardTop:     { flexDirection: 'row', gap: 10 },
-  serviceName: { fontSize: 15, fontWeight: '700', color: Colors.primary },
+  customerRow: { flexDirection: 'row', alignItems: 'center', gap: 5, marginBottom: 3 },
+  customerName:{ fontSize: 15, fontWeight: '800', color: Colors.primary },
+  serviceName: { fontSize: 14, fontWeight: '700', color: Colors.textSecondary },
   meta:        { fontSize: 12, color: Colors.textSecondary, marginTop: 3 },
   kapora:      { fontSize: 12, color: '#16a34a', fontWeight: '600', marginTop: 3 },
   price:       { fontSize: 12, color: Colors.textSecondary, marginTop: 2 },

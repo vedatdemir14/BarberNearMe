@@ -11,6 +11,7 @@ import { Colors } from '../../constants';
 import BackButton from '../../components/BackButton';
 import { addToWallet } from '../../services/barberService';
 import { createAppointment } from '../../services/appointmentService';
+import { useAuth } from '../../hooks/useAuth';
 import { auth } from '../../services/firebase';
 import { Timestamp } from 'firebase/firestore';
 
@@ -26,6 +27,7 @@ function formatExpiry(val: string) {
 }
 
 export default function PaymentScreen({ route, navigation }: Props) {
+  const { profile } = useAuth();
   const { barberId, barberName, serviceName, servicePrice, serviceId,
           date, timeSlot, staffName, staffId } = route.params;
 
@@ -64,6 +66,7 @@ export default function PaymentScreen({ route, navigation }: Props) {
       // 2. Randevuyu oluştur
       const appointmentId = await createAppointment({
         customerId:   user.uid,
+        customerName: profile ? `${profile.firstName} ${profile.lastName}`.trim() : 'Müşteri',
         barberId,
         serviceId,
         serviceName,
