@@ -3,6 +3,7 @@ import React, { useCallback, useState } from 'react';
 import { View, Text, TouchableOpacity, FlatList, StyleSheet, ActivityIndicator, Alert } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { Colors } from '../../constants';
+import { friendlyError } from '../../utils/errorMessage';
 import { useAuth } from '../../hooks/useAuth';
 import { getCustomerAppointments, updateAppointmentStatus, Appointment } from '../../services/appointmentService';
 import { getBarber } from '../../services/barberService';
@@ -59,11 +60,11 @@ export default function AppointmentsListScreen({ navigation }: any) {
         style: 'destructive',
         onPress: async () => {
           try {
-            await updateAppointmentStatus(item.id, 'cancelled');
+            await updateAppointmentStatus(item.id, 'cancelled', 'customer');
             // Anlık güncelle: listede durumu cancelled yap
             setAppts(prev => prev.map(a => (a.id === item.id ? { ...a, status: 'cancelled' } : a)));
           } catch (e: any) {
-            Alert.alert('Hata', e.message ?? 'Randevu iptal edilemedi.');
+            Alert.alert('Hata', friendlyError(e, 'Randevu iptal edilemedi.'));
           }
         },
       },
@@ -107,22 +108,22 @@ export default function AppointmentsListScreen({ navigation }: any) {
             const badge = badgeStyle(item.status);
             return (
               <View style={styles.card}>
-                <View style={styles.icon}><Text style={{ fontSize: 22 }}>💈</Text></View>
+                <View style={styles.icon}><Text style={{ fontSize: 18, color: Colors.primary }}>✂</Text></View>
                 <View style={{ flex: 1 }}>
                   <Text style={styles.shopName}>{shopNames[item.barberId] ?? 'Berber'}</Text>
                   <Text style={styles.sub}>{item.serviceName} · {item.staffName}</Text>
-                  <Text style={styles.date}>📅 {formatDate(item.date.toDate())} · {item.timeSlot}</Text>
+                  <Text style={styles.date}>{formatDate(item.date.toDate())} · {item.timeSlot}</Text>
                   <View style={[styles.badge, { backgroundColor: badge.bg }]}>
                     <Text style={[styles.badgeText, { color: badge.text }]}>{badge.label}</Text>
                   </View>
                   {item.status === 'completed' && (
-                    <TouchableOpacity onPress={() => navigation.navigate('Rating', { appointmentId: item.id })}>
+                    <TouchableOpacity style={styles.actionBtn} onPress={() => navigation.navigate('Rating', { appointmentId: item.id })}>
                       <Text style={styles.rateLink}>Değerlendir →</Text>
                     </TouchableOpacity>
                   )}
                   {(item.status === 'pending' || item.status === 'confirmed') &&
                     item.date.toDate().getTime() > now && (
-                      <TouchableOpacity onPress={() => handleCancel(item)}>
+                      <TouchableOpacity style={styles.actionBtn} onPress={() => handleCancel(item)}>
                         <Text style={styles.cancelLink}>İptal Et</Text>
                       </TouchableOpacity>
                     )}
@@ -146,13 +147,14 @@ const styles = StyleSheet.create({
   tabText: { fontSize: 13, color: Colors.textSecondary },
   tabTextActive: { color: Colors.secondary, fontWeight: '700' },
   card: { flexDirection: 'row', gap: 12, padding: 14, backgroundColor: Colors.surface, borderRadius: 14, borderWidth: 1, borderColor: Colors.borderLight },
-  icon: { width: 48, height: 48, borderRadius: 12, backgroundColor: '#eff6ff', alignItems: 'center', justifyContent: 'center' },
+  icon: { width: 48, height: 48, borderRadius: 12, backgroundColor: '#F5F5F5', alignItems: 'center', justifyContent: 'center' },
   shopName: { fontSize: 14, fontWeight: '700', color: Colors.primary },
   sub: { fontSize: 12, color: Colors.textSecondary, marginTop: 2 },
   date: { fontSize: 12, color: Colors.secondary, fontWeight: '600', marginTop: 4 },
   badge: { alignSelf: 'flex-start', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 20, marginTop: 6 },
   badgeText: { fontSize: 11, fontWeight: '700' },
-  rateLink: { color: Colors.secondary, fontSize: 12, marginTop: 6, fontWeight: '600' },
-  cancelLink: { color: Colors.danger, fontSize: 12, marginTop: 6, fontWeight: '600' },
+  actionBtn: { alignSelf: 'flex-end', marginTop: 6, paddingHorizontal: 12, paddingVertical: 6, borderRadius: 8, borderWidth: 1, borderColor: Colors.borderLight },
+  rateLink: { color: Colors.secondary, fontSize: 12, fontWeight: '700' },
+  cancelLink: { color: Colors.danger, fontSize: 12, fontWeight: '700' },
   empty: { textAlign: 'center', color: Colors.textMuted, marginTop: 40 },
 });

@@ -4,7 +4,9 @@ import {
   View, Text, StyleSheet, FlatList,
   TouchableOpacity, ActivityIndicator, Alert, RefreshControl,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '../../constants';
+import { friendlyError } from '../../utils/errorMessage';
 import { useAuth } from '../../hooks/useAuth';
 import { getBarberAppointments, updateAppointmentStatus, Appointment } from '../../services/appointmentService';
 
@@ -14,17 +16,19 @@ const STATUS_MAP: Record<string, string> = {
   'Tamamlandı': 'completed', 'İptal': 'cancelled',
 };
 
+const STATUS_META: Record<string, { label: string; color: string }> = {
+  pending:   { label: 'Bekliyor',   color: '#D97706' },
+  confirmed: { label: 'Onaylandı',  color: '#16A34A' },
+  completed: { label: 'Tamamlandı', color: '#2563EB' },
+  cancelled: { label: 'İptal',      color: '#DC2626' },
+};
+
 function StatusBadge({ status }: { status: string }) {
-  const map: Record<string, { label: string; bg: string; color: string }> = {
-    pending:   { label: 'Bekliyor',   bg: '#fef9c3', color: '#854d0e' },
-    confirmed: { label: 'Onaylandı',  bg: '#dcfce7', color: '#166534' },
-    completed: { label: 'Tamamlandı', bg: '#e0e7ff', color: '#3730a3' },
-    cancelled: { label: 'İptal',      bg: '#fee2e2', color: '#991b1b' },
-  };
-  const s = map[status] ?? { label: status, bg: '#f3f4f6', color: '#374151' };
+  const s = STATUS_META[status] ?? { label: status, color: Colors.textMuted };
   return (
-    <View style={{ backgroundColor: s.bg, borderRadius: 8, paddingHorizontal: 8, paddingVertical: 3 }}>
-      <Text style={{ fontSize: 11, fontWeight: '700', color: s.color }}>{s.label}</Text>
+    <View style={styles.badge}>
+      <View style={[styles.badgeDot, { backgroundColor: s.color }]} />
+      <Text style={[styles.badgeText, { color: s.color }]}>{s.label}</Text>
     </View>
   );
 }
@@ -67,10 +71,10 @@ export default function BarberAppointmentsScreen() {
           onPress: async () => {
             setActionId(appt.id);
             try {
-              await updateAppointmentStatus(appt.id, action);
+              await updateAppointmentStatus(appt.id, action, action === 'cancelled' ? 'barber' : undefined);
               setAppts(prev => prev.map(a => a.id === appt.id ? { ...a, status: action } : a));
             } catch (e: any) {
-              Alert.alert('Hata', e.message);
+              Alert.alert('Hata', friendlyError(e));
             } finally { setActionId(null); }
           },
         },
@@ -118,7 +122,7 @@ export default function BarberAppointmentsScreen() {
         contentContainerStyle={{ padding: 16, gap: 12 }}
         ListEmptyComponent={
           <View style={styles.empty}>
-            <Text style={{ fontSize: 28 }}>📭</Text>
+            <Ionicons name="calendar-outline" size={34} color={Colors.textMuted} />
             <Text style={styles.emptyText}>Bu filtrede randevu yok</Text>
           </View>
         }
@@ -130,15 +134,19 @@ export default function BarberAppointmentsScreen() {
           const isActing = actionId === a.id;
 
           return (
-            <View style={styles.card}>
+            <View style={[styles.card, { borderLeftWidth: 4, borderLeftColor: STATUS_META[a.status]?.color ?? Colors.border }]}>
               {/* Üst satır */}
               <View style={styles.cardTop}>
                 <View style={{ flex: 1 }}>
+                  <View style={styles.customerRow}>
+                    <Ionicons name="person-circle-outline" size={18} color={Colors.primary} />
+                    <Text style={styles.customerName}>{a.customerName || 'Müşteri'}</Text>
+                  </View>
                   <Text style={styles.serviceName}>{a.serviceName || a.serviceId}</Text>
-                  <Text style={styles.meta}>👤 {a.staffName || '—'}</Text>
-                  <Text style={styles.meta}>📅 {dateStr}  🕐 {a.timeSlot}</Text>
+                  <Text style={styles.meta}>{a.staffName || '—'}</Text>
+                  <Text style={styles.meta}>{dateStr}  {a.timeSlot}</Text>
                   {a.kaporaAmount ? (
-                    <Text style={styles.kapora}>💰 Kapora alındı: ₺{a.kaporaAmount}</Text>
+                    <Text style={styles.kapora}>Kapora alındı: ₺{a.kaporaAmount}</Text>
                   ) : null}
                   {a.servicePrice ? (
                     <Text style={styles.price}>Toplam: ₺{a.servicePrice}</Text>
@@ -154,26 +162,20 @@ export default function BarberAppointmentsScreen() {
                 <View style={styles.actions}>
                   {a.status === 'pending' && (
                     <>
-                      <TouchableOpacity
-                        style={[styles.actionBtn, styles.confirmBtn]}
-                        onPress={() => handleAction(a, 'confirmed')}
-                      >
-                        <Text style={styles.confirmText}>✓ Onayla</Text>
+                      <TouchableOpacity style={[styles.actionBtn, styles.confirmBtn]} onPress={() => handleAction(a, 'confirmed')}>
+                        <Ionicons name="checkmark" size={16} color="#fff" />
+                        <Text style={styles.confirmText}>Onayla</Text>
                       </TouchableOpacity>
-                      <TouchableOpacity
-                        style={[styles.actionBtn, styles.cancelBtn]}
-                        onPress={() => handleAction(a, 'cancelled')}
-                      >
-                        <Text style={styles.cancelText}>✕ Reddet</Text>
+                      <TouchableOpacity style={[styles.actionBtn, styles.cancelBtn]} onPress={() => handleAction(a, 'cancelled')}>
+                        <Ionicons name="close" size={16} color={Colors.danger} />
+                        <Text style={styles.cancelText}>Reddet</Text>
                       </TouchableOpacity>
                     </>
                   )}
                   {a.status === 'confirmed' && (
-                    <TouchableOpacity
-                      style={[styles.actionBtn, styles.completeBtn]}
-                      onPress={() => handleAction(a, 'completed')}
-                    >
-                      <Text style={styles.completeText}>✓ Tamamlandı İşaretle</Text>
+                    <TouchableOpacity style={[styles.actionBtn, styles.completeBtn]} onPress={() => handleAction(a, 'completed')}>
+                      <Ionicons name="checkmark-done" size={16} color="#fff" />
+                      <Text style={styles.completeText}>Tamamlandı İşaretle</Text>
                     </TouchableOpacity>
                   )}
                 </View>
@@ -193,25 +195,31 @@ const styles = StyleSheet.create({
   count:       { fontSize: 13, color: Colors.textSecondary },
   filterScroll:{ flexGrow: 0, marginBottom: 4 },
   chip:        { paddingHorizontal: 14, paddingVertical: 7, borderRadius: 20, borderWidth: 1.5, borderColor: Colors.border, backgroundColor: Colors.surface },
-  chipActive:  { backgroundColor: Colors.primary, borderColor: Colors.primary },
+  chipActive:  { backgroundColor: Colors.secondary, borderColor: Colors.secondary },
   chipText:    { fontSize: 13, color: Colors.textSecondary, fontWeight: '500' },
-  chipTextActive: { color: '#fff' },
+  chipTextActive: { color: '#020000' },
 
   card:        { backgroundColor: Colors.surface, borderRadius: 14, padding: 14, borderWidth: 1, borderColor: Colors.borderLight },
   cardTop:     { flexDirection: 'row', gap: 10 },
-  serviceName: { fontSize: 15, fontWeight: '700', color: Colors.primary },
+  customerRow: { flexDirection: 'row', alignItems: 'center', gap: 5, marginBottom: 3 },
+  customerName:{ fontSize: 15, fontWeight: '800', color: Colors.primary },
+  serviceName: { fontSize: 14, fontWeight: '700', color: Colors.textSecondary },
   meta:        { fontSize: 12, color: Colors.textSecondary, marginTop: 3 },
   kapora:      { fontSize: 12, color: '#16a34a', fontWeight: '600', marginTop: 3 },
   price:       { fontSize: 12, color: Colors.textSecondary, marginTop: 2 },
 
+  badge:       { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  badgeDot:    { width: 8, height: 8, borderRadius: 4 },
+  badgeText:   { fontSize: 12, fontWeight: '700' },
+
   actions:     { flexDirection: 'row', gap: 8, marginTop: 12 },
-  actionBtn:   { flex: 1, paddingVertical: 9, borderRadius: 10, alignItems: 'center' },
-  confirmBtn:  { backgroundColor: '#dcfce7', borderWidth: 1, borderColor: '#86efac' },
-  confirmText: { fontWeight: '700', color: '#166534', fontSize: 13 },
-  cancelBtn:   { backgroundColor: '#fee2e2', borderWidth: 1, borderColor: '#fca5a5' },
-  cancelText:  { fontWeight: '700', color: '#991b1b', fontSize: 13 },
-  completeBtn: { backgroundColor: '#e0e7ff', borderWidth: 1, borderColor: '#a5b4fc' },
-  completeText:{ fontWeight: '700', color: '#3730a3', fontSize: 13 },
+  actionBtn:   { flex: 1, flexDirection: 'row', gap: 6, paddingVertical: 11, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
+  confirmBtn:  { backgroundColor: '#16A34A' },
+  confirmText: { fontWeight: '700', color: '#fff', fontSize: 13 },
+  cancelBtn:   { backgroundColor: Colors.surface, borderWidth: 1.5, borderColor: Colors.danger },
+  cancelText:  { fontWeight: '700', color: Colors.danger, fontSize: 13 },
+  completeBtn: { backgroundColor: Colors.primary },
+  completeText:{ fontWeight: '700', color: '#fff', fontSize: 13 },
 
   empty:     { alignItems: 'center', paddingTop: 60, gap: 10 },
   emptyText: { fontSize: 15, color: Colors.textSecondary },

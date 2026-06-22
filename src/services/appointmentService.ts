@@ -12,12 +12,15 @@ import {
   Timestamp,
 } from 'firebase/firestore';
 import { db } from './firebase';
+import { addToWallet } from './barberService';
+import { getUserPushToken, sendPushNotification } from './notificationService';
 
 export type AppointmentStatus = 'pending' | 'confirmed' | 'completed' | 'cancelled';
 
 export interface Appointment {
   id: string;
   customerId: string;
+  customerName?: string;
   barberId: string;
   staffId: string;
   staffName: string;
@@ -28,6 +31,7 @@ export interface Appointment {
   timeSlot: string;        // "10:30"
   durationMin?: number;
   status: AppointmentStatus;
+  cancelledBy?: 'customer' | 'barber';
   createdAt: any;
   notes?: string;
   // Kapora ödeme (Payment ekranı)
@@ -44,7 +48,71 @@ export async function createAppointment(
     ...data,
     createdAt: serverTimestamp(),
   });
+  // Berbere bildirim: yeni randevu talebi
+  const apptData = data as Appointment;
+  getUserPushToken(apptData.barberId).then(token => {
+    if (token) sendPushNotification(token, '✂️ Yeni Randevu Talebi', `Yeni bir randevu talebi aldınız.`);
+  }).catch(() => {});
+
   return ref.id;
+}
+
+// ── Update appointment status ─────────────────────────────────
+export async function updateAppointmentStatus(
+  id: string,
+  status: AppointmentStatus,
+  cancelledBy?: 'customer' | 'barber',
+): Promise<void> {
+  // Önceki durumu al (cüzdana çift ekleme yapmamak için)
+  const prev = await getAppointment(id);
+
+  await updateDoc(doc(db, 'appointments', id), {
+    status,
+    ...(status === 'cancelled' && cancelledBy ? { cancelledBy } : {}),
+  });
+
+  // Randevu tamamlandığında kalan ücret (toplam − kapora) berberin cüzdanına eklenir.
+  // Kapora rezervasyonda zaten eklenmişti; burada sadece geri kalanı ekliyoruz.
+  if (status === 'completed' && prev && prev.status !== 'completed') {
+    const total = prev.totalPrice ?? prev.servicePrice ?? 0;
+    const kapora = prev.kaporaAmount ?? 0;
+    const remaining = Math.max(0, total - kapora);
+    if (remaining > 0) {
+      await addToWallet(prev.barberId, remaining).catch(() => {});
+    }
+  }
+
+  // Randevu iptal edilince (müşteri ya da berber) alınan kapora müşteriye iade edilir
+  // → berberin cüzdanından düşülür.
+  if (status === 'cancelled' && prev && prev.status !== 'cancelled') {
+    const kapora = prev.kaporaAmount ?? 0;
+    if (kapora > 0) {
+      await addToWallet(prev.barberId, -kapora).catch(() => {});
+    }
+  }
+
+  const appt = await getAppointment(id);
+  if (!appt) return;
+
+  // Müşteri kendi iptal ettiyse → bildirim BERBERE gider (müşteri zaten biliyor)
+  if (status === 'cancelled' && cancelledBy === 'customer') {
+    const bToken = await getUserPushToken(appt.barberId).catch(() => null);
+    if (bToken) sendPushNotification(bToken, '❌ Randevu İptal Edildi', 'Bir müşteri randevusunu iptal etti.', { appointmentId: id }).catch(() => {});
+    return;
+  }
+
+  // Diğer tüm durumlar → bildirim MÜŞTERİYE gider
+  const token = await getUserPushToken(appt.customerId).catch(() => null);
+  if (!token) return;
+
+  const messages: Record<string, { title: string; body: string }> = {
+    confirmed:  { title: '✅ Randevunuz Onaylandı', body: `${appt.timeSlot} randevunuz onaylandı.` },
+    cancelled:  { title: '❌ Randevunuz İptal Edildi', body: 'Randevunuz berber tarafından iptal edildi.' },
+    completed:  { title: '🎉 Randevunuz Tamamlandı', body: 'Randevunuzu değerlendirmeyi unutmayın!' },
+  };
+
+  const msg = messages[status];
+  if (msg) sendPushNotification(token, msg.title, msg.body, { appointmentId: id }).catch(() => {});
 }
 
 // ── Get single appointment ────────────────────────────────────
@@ -86,6 +154,57 @@ export interface BookedSlot {
   durationMin: number;
 }
 
+// ── Cüzdan hareketleri (randevulardan türetilir) ──────────────
+export interface WalletTx {
+  id: string;
+  type: 'in' | 'out';
+  amount: number;
+  title: string;
+  customerName?: string;
+  serviceName?: string;
+  dateMs: number;
+}
+
+// Bir berberin randevularından cüzdan hareketleri listesini üretir (en yeni önce).
+export function buildWalletTransactions(appts: Appointment[]): WalletTx[] {
+  const txs: WalletTx[] = [];
+  for (const a of appts) {
+    const dateMs = a.date?.toMillis?.() ?? 0;
+    const kapora = a.kaporaAmount ?? 0;
+    const total  = a.totalPrice ?? a.servicePrice ?? 0;
+
+    // Rezervasyonda alınan kapora (iptal/tamam fark etmez, başta alınmıştı)
+    if (a.kaporaPaid && kapora > 0) {
+      txs.push({
+        id: `${a.id}_kapora`, type: 'in', amount: kapora,
+        title: 'Kapora alındı', customerName: a.customerName, serviceName: a.serviceName,
+        dateMs,
+      });
+    }
+    // Tamamlanınca kalan ücret
+    if (a.status === 'completed') {
+      const remaining = Math.max(0, total - kapora);
+      if (remaining > 0) {
+        txs.push({
+          id: `${a.id}_complete`, type: 'in', amount: remaining,
+          title: 'Hizmet geliri (tamamlandı)', customerName: a.customerName, serviceName: a.serviceName,
+          dateMs: dateMs + 1,
+        });
+      }
+    }
+    // İptal edilince kapora iadesi (cüzdandan çıkış)
+    if (a.status === 'cancelled' && kapora > 0) {
+      txs.push({
+        id: `${a.id}_refund`, type: 'out', amount: kapora,
+        title: a.cancelledBy === 'customer' ? 'İptal (müşteri) — kapora iadesi' : 'İptal (berber) — kapora iadesi',
+        customerName: a.customerName, serviceName: a.serviceName,
+        dateMs: dateMs + 2,
+      });
+    }
+  }
+  return txs.sort((x, y) => y.dateMs - x.dateMs);
+}
+
 export async function getBookedSlots(
   barberId: string,
   date: Date
@@ -110,12 +229,4 @@ export async function getBookedSlots(
       return t && t >= startOfDay && t <= endOfDay;
     })
     .map(a => ({ timeSlot: a.timeSlot, durationMin: a.durationMin ?? 30 }));
-}
-
-// ── Update appointment status ─────────────────────────────────
-export async function updateAppointmentStatus(
-  appointmentId: string,
-  status: AppointmentStatus
-): Promise<void> {
-  await updateDoc(doc(db, 'appointments', appointmentId), { status });
 }

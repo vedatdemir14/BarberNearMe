@@ -5,8 +5,10 @@ import {
 } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../navigation';
-import { login } from '../../services/authService';
+import { login, sendPasswordReset } from '../../services/authService';
 import { Colors } from '../../constants';
+import PasswordInput from '../../components/PasswordInput';
+import { friendlyError } from '../../utils/errorMessage';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Login'>;
 
@@ -14,6 +16,19 @@ export default function LoginScreen({ navigation }: Props) {
   const [email, setEmail]       = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading]   = useState(false);
+
+  async function handleForgotPassword() {
+    if (!email.trim()) {
+      Alert.alert('E-posta Girin', 'Lütfen önce e-posta adresinizi yukarıya girin.');
+      return;
+    }
+    try {
+      await sendPasswordReset(email.trim());
+      Alert.alert('Gönderildi ✓', 'Şifre sıfırlama linki e-posta adresinize gönderildi.');
+    } catch (e: any) {
+      Alert.alert('Hata', friendlyError(e));
+    }
+  }
 
   async function handleLogin() {
     if (!email || !password) {
@@ -25,7 +40,7 @@ export default function LoginScreen({ navigation }: Props) {
       await login(email.trim(), password);
       // Navigation will auto-redirect via useAuth in Navigation component
     } catch (e: any) {
-      Alert.alert('Giriş Hatası', e.message);
+      Alert.alert('Giriş Hatası', friendlyError(e));
     } finally {
       setLoading(false);
     }
@@ -59,15 +74,14 @@ export default function LoginScreen({ navigation }: Props) {
 
           <View style={styles.fieldGroup}>
             <Text style={styles.label}>Şifre</Text>
-            <TextInput
+            <PasswordInput
               style={styles.input}
               placeholder="••••••••"
               placeholderTextColor={Colors.textMuted}
-              secureTextEntry
               value={password}
               onChangeText={setPassword}
             />
-            <TouchableOpacity style={{ alignSelf: 'flex-end', marginTop: 6 }}>
+            <TouchableOpacity style={{ alignSelf: 'flex-end', marginTop: 6 }} onPress={handleForgotPassword}>
               <Text style={styles.link}>Şifremi unuttum</Text>
             </TouchableOpacity>
           </View>
@@ -79,18 +93,6 @@ export default function LoginScreen({ navigation }: Props) {
               : <Text style={styles.btnPrimaryText}>Giriş Yap</Text>
             }
           </TouchableOpacity>
-
-          <Text style={styles.orText}>— veya —</Text>
-
-          {/* Social buttons (UI only for prototype) */}
-          <View style={styles.socialRow}>
-            <TouchableOpacity style={styles.socialBtn}>
-              <Text style={styles.socialBtnText}>🇬  Google</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.socialBtn}>
-              <Text style={styles.socialBtnText}> Apple</Text>
-            </TouchableOpacity>
-          </View>
 
           <View style={styles.divider} />
 
@@ -115,7 +117,7 @@ export default function LoginScreen({ navigation }: Props) {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.surface },
   inner: { padding: 24, gap: 16 },
-  logoRow: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 8 },
+  logoRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10, marginBottom: 8 },
   logoIcon: { fontSize: 28 },
   logoText: { fontSize: 22, fontWeight: '800', color: Colors.primary },
   title: { fontSize: 24, fontWeight: '800', color: Colors.primary },
@@ -126,10 +128,10 @@ const styles = StyleSheet.create({
     padding: 13, fontSize: 15, color: Colors.text, backgroundColor: '#fafafa',
   },
   btnPrimary: {
-    backgroundColor: Colors.primary, borderRadius: 12,
+    backgroundColor: Colors.secondary, borderRadius: 12,
     paddingVertical: 15, alignItems: 'center',
   },
-  btnPrimaryText: { color: '#fff', fontSize: 16, fontWeight: '700' },
+  btnPrimaryText: { color: '#020000', fontSize: 16, fontWeight: '700' },
   orText: { textAlign: 'center', color: Colors.textMuted, fontSize: 13 },
   socialRow: { flexDirection: 'row', gap: 12 },
   socialBtn: {
@@ -139,9 +141,9 @@ const styles = StyleSheet.create({
   socialBtnText: { fontSize: 14, color: Colors.text },
   divider: { height: 1, backgroundColor: Colors.border },
   btnOutline: {
-    borderWidth: 1.5, borderColor: Colors.secondary, borderRadius: 12,
-    paddingVertical: 14, alignItems: 'center', backgroundColor: '#eff6ff',
+    borderWidth: 1.5, borderColor: Colors.primary, borderRadius: 12,
+    paddingVertical: 14, alignItems: 'center',
   },
-  btnOutlineText: { color: Colors.secondary, fontSize: 15, fontWeight: '600' },
-  link: { color: Colors.secondary, fontSize: 13 },
+  btnOutlineText: { color: Colors.primary, fontSize: 15, fontWeight: '600' },
+  link: { color: Colors.primary, fontSize: 13 },
 });

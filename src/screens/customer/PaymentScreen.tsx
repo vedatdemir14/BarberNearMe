@@ -3,12 +3,15 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import {
   View, Text, TextInput, TouchableOpacity,
   StyleSheet, ScrollView, Alert, ActivityIndicator,
+  KeyboardAvoidingView, Platform,
 } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../navigation';
 import { Colors } from '../../constants';
+import BackButton from '../../components/BackButton';
 import { addToWallet } from '../../services/barberService';
 import { createAppointment } from '../../services/appointmentService';
+import { useAuth } from '../../hooks/useAuth';
 import { auth } from '../../services/firebase';
 import { Timestamp } from 'firebase/firestore';
 
@@ -24,15 +27,17 @@ function formatExpiry(val: string) {
 }
 
 export default function PaymentScreen({ route, navigation }: Props) {
+  const { profile } = useAuth();
   const { barberId, barberName, serviceName, servicePrice, serviceId,
           date, timeSlot, staffName, staffId } = route.params;
 
   const kapora = Math.round(servicePrice * 0.1);
 
-  const [cardNumber, setCardNumber] = useState('');
-  const [expiry, setExpiry]         = useState('');
-  const [cvv, setCvv]               = useState('');
-  const [cardName, setCardName]     = useState('');
+  // Demo: kart bilgileri önceden dolu gelir (sunumda hızlı "Öde")
+  const [cardNumber, setCardNumber] = useState('4242 4242 4242 4242');
+  const [expiry, setExpiry]         = useState('12/30');
+  const [cvv, setCvv]               = useState('123');
+  const [cardName, setCardName]     = useState('Demo Kullanıcı');
   const [loading, setLoading]       = useState(false);
 
   function isFormValid() {
@@ -61,6 +66,7 @@ export default function PaymentScreen({ route, navigation }: Props) {
       // 2. Randevuyu oluştur
       const appointmentId = await createAppointment({
         customerId:   user.uid,
+        customerName: profile ? `${profile.firstName} ${profile.lastName}`.trim() : 'Müşteri',
         barberId,
         serviceId,
         serviceName,
@@ -87,16 +93,15 @@ export default function PaymentScreen({ route, navigation }: Props) {
     <SafeAreaView style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()}>
-          <Text style={styles.back}>←</Text>
-        </TouchableOpacity>
+        <BackButton onPress={() => navigation.goBack()} />
         <View>
           <Text style={styles.headerTitle}>Kapora Ödemesi</Text>
           <Text style={styles.headerSub}>{barberName}</Text>
         </View>
       </View>
 
-      <ScrollView contentContainerStyle={styles.scroll}>
+      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }}>
+      <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
 
         {/* Özet kartı */}
         <View style={styles.summaryCard}>
@@ -143,7 +148,7 @@ export default function PaymentScreen({ route, navigation }: Props) {
           <View style={styles.inputRow}>
             <Text style={styles.cardIcon}>💳</Text>
             <TextInput
-              style={[styles.input, { flex: 1, marginBottom: 0 }]}
+              style={{ flex: 1, paddingVertical: 12, fontSize: 15, color: Colors.text }}
               placeholder="0000 0000 0000 0000"
               placeholderTextColor={Colors.textMuted}
               value={cardNumber}
@@ -184,7 +189,7 @@ export default function PaymentScreen({ route, navigation }: Props) {
 
         {/* Güvenlik notu */}
         <View style={styles.secureNote}>
-          <Text style={styles.secureText}>🔒 256-bit SSL ile şifrelenmiş güvenli ödeme</Text>
+          <Text style={styles.secureText}>256-bit SSL ile şifrelenmiş güvenli ödeme</Text>
         </View>
 
         {/* Ödeme butonu */}
@@ -201,6 +206,7 @@ export default function PaymentScreen({ route, navigation }: Props) {
 
         <View style={{ height: 24 }} />
       </ScrollView>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
@@ -231,7 +237,7 @@ const styles = StyleSheet.create({
   secureNote: { alignItems: 'center', paddingVertical: 4 },
   secureText: { fontSize: 12, color: Colors.textMuted },
 
-  payBtn:         { backgroundColor: Colors.primary, borderRadius: 14, paddingVertical: 16, alignItems: 'center' },
+  payBtn:         { backgroundColor: Colors.secondary, borderRadius: 14, paddingVertical: 16, alignItems: 'center' },
   payBtnDisabled: { backgroundColor: Colors.textMuted },
-  payBtnText:     { color: '#fff', fontSize: 16, fontWeight: '800' },
+  payBtnText:     { color: '#020000', fontSize: 16, fontWeight: '800' },
 });

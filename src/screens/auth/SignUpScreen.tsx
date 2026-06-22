@@ -8,6 +8,9 @@ import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../navigation';
 import { registerCustomer } from '../../services/authService';
 import { Colors } from '../../constants';
+import BackButton from '../../components/BackButton';
+import PasswordInput from '../../components/PasswordInput';
+import { friendlyError } from '../../utils/errorMessage';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'SignUp'>;
 
@@ -38,7 +41,7 @@ export default function SignUpScreen({ navigation }: Props) {
       await registerCustomer({ ...form });
       // Auto-navigates via useAuth
     } catch (e: any) {
-      Alert.alert('Kayıt Hatası', e.message);
+      Alert.alert('Kayıt Hatası', friendlyError(e));
     } finally {
       setLoading(false);
     }
@@ -48,9 +51,7 @@ export default function SignUpScreen({ navigation }: Props) {
     <SafeAreaView style={styles.container}>
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }}>
         <ScrollView contentContainerStyle={styles.inner} keyboardShouldPersistTaps="handled">
-          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
-            <Text style={styles.backText}>← Geri</Text>
-          </TouchableOpacity>
+          <BackButton onPress={() => navigation.goBack()} label="Geri" color={Colors.secondary} size={18} style={styles.backBtn} />
 
           <Text style={styles.title}>Hesap Oluştur</Text>
 
@@ -82,14 +83,14 @@ export default function SignUpScreen({ navigation }: Props) {
 
           <View>
             <Text style={styles.label}>Şifre *</Text>
-            <TextInput style={styles.input} placeholder="••••••••" placeholderTextColor={Colors.textMuted}
-              secureTextEntry value={form.password} onChangeText={set('password')} />
+            <PasswordInput style={styles.input} placeholder="••••••••" placeholderTextColor={Colors.textMuted}
+              value={form.password} onChangeText={set('password')} />
           </View>
 
           <View>
             <Text style={styles.label}>Şifre Tekrar *</Text>
-            <TextInput style={styles.input} placeholder="••••••••" placeholderTextColor={Colors.textMuted}
-              secureTextEntry value={form.confirmPassword} onChangeText={set('confirmPassword')} />
+            <PasswordInput style={styles.input} placeholder="••••••••" placeholderTextColor={Colors.textMuted}
+              value={form.confirmPassword} onChangeText={set('confirmPassword')} />
           </View>
 
           <TouchableOpacity style={styles.btnPrimary} onPress={handleRegister} disabled={loading}>
@@ -115,7 +116,7 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.surface },
   inner: { padding: 24, gap: 14 },
   backBtn: { marginBottom: 4 },
-  backText: { fontSize: 15, color: Colors.secondary },
+  backText: { fontSize: 15, color: Colors.primary },
   title: { fontSize: 24, fontWeight: '800', color: Colors.primary, marginBottom: 4 },
   row: { flexDirection: 'row', gap: 12 },
   label: { fontSize: 12, fontWeight: '600', color: Colors.textSecondary, marginBottom: 4 },
@@ -124,11 +125,11 @@ const styles = StyleSheet.create({
     padding: 12, fontSize: 15, color: Colors.text, backgroundColor: '#fafafa',
   },
   btnPrimary: {
-    backgroundColor: Colors.primary, borderRadius: 12,
+    backgroundColor: Colors.secondary, borderRadius: 12,
     paddingVertical: 15, alignItems: 'center', marginTop: 4,
   },
-  btnPrimaryText: { color: '#fff', fontSize: 16, fontWeight: '700' },
+  btnPrimaryText: { color: '#020000', fontSize: 16, fontWeight: '700' },
   loginRow: { flexDirection: 'row', justifyContent: 'center' },
   loginText: { fontSize: 13, color: Colors.textSecondary },
-  link: { fontSize: 13, color: Colors.secondary, fontWeight: '600' },
+  link: { fontSize: 13, color: Colors.primary, fontWeight: '600' },
 });

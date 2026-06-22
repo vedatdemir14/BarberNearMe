@@ -1,3 +1,4 @@
+import RangeSlider from '../../components/RangeSlider';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
@@ -6,7 +7,6 @@ import {
 } from 'react-native';
 import MapView, { Marker, Region } from 'react-native-maps';
 import * as Location from 'expo-location';
-import Slider from '@react-native-community/slider';
 import { Ionicons } from '@expo/vector-icons';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../navigation';
@@ -15,11 +15,12 @@ import { Colors } from '../../constants';
 
 const { width: SCREEN_W } = Dimensions.get('window');
 
-type Props = NativeStackScreenProps<RootStackParamList, 'CustomerTabs'>;
+// Tab ekranı; root stack'e de yönlendirdiği için esnek navigation tipi
+type Props = { navigation: any };
 
-const SORT_OPTIONS = ['Önerilen', 'Yakın', 'En İyi', 'Uygun Fiyat'];
+const SORT_OPTIONS = ['Puana Göre', 'Yakın', 'Uygun Fiyat'];
 const SERVICE_KEYWORDS = ['Saç', 'Sakal', 'Çocuk', 'Cilt'];
-const MAX_RADIUS = 50; // km — slider sonu = "Tümü" (mesafe filtresi yok)
+const MAX_RADIUS = 50; // km — "Tümü" (mesafe filtresi yok)
 
 // İki coğrafi nokta arası mesafe (km) — Haversine
 function haversineKm(lat1: number, lng1: number, lat2: number, lng2: number): number {
@@ -144,13 +145,14 @@ export default function HomeScreen({ navigation }: Props) {
 
   // ── Filtre/tercih durumları (Tercihler panelinde) ──
   const [showFilters, setShowFilters]     = useState(false);
-  const [sortBy, setSortBy]               = useState('Önerilen');
+  const [sortBy, setSortBy]               = useState('Puana Göre');
   const [serviceFilters, setServiceFilters] = useState<string[]>([]);
   const [openOnly, setOpenOnly]           = useState(false);
-  const [radiusKm, setRadiusKm]           = useState<number>(MAX_RADIUS); // MAX = Tümü
+  const [radiusKm, setRadiusKm]           = useState<number>(MAX_RADIUS); // MAX = Tümü (uygulanan değer)
+  const [dragKm, setDragKm]               = useState<number>(MAX_RADIUS); // slider sürüklenirken canlı etiket
 
   const activeFilterCount =
-    (sortBy !== 'Önerilen' ? 1 : 0) +
+    (sortBy !== 'Puana Göre' ? 1 : 0) +
     serviceFilters.length +
     (openOnly ? 1 : 0) +
     (radiusKm < MAX_RADIUS ? 1 : 0);
@@ -159,7 +161,7 @@ export default function HomeScreen({ navigation }: Props) {
     setServiceFilters(prev => prev.includes(kw) ? prev.filter(x => x !== kw) : [...prev, kw]);
   }
   function resetFilters() {
-    setSortBy('Önerilen'); setServiceFilters([]); setOpenOnly(false); setRadiusKm(MAX_RADIUS);
+    setSortBy('Puana Göre'); setServiceFilters([]); setOpenOnly(false); setRadiusKm(MAX_RADIUS); setDragKm(MAX_RADIUS);
   }
 
   useEffect(() => {
@@ -175,7 +177,12 @@ export default function HomeScreen({ navigation }: Props) {
       try {
         const { status } = await Location.requestForegroundPermissionsAsync();
         if (status !== 'granted') return;
-        const pos = await Location.getCurrentPositionAsync({});
+        // Önce son bilinen konum (anında); yoksa/taze gerekirse güncel konumu dene.
+        let pos = await Location.getLastKnownPositionAsync();
+        if (!pos) {
+          pos = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced }).catch(() => null);
+        }
+        if (!pos) return;
         const loc = { lat: pos.coords.latitude, lng: pos.coords.longitude };
         setUserLoc(loc);
         mapRef.current?.animateToRegion(
@@ -230,15 +237,12 @@ export default function HomeScreen({ navigation }: Props) {
       case 'Yakın':
         list = [...list].sort((a, b) => distOf(a) - distOf(b));
         break;
-      case 'En İyi':
-        list = [...list].sort((a, b) => (b.rating ?? 0) - (a.rating ?? 0));
-        break;
       case 'Uygun Fiyat':
         list = [...list].sort((a, b) => minPrice(a) - minPrice(b));
         break;
       default:
-        // Önerilen: yarıçap seçiliyse yakından uzağa sırala
-        if (userLoc && radiusKm < MAX_RADIUS) list = [...list].sort((a, b) => distOf(a) - distOf(b));
+        // Önerilen = en yüksek puanlılar önce
+        list = [...list].sort((a, b) => (b.rating ?? 0) - (a.rating ?? 0));
     }
     return list;
   }, [barbers, search, sortBy, serviceFilters, openOnly, radiusKm, userLoc]);
@@ -248,11 +252,12 @@ export default function HomeScreen({ navigation }: Props) {
       {/* Header */}
       <View style={styles.header}>
         <View>
-          <Text style={styles.greeting}>Merhaba 👋</Text>
+          <Text style={styles.greeting}>Merhaba</Text>
           <Text style={styles.title}>Berber Bul</Text>
         </View>
         <TouchableOpacity style={styles.prefBtn} onPress={() => setShowFilters(true)}>
-          <Ionicons name="options-outline" size={24} color={Colors.primary} />
+          <Ionicons name="options-outline" size={20} color={Colors.primary} />
+          <Text style={styles.prefBtnText}>Filtrele</Text>
           {activeFilterCount > 0 && (
             <View style={styles.prefBadge}><Text style={styles.prefBadgeText}>{activeFilterCount}</Text></View>
           )}
@@ -261,7 +266,7 @@ export default function HomeScreen({ navigation }: Props) {
 
       {/* Search */}
       <View style={styles.searchRow}>
-        <Text style={styles.searchIcon}>🔍</Text>
+        <Ionicons name="search-outline" size={16} color={Colors.textMuted} />
         <TextInput
           style={styles.searchInput}
           placeholder="Berber veya konum ara..."
@@ -276,7 +281,7 @@ export default function HomeScreen({ navigation }: Props) {
         <View style={styles.activeRow}>
           <Text style={styles.activeText} numberOfLines={1}>
             {[
-              sortBy !== 'Önerilen' ? sortBy : null,
+              sortBy !== 'Puana Göre' ? sortBy : null,
               ...serviceFilters,
               openOnly ? 'Açık' : null,
               radiusKm < MAX_RADIUS ? `${radiusKm} km` : null,
@@ -292,13 +297,13 @@ export default function HomeScreen({ navigation }: Props) {
           style={[styles.toggleBtn, showMap && styles.toggleActive]}
           onPress={() => setShowMap(true)}
         >
-          <Text style={[styles.toggleText, showMap && styles.toggleTextActive]}>🗺 Harita</Text>
+          <Text style={[styles.toggleText, showMap && styles.toggleTextActive]}>Harita</Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={[styles.toggleBtn, !showMap && styles.toggleActive]}
           onPress={() => setShowMap(false)}
         >
-          <Text style={[styles.toggleText, !showMap && styles.toggleTextActive]}>☰ Liste</Text>
+          <Text style={[styles.toggleText, !showMap && styles.toggleTextActive]}>Liste</Text>
         </TouchableOpacity>
       </View>
 
@@ -322,7 +327,7 @@ export default function HomeScreen({ navigation }: Props) {
                   key={b.id}
                   coordinate={{ latitude: lat, longitude: lng }}
                   title={b.shopName}
-                  description={`⭐ ${b.rating} · ${b.neighborhood}`}
+                  description={`${b.rating} · ${b.neighborhood}`}
                   pinColor={selectedId === b.id ? '#1a3c5e' : Colors.primary}
                   onPress={() => setSelectedId(b.id)}
                   onCalloutPress={() => navigation.navigate('BarberDetail', { barberId: b.id })}
@@ -366,15 +371,27 @@ export default function HomeScreen({ navigation }: Props) {
                 navigation.navigate('BarberDetail', { barberId: item.id });
               }}
             >
-              <View style={styles.avatar}><Text style={{ fontSize: 24 }}>💈</Text></View>
+              <View style={styles.avatar}><Text style={{ fontSize: 20, color: Colors.primary }}>✂</Text></View>
               <View style={{ flex: 1 }}>
-                <Text style={styles.shopName}>{item.shopName}</Text>
-                <Text style={styles.shopMeta}>📍 {item.neighborhood} · {item.workingHours.openTime}–{item.workingHours.closeTime}</Text>
+                <View style={styles.nameRow}>
+                  <Text style={styles.shopName}>{item.shopName}</Text>
+                  {(() => {
+                    const open = isOpenNow(item);
+                    return (
+                      <View style={[styles.statusPill, { backgroundColor: open ? 'rgba(34,197,94,0.15)' : 'rgba(248,113,113,0.15)' }]}>
+                        <Text style={{ fontSize: 10, fontWeight: '700', color: open ? '#16a34a' : '#dc2626' }}>
+                          {open ? '● Açık' : '● Kapalı'}
+                        </Text>
+                      </View>
+                    );
+                  })()}
+                </View>
+                <Text style={styles.shopMeta}>{item.neighborhood} · {item.workingHours.openTime}–{item.workingHours.closeTime}</Text>
                 {(() => {
                   const km = distanceKm(item);
-                  return km != null ? <Text style={styles.distance}>📏 {km.toFixed(1)} km uzakta</Text> : null;
+                  return km != null ? <Text style={styles.distance}>{km.toFixed(1)} km uzakta</Text> : null;
                 })()}
-                <Text style={styles.rating}>⭐ {item.rating.toFixed(1)} <Text style={{ color: Colors.textMuted }}>({item.reviewCount} yorum)</Text></Text>
+                <Text style={styles.rating}>★ {item.rating.toFixed(1)} <Text style={{ color: Colors.textMuted }}>({item.reviewCount} yorum)</Text></Text>
                 <Text style={styles.price}>₺{Math.min(...item.services.map(s => s.price))}'den başlıyor</Text>
               </View>
             </TouchableOpacity>
@@ -423,28 +440,33 @@ export default function HomeScreen({ navigation }: Props) {
               <View style={styles.switchRow}>
                 <Text style={styles.switchLabel}>Sadece şu an açık olanlar</Text>
                 <Switch value={openOnly} onValueChange={setOpenOnly}
-                  trackColor={{ true: '#F59E0B' }} thumbColor="#fff" />
+                  trackColor={{ false: '#D1D5DB', true: Colors.secondary }}
+                  thumbColor="#ffffff" ios_backgroundColor="#D1D5DB" />
               </View>
 
-              {/* Mesafe */}
+            </ScrollView>
+
+            {/* Mesafe — slider (parmakla kaydır, bıraktığın yer uygulanır) */}
+            <View style={{ marginTop: 8 }}>
               <Text style={styles.modalSection}>
-                Mesafe: {radiusKm >= MAX_RADIUS ? 'Tümü' : `${radiusKm} km içinde`}
+                Mesafe: {dragKm >= MAX_RADIUS ? 'Tümü' : `${dragKm} km içinde`}
               </Text>
-              <Slider
-                style={{ width: '100%', height: 40 }}
-                minimumValue={1}
-                maximumValue={MAX_RADIUS}
+              <RangeSlider
+                min={1}
+                max={MAX_RADIUS}
                 step={1}
                 value={radiusKm}
-                onValueChange={setRadiusKm}
-                minimumTrackTintColor="#F59E0B"
-                maximumTrackTintColor="#E5E7EB"
-                thumbTintColor="#F59E0B"
+                onChange={setDragKm}
+                onComplete={setRadiusKm}
               />
+              <View style={styles.radiusScale}>
+                <Text style={styles.radiusScaleText}>1 km</Text>
+                <Text style={styles.radiusScaleText}>50 km</Text>
+              </View>
               {radiusKm < MAX_RADIUS && !userLoc && (
                 <Text style={styles.radiusHint}>Konum alınamadı — mesafe filtresi için konum iznine izin ver.</Text>
               )}
-            </ScrollView>
+            </View>
 
             <View style={styles.modalBtns}>
               <TouchableOpacity style={styles.modalReset} onPress={resetFilters}>
@@ -467,9 +489,10 @@ const styles = StyleSheet.create({
   greeting: { fontSize: 13, color: Colors.textSecondary },
   title: { fontSize: 22, fontWeight: '800', color: Colors.primary },
   msgIcon: { fontSize: 24 },
-  prefBtn: { width: 42, height: 42, borderRadius: 12, borderWidth: 1.5, borderColor: Colors.border, backgroundColor: Colors.surface, alignItems: 'center', justifyContent: 'center' },
-  prefBadge: { position: 'absolute', top: -6, right: -6, minWidth: 18, height: 18, borderRadius: 9, backgroundColor: '#F59E0B', alignItems: 'center', justifyContent: 'center', paddingHorizontal: 4 },
-  prefBadgeText: { color: '#fff', fontSize: 11, fontWeight: '800' },
+  prefBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, height: 42, paddingHorizontal: 14, borderRadius: 12, borderWidth: 1.5, borderColor: Colors.border, backgroundColor: Colors.surface },
+  prefBtnText: { fontSize: 14, fontWeight: '700', color: Colors.primary },
+  prefBadge: { position: 'absolute', top: -6, right: -6, minWidth: 18, height: 18, borderRadius: 9, backgroundColor: Colors.secondary, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 4 },
+  prefBadgeText: { color: '#020000', fontSize: 11, fontWeight: '800' },
   activeRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, marginBottom: 8, gap: 8 },
   activeText: { flex: 1, fontSize: 12, color: Colors.textSecondary, fontWeight: '600' },
   activeClear: { fontSize: 12, color: Colors.danger, fontWeight: '700' },
@@ -485,14 +508,13 @@ const styles = StyleSheet.create({
   modalBtns: { flexDirection: 'row', gap: 12, marginTop: 14 },
   modalReset: { flex: 1, borderWidth: 1.5, borderColor: Colors.border, borderRadius: 12, paddingVertical: 14, alignItems: 'center' },
   modalResetText: { fontSize: 15, color: Colors.primary, fontWeight: '700' },
-  modalApply: { flex: 2, backgroundColor: Colors.primary, borderRadius: 12, paddingVertical: 14, alignItems: 'center' },
-  modalApplyText: { fontSize: 15, color: '#fff', fontWeight: '700' },
+  modalApply: { flex: 2, backgroundColor: Colors.secondary, borderRadius: 12, paddingVertical: 14, alignItems: 'center' },
+  modalApplyText: { fontSize: 15, color: '#020000', fontWeight: '700' },
   searchRow: {
     flexDirection: 'row', alignItems: 'center', gap: 8,
     margin: 16, marginTop: 4, backgroundColor: Colors.surface,
     borderWidth: 1.5, borderColor: Colors.border, borderRadius: 20, paddingHorizontal: 14,
   },
-  searchIcon: { fontSize: 16 },
   searchInput: { flex: 1, paddingVertical: 11, fontSize: 15, color: Colors.text },
   filterScroll: { paddingLeft: 16, marginBottom: 12, flexGrow: 0 },
   chip: {
@@ -500,12 +522,14 @@ const styles = StyleSheet.create({
     borderWidth: 1.5, borderColor: Colors.border, backgroundColor: Colors.surface,
     marginRight: 8,
   },
-  chipActive: { backgroundColor: Colors.primary, borderColor: Colors.primary },
+  chipActive: { backgroundColor: Colors.secondary, borderColor: Colors.secondary },
   chipText: { fontSize: 13, color: Colors.text, fontWeight: '600' },
-  chipTextActive: { color: '#fff', fontWeight: '700' },
+  chipTextActive: { color: '#020000', fontWeight: '700' },
   radiusBox: { paddingHorizontal: 16, marginBottom: 4 },
   radiusLabel: { fontSize: 13, fontWeight: '700', color: Colors.primary },
   radiusHint: { fontSize: 11, color: Colors.danger, paddingHorizontal: 16, marginBottom: 8 },
+  radiusScale: { flexDirection: 'row', justifyContent: 'space-between', marginTop: -10, paddingHorizontal: 2 },
+  radiusScaleText: { fontSize: 11, color: Colors.textMuted },
   distance: { fontSize: 12, color: Colors.accent, fontWeight: '700', marginTop: 3 },
   toggleRow: {
     flexDirection: 'row', marginHorizontal: 16, marginBottom: 10,
@@ -513,9 +537,9 @@ const styles = StyleSheet.create({
     borderWidth: 1, borderColor: Colors.border, overflow: 'hidden',
   },
   toggleBtn: { flex: 1, paddingVertical: 8, alignItems: 'center' },
-  toggleActive: { backgroundColor: Colors.primary },
+  toggleActive: { backgroundColor: Colors.secondary },
   toggleText: { fontSize: 13, fontWeight: '600', color: Colors.textSecondary },
-  toggleTextActive: { color: '#fff' },
+  toggleTextActive: { color: '#020000' },
   mapContainer: {
     marginHorizontal: 16, height: 200, borderRadius: 14,
     overflow: 'hidden', marginBottom: 4,
@@ -540,6 +564,8 @@ const styles = StyleSheet.create({
     width: 56, height: 56, borderRadius: 12, backgroundColor: '#f0f0f0',
     alignItems: 'center', justifyContent: 'center',
   },
+  nameRow: { flexDirection: 'row', alignItems: 'center', gap: 8, flexWrap: 'wrap' },
+  statusPill: { paddingHorizontal: 7, paddingVertical: 2, borderRadius: 10 },
   shopName: { fontSize: 15, fontWeight: '700', color: Colors.primary },
   shopMeta: { fontSize: 12, color: Colors.textSecondary, marginTop: 2 },
   rating: { fontSize: 12, color: Colors.warning, marginTop: 4 },

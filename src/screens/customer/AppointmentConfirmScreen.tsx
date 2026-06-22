@@ -55,7 +55,7 @@ export default function AppointmentConfirmScreen({ navigation, route }: Props) {
         ['Tarih', formatDate(appt.date.toDate())],
         ['Saat', appt.timeSlot],
         ['Hizmet Bedeli', `₺${appt.servicePrice ?? appt.totalPrice ?? '—'}`],
-        ...(appt.kaporaAmount ? [['Ödenen Kapora', `₺${appt.kaporaAmount} ✓`] as [string, string]] : []),
+        ...(appt.kaporaAmount ? [['Ödenen Kapora', `₺${appt.kaporaAmount}`] as [string, string]] : []),
         ...(appt.kaporaAmount && appt.servicePrice
           ? [['Kalan (Berberde)', `₺${appt.servicePrice - appt.kaporaAmount}`] as [string, string]]
           : []),
@@ -65,7 +65,6 @@ export default function AppointmentConfirmScreen({ navigation, route }: Props) {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.inner}>
-        <View style={styles.checkCircle}><Text style={{ fontSize: 40 }}>✓</Text></View>
         <Text style={styles.title}>Randevu Oluşturuldu!</Text>
         <Text style={styles.sub}>Berberiniz onayladıktan sonra bildirim alacaksınız.</Text>
         <View style={styles.card}>
@@ -77,7 +76,7 @@ export default function AppointmentConfirmScreen({ navigation, route }: Props) {
           <Text style={styles.btnText}>Randevularıma Git</Text>
         </TouchableOpacity>
         {appt && (
-          <TouchableOpacity style={styles.btnSecondary} onPress={() => navigation.navigate('Messaging', { barberId: appt.barberId, barberName: shopName })}>
+          <TouchableOpacity style={styles.btnSecondary} onPress={() => navigation.navigate('Chat', { barberId: appt.barberId, barberName: shopName })}>
             <Text style={styles.btnSecText}>Berberle Mesajlaş</Text>
           </TouchableOpacity>
         )}
@@ -92,15 +91,15 @@ export default function AppointmentConfirmScreen({ navigation, route }: Props) {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.surface },
   inner: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24, gap: 14 },
-  checkCircle: { width: 80, height: 80, borderRadius: 40, backgroundColor: '#dcfce7', alignItems: 'center', justifyContent: 'center' },
+  checkCircle: { width: 80, height: 80, borderRadius: 40, backgroundColor: '#FFF9D9', alignItems: 'center', justifyContent: 'center' },
   title: { fontSize: 22, fontWeight: '800', color: Colors.primary, textAlign: 'center' },
   sub: { fontSize: 14, color: Colors.textSecondary, textAlign: 'center', lineHeight: 20 },
-  card: { width: '100%', backgroundColor: '#f8f8ff', borderWidth: 1.5, borderColor: '#e0e0ff', borderRadius: 14, padding: 16 },
+  card: { width: '100%', backgroundColor: Colors.surface, borderWidth: 1.5, borderColor: Colors.border, borderRadius: 14, padding: 16 },
   row: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 7, borderBottomWidth: 1, borderBottomColor: Colors.borderLight },
   rowLabel: { fontSize: 12, color: Colors.textSecondary },
   rowVal: { fontSize: 13, fontWeight: '600', color: Colors.primary },
-  btnPrimary: { width: '100%', backgroundColor: Colors.primary, borderRadius: 12, paddingVertical: 14, alignItems: 'center' },
-  btnText: { color: '#fff', fontSize: 15, fontWeight: '700' },
+  btnPrimary: { width: '100%', backgroundColor: Colors.secondary, borderRadius: 12, paddingVertical: 14, alignItems: 'center' },
+  btnText: { color: '#020000', fontSize: 15, fontWeight: '700' },
   btnSecondary: { width: '100%', borderWidth: 1.5, borderColor: Colors.border, borderRadius: 12, paddingVertical: 13, alignItems: 'center' },
   btnSecText: { fontSize: 14, color: Colors.primary },
 });

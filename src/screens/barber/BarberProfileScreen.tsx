@@ -4,7 +4,9 @@ import {
   View, Text, TouchableOpacity, StyleSheet,
   ScrollView, Alert, Switch, RefreshControl, ActivityIndicator,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '../../constants';
+import { friendlyError } from '../../utils/errorMessage';
 import { useAuth } from '../../hooks/useAuth';
 import { logout } from '../../services/authService';
 import { getBarber, BarberShop } from '../../services/barberService';
@@ -38,7 +40,7 @@ export default function BarberProfileScreen({ navigation }: any) {
       await updateDoc(doc(db, 'barbers', user.uid), { isActive: val });
       setShop(prev => prev ? { ...prev, isActive: val } : prev);
     } catch (e: any) {
-      Alert.alert('Hata', e.message);
+      Alert.alert('Hata', friendlyError(e));
     } finally { setToggling(false); }
   }
 
@@ -70,7 +72,7 @@ export default function BarberProfileScreen({ navigation }: any) {
         {/* Hero */}
         <View style={styles.hero}>
           <View style={styles.avatar}>
-            <Text style={{ fontSize: 32 }}>✂️</Text>
+            <Ionicons name="storefront" size={34} color="#020000" />
           </View>
           <Text style={styles.shopName}>{shop?.shopName ?? 'Dükkanım'}</Text>
           <Text style={styles.ownerName}>{fullName}</Text>
@@ -79,7 +81,7 @@ export default function BarberProfileScreen({ navigation }: any) {
           </Text>
           {/* Rating */}
           <View style={styles.ratingRow}>
-            <Text style={styles.ratingVal}>⭐ {shop?.rating?.toFixed(1) ?? '—'}</Text>
+            <Text style={styles.ratingVal}>★ {shop?.rating?.toFixed(1) ?? '—'}</Text>
             <Text style={styles.ratingCount}>({shop?.reviewCount ?? 0} değerlendirme)</Text>
           </View>
         </View>
@@ -109,12 +111,11 @@ export default function BarberProfileScreen({ navigation }: any) {
         {/* İstatistik kartları */}
         <View style={styles.statsRow}>
           {[
-            { label: 'Hizmet', value: shop?.services?.length ?? 0, icon: '✂️' },
-            { label: 'Çalışan', value: shop?.staff?.length ?? 0, icon: '👤' },
-            { label: 'Puan', value: shop?.rating?.toFixed(1) ?? '—', icon: '⭐' },
+            { label: 'Hizmet', value: shop?.services?.length ?? 0 },
+            { label: 'Çalışan', value: shop?.staff?.length ?? 0 },
+            { label: 'Puan', value: shop?.rating?.toFixed(1) ?? '—' },
           ].map(s => (
             <View key={s.label} style={styles.statCard}>
-              <Text style={styles.statIcon}>{s.icon}</Text>
               <Text style={styles.statVal}>{s.value}</Text>
               <Text style={styles.statLabel}>{s.label}</Text>
             </View>
@@ -123,7 +124,7 @@ export default function BarberProfileScreen({ navigation }: any) {
 
         {/* Çalışma bilgisi */}
         <View style={styles.infoCard}>
-          <Text style={styles.infoTitle}>📅 Çalışma Saatleri</Text>
+          <Text style={styles.infoTitle}>Çalışma Saatleri</Text>
           <View style={styles.infoRow}>
             <Text style={styles.infoLabel}>Günler</Text>
             <Text style={styles.infoVal}>{openDaysStr}</Text>
@@ -140,33 +141,75 @@ export default function BarberProfileScreen({ navigation }: any) {
           </View>
         </View>
 
-        {/* Menü — prototype'taki quick actions yapısına uygun */}
+        {/* Yönetim menüsü */}
+        <Text style={styles.menuSectionTitle}>Yönetim</Text>
         <View style={styles.menuCard}>
           <TouchableOpacity
-            style={styles.menuItem}
-            onPress={() => navigation.navigate('BarberRegStep2', { uid: user?.uid })}
+            style={[styles.menuItem, styles.menuBorder]}
+            activeOpacity={0.7}
+            onPress={() => navigation.navigate('BarberWallet')}
           >
-            <Text style={styles.menuIcon}>✂️</Text>
+            <View style={styles.iconChip}><Ionicons name="wallet-outline" size={19} color={Colors.primary} /></View>
+            <Text style={styles.menuLabel}>Hesap Hareketleri</Text>
+            <Ionicons name="chevron-forward" size={18} color={Colors.textMuted} />
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.menuItem, styles.menuBorder]}
+            activeOpacity={0.7}
+            onPress={() => navigation.navigate('BarberEditServices', { uid: user!.uid })}
+          >
+            <View style={styles.iconChip}><Ionicons name="cut-outline" size={19} color={Colors.primary} /></View>
             <Text style={styles.menuLabel}>Hizmetleri & Çalışanları Düzenle</Text>
-            <Text style={styles.menuArrow}>›</Text>
+            <Ionicons name="chevron-forward" size={18} color={Colors.textMuted} />
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.menuItem, styles.menuBorder]}
+            activeOpacity={0.7}
+            onPress={() => navigation.navigate('BarberEditHours', { uid: user!.uid })}
+          >
+            <View style={styles.iconChip}><Ionicons name="time-outline" size={19} color={Colors.primary} /></View>
+            <Text style={styles.menuLabel}>Çalışma Saatlerini Düzenle</Text>
+            <Ionicons name="chevron-forward" size={18} color={Colors.textMuted} />
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.menuItem, styles.menuBorder]}
+            activeOpacity={0.7}
+            onPress={() => navigation.navigate('BarberReviews')}
+          >
+            <View style={styles.iconChip}><Ionicons name="star-outline" size={19} color={Colors.primary} /></View>
+            <Text style={styles.menuLabel}>Müşteri Değerlendirmeleri</Text>
+            <Ionicons name="chevron-forward" size={18} color={Colors.textMuted} />
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.menuItem, styles.menuBorder]}
+            activeOpacity={0.7}
+            onPress={() => navigation.navigate('Notifications')}
+          >
+            <View style={styles.iconChip}><Ionicons name="notifications-outline" size={19} color={Colors.primary} /></View>
+            <Text style={styles.menuLabel}>Bildirimler</Text>
+            <Ionicons name="chevron-forward" size={18} color={Colors.textMuted} />
           </TouchableOpacity>
 
           <TouchableOpacity
             style={styles.menuItem}
-            onPress={() => navigation.navigate('BarberRegStep3', { uid: user?.uid })}
+            activeOpacity={0.7}
+            onPress={() => navigation.navigate('Settings')}
           >
-            <Text style={styles.menuIcon}>🕐</Text>
-            <Text style={styles.menuLabel}>Çalışma Saatlerini Düzenle</Text>
-            <Text style={styles.menuArrow}>›</Text>
-          </TouchableOpacity>
-
-          <View style={styles.divider} />
-
-          <TouchableOpacity style={styles.menuItem} onPress={handleLogout}>
-            <Text style={styles.menuIcon}>🚪</Text>
-            <Text style={[styles.menuLabel, { color: Colors.danger }]}>Çıkış Yap</Text>
+            <View style={styles.iconChip}><Ionicons name="settings-outline" size={19} color={Colors.primary} /></View>
+            <Text style={styles.menuLabel}>Ayarlar</Text>
+            <Ionicons name="chevron-forward" size={18} color={Colors.textMuted} />
           </TouchableOpacity>
         </View>
+
+        {/* Çıkış */}
+        <TouchableOpacity style={styles.logoutBtn} activeOpacity={0.8} onPress={handleLogout}>
+          <Ionicons name="log-out-outline" size={19} color={Colors.danger} />
+          <Text style={styles.logoutText}>Çıkış Yap</Text>
+        </TouchableOpacity>
 
         <View style={{ height: 24 }} />
       </ScrollView>
@@ -181,9 +224,9 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1, borderBottomColor: Colors.border, gap: 4,
   },
   avatar: {
-    width: 72, height: 72, borderRadius: 36,
-    backgroundColor: '#fef3c7',
-    alignItems: 'center', justifyContent: 'center', marginBottom: 8,
+    width: 80, height: 80, borderRadius: 40,
+    backgroundColor: Colors.secondary,
+    alignItems: 'center', justifyContent: 'center', marginBottom: 10,
   },
   shopName:   { fontSize: 20, fontWeight: '800', color: Colors.primary },
   ownerName:  { fontSize: 13, color: Colors.textSecondary },
@@ -207,7 +250,6 @@ const styles = StyleSheet.create({
     flex: 1, backgroundColor: Colors.surface, borderRadius: 14, padding: 14,
     alignItems: 'center', borderWidth: 1, borderColor: Colors.borderLight, gap: 3,
   },
-  statIcon:  { fontSize: 18 },
   statVal:   { fontSize: 20, fontWeight: '800', color: Colors.primary },
   statLabel: { fontSize: 11, color: Colors.textSecondary },
 
@@ -220,13 +262,12 @@ const styles = StyleSheet.create({
   infoLabel: { fontSize: 13, color: Colors.textSecondary },
   infoVal:   { fontSize: 13, fontWeight: '600', color: Colors.primary, flex: 1, textAlign: 'right' },
 
-  menuCard: {
-    backgroundColor: Colors.surface, marginHorizontal: 16,
-    borderRadius: 14, borderWidth: 1, borderColor: Colors.borderLight,
-  },
-  menuItem:  { flexDirection: 'row', alignItems: 'center', padding: 16, borderBottomWidth: 1, borderBottomColor: Colors.borderLight },
-  menuIcon:  { fontSize: 20, width: 32 },
-  menuLabel: { flex: 1, fontSize: 15, color: Colors.primary },
-  menuArrow: { color: Colors.textMuted, fontSize: 18 },
-  divider:   { height: 1, backgroundColor: Colors.border },
+  menuSectionTitle: { fontSize: 13, fontWeight: '700', color: Colors.textSecondary, marginHorizontal: 20, marginTop: 6, marginBottom: 8 },
+  menuCard: { backgroundColor: Colors.surface, marginHorizontal: 16, borderRadius: 16, borderWidth: 1, borderColor: Colors.borderLight, overflow: 'hidden' },
+  menuItem:  { flexDirection: 'row', alignItems: 'center', gap: 14, paddingHorizontal: 14, paddingVertical: 15 },
+  menuBorder:{ borderBottomWidth: 1, borderBottomColor: Colors.borderLight },
+  iconChip:  { width: 38, height: 38, borderRadius: 11, backgroundColor: '#FFF7DE', alignItems: 'center', justifyContent: 'center' },
+  menuLabel: { flex: 1, fontSize: 15, fontWeight: '600', color: Colors.primary },
+  logoutBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, marginHorizontal: 16, marginTop: 16, paddingVertical: 15, borderRadius: 14, borderWidth: 1.5, borderColor: Colors.danger },
+  logoutText:{ fontSize: 15, fontWeight: '700', color: Colors.danger },
 });

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
   View, Text, TextInput, TouchableOpacity, StyleSheet,
@@ -9,29 +9,31 @@ import { RootStackParamList } from '../../navigation';
 import { Colors } from '../../constants';
 import BackButton from '../../components/BackButton';
 import { friendlyError } from '../../utils/errorMessage';
-import { updateBarberServices, Service, StaffMember } from '../../services/barberService';
+import { getBarber, updateBarberServices, Service, StaffMember } from '../../services/barberService';
 
-type Props = NativeStackScreenProps<RootStackParamList, 'BarberRegStep2'>;
+type Props = NativeStackScreenProps<RootStackParamList, 'BarberEditServices'>;
 
-const DEFAULT_SERVICES: Service[] = [
-  { id: 's1', name: 'Saç Kesimi',     price: 150, durationMin: 30 },
-  { id: 's2', name: 'Sakal Düzeltme', price: 100, durationMin: 20 },
-];
-const DEFAULT_STAFF: StaffMember[] = [
-  { id: 'st1', name: '', title: 'Berber' },
-];
-
-export default function BarberRegStep2Screen({ navigation, route }: Props) {
+export default function BarberEditServicesScreen({ navigation, route }: Props) {
   const { uid } = route.params;
 
-  const [services, setServices] = useState<Service[]>(DEFAULT_SERVICES);
-  const [staff,    setStaff]    = useState<StaffMember[]>(DEFAULT_STAFF);
-  const [loading,  setLoading]  = useState(false);
+  const [services, setServices] = useState<Service[]>([]);
+  const [staff,    setStaff]    = useState<StaffMember[]>([]);
+  const [loading,  setLoading]  = useState(true);
+  const [saving,   setSaving]   = useState(false);
+
+  useEffect(() => {
+    getBarber(uid)
+      .then(s => {
+        setServices(s?.services?.length ? s.services : [{ id: 's1', name: '', price: 0, durationMin: 30 }]);
+        setStaff(s?.staff?.length ? s.staff : [{ id: 'st1', name: '', title: 'Berber' }]);
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, [uid]);
 
   /* ── Hizmetler ── */
   function addService() {
-    const id = `s${Date.now()}`;
-    setServices(prev => [...prev, { id, name: '', price: 0, durationMin: 30 }]);
+    setServices(prev => [...prev, { id: `s${Date.now()}`, name: '', price: 0, durationMin: 30 }]);
   }
   function removeService(id: string) {
     if (services.length === 1) { Alert.alert('En az 1 hizmet gerekli'); return; }
@@ -46,8 +48,7 @@ export default function BarberRegStep2Screen({ navigation, route }: Props) {
 
   /* ── Çalışanlar ── */
   function addStaff() {
-    const id = `st${Date.now()}`;
-    setStaff(prev => [...prev, { id, name: '', title: 'Berber' }]);
+    setStaff(prev => [...prev, { id: `st${Date.now()}`, name: '', title: 'Berber' }]);
   }
   function removeStaff(id: string) {
     if (staff.length === 1) { Alert.alert('En az 1 çalışan gerekli'); return; }
@@ -57,64 +58,56 @@ export default function BarberRegStep2Screen({ navigation, route }: Props) {
     setStaff(prev => prev.map(s => s.id !== id ? s : { ...s, [field]: val }));
   }
 
-  async function handleNext() {
-    const invalidSvc = services.find(s => !s.name.trim() || s.price <= 0);
-    if (invalidSvc) { Alert.alert('Hata', 'Her hizmetin adı ve fiyatı olmalıdır.'); return; }
-    const invalidStaff = staff.find(s => !s.name.trim());
-    if (invalidStaff) { Alert.alert('Hata', 'Her çalışanın adı olmalıdır.'); return; }
+  async function handleSave() {
+    if (services.find(s => !s.name.trim() || s.price <= 0)) { Alert.alert('Hata', 'Her hizmetin adı ve fiyatı olmalıdır.'); return; }
+    if (staff.find(s => !s.name.trim())) { Alert.alert('Hata', 'Her çalışanın adı olmalıdır.'); return; }
 
-    setLoading(true);
+    setSaving(true);
     try {
       await updateBarberServices(uid, services, staff);
-      navigation.navigate('BarberRegStep3', { uid });
+      Alert.alert('Kaydedildi', 'Hizmet ve çalışanlar güncellendi.', [
+        { text: 'Tamam', onPress: () => navigation.goBack() },
+      ]);
     } catch (e: any) {
       Alert.alert('Hata', friendlyError(e));
     } finally {
-      setLoading(false);
+      setSaving(false);
     }
+  }
+
+  if (loading) {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: Colors.background }}>
+        <ActivityIndicator color={Colors.primary} />
+      </View>
+    );
   }
 
   return (
     <SafeAreaView style={styles.container}>
+      <View style={styles.header}>
+        <BackButton onPress={() => navigation.goBack()} />
+        <Text style={styles.headerTitle}>Hizmetler & Çalışanlar</Text>
+      </View>
+
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }}>
         <ScrollView contentContainerStyle={styles.inner} keyboardShouldPersistTaps="handled">
-
-          <BackButton onPress={() => navigation.goBack()} label="Geri" color={Colors.secondary} size={18} style={{ marginBottom: 8 }} />
-
-          {/* Progress */}
-          <View style={styles.progress}>
-            {[1, 2, 3, 4].map(n => (
-              <View key={n} style={[styles.dot, n <= 2 && styles.dotActive]}>
-                <Text style={[styles.dotText, n <= 2 && styles.dotTextActive]}>{n}</Text>
-              </View>
-            ))}
-          </View>
-
-          <Text style={styles.title}>Hizmetler & Çalışanlar</Text>
-          <Text style={styles.sub}>Sunduğun hizmetleri ve çalışanlarını ekle.</Text>
 
           {/* Hizmetler */}
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
               <Text style={styles.sectionTitle}>Hizmetler</Text>
-              <TouchableOpacity onPress={addService} style={styles.addBtn}>
-                <Text style={styles.addBtnText}>+ Ekle</Text>
-              </TouchableOpacity>
+              <TouchableOpacity onPress={addService} style={styles.addBtn}><Text style={styles.addBtnText}>+ Ekle</Text></TouchableOpacity>
             </View>
-
             {services.map((svc, i) => (
               <View key={svc.id} style={styles.card}>
                 <View style={styles.cardHeader}>
                   <Text style={styles.cardIndex}>Hizmet {i + 1}</Text>
-                  <TouchableOpacity onPress={() => removeService(svc.id)}>
-                    <Text style={styles.removeBtn}>✕ Kaldır</Text>
-                  </TouchableOpacity>
+                  <TouchableOpacity onPress={() => removeService(svc.id)}><Text style={styles.removeBtn}>✕ Kaldır</Text></TouchableOpacity>
                 </View>
-
                 <Text style={styles.label}>Hizmet Adı</Text>
                 <TextInput style={styles.input} placeholder="Saç Kesimi" placeholderTextColor={Colors.textMuted}
                   value={svc.name} onChangeText={v => updateService(svc.id, 'name', v)} />
-
                 <View style={styles.row}>
                   <View style={{ flex: 1 }}>
                     <Text style={styles.label}>Fiyat (₺)</Text>
@@ -137,20 +130,14 @@ export default function BarberRegStep2Screen({ navigation, route }: Props) {
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
               <Text style={styles.sectionTitle}>Çalışanlar</Text>
-              <TouchableOpacity onPress={addStaff} style={styles.addBtn}>
-                <Text style={styles.addBtnText}>+ Ekle</Text>
-              </TouchableOpacity>
+              <TouchableOpacity onPress={addStaff} style={styles.addBtn}><Text style={styles.addBtnText}>+ Ekle</Text></TouchableOpacity>
             </View>
-
             {staff.map((st, i) => (
               <View key={st.id} style={styles.card}>
                 <View style={styles.cardHeader}>
                   <Text style={styles.cardIndex}>Çalışan {i + 1}</Text>
-                  <TouchableOpacity onPress={() => removeStaff(st.id)}>
-                    <Text style={styles.removeBtn}>✕ Kaldır</Text>
-                  </TouchableOpacity>
+                  <TouchableOpacity onPress={() => removeStaff(st.id)}><Text style={styles.removeBtn}>✕ Kaldır</Text></TouchableOpacity>
                 </View>
-
                 <View style={styles.row}>
                   <View style={{ flex: 1 }}>
                     <Text style={styles.label}>Ad Soyad</Text>
@@ -167,11 +154,10 @@ export default function BarberRegStep2Screen({ navigation, route }: Props) {
             ))}
           </View>
 
-          <TouchableOpacity style={[styles.btn, loading && { opacity: 0.6 }]} onPress={handleNext} disabled={loading}>
-            {loading ? <ActivityIndicator color="#020000" /> : <Text style={styles.btnText}>Devam Et →</Text>}
+          <TouchableOpacity style={[styles.btn, saving && { opacity: 0.6 }]} onPress={handleSave} disabled={saving}>
+            {saving ? <ActivityIndicator color="#020000" /> : <Text style={styles.btnText}>Kaydet</Text>}
           </TouchableOpacity>
           <View style={{ height: 24 }} />
-
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
@@ -180,16 +166,9 @@ export default function BarberRegStep2Screen({ navigation, route }: Props) {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.background },
-  inner:     { padding: 20, gap: 12 },
-
-  progress:     { flexDirection: 'row', gap: 8, marginBottom: 4 },
-  dot:          { width: 28, height: 28, borderRadius: 14, backgroundColor: Colors.borderLight, alignItems: 'center', justifyContent: 'center' },
-  dotActive:    { backgroundColor: Colors.secondary },
-  dotText:      { fontSize: 12, fontWeight: '700', color: Colors.textMuted },
-  dotTextActive:{ color: '#020000' },
-
-  title: { fontSize: 22, fontWeight: '800', color: Colors.primary },
-  sub:   { fontSize: 13, color: Colors.textSecondary },
+  header: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 16, backgroundColor: Colors.surface, borderBottomWidth: 1, borderBottomColor: Colors.border },
+  headerTitle: { fontSize: 18, fontWeight: '800', color: Colors.primary },
+  inner: { padding: 20, gap: 12 },
 
   section:       { gap: 10 },
   sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
@@ -204,10 +183,7 @@ const styles = StyleSheet.create({
 
   label: { fontSize: 12, fontWeight: '600', color: Colors.textSecondary },
   row:   { flexDirection: 'row', gap: 10 },
-  input: {
-    borderWidth: 1.5, borderColor: Colors.border, borderRadius: 10,
-    paddingHorizontal: 12, paddingVertical: 10, fontSize: 14, color: Colors.text, backgroundColor: '#fafafa',
-  },
+  input: { borderWidth: 1.5, borderColor: Colors.border, borderRadius: 10, paddingHorizontal: 12, paddingVertical: 10, fontSize: 14, color: Colors.text, backgroundColor: '#fafafa' },
   btn:     { backgroundColor: Colors.secondary, borderRadius: 12, paddingVertical: 15, alignItems: 'center', marginTop: 4 },
-  btnText: { color: '#020000', fontSize: 16, fontWeight: '700' },
+  btnText: { color: '#020000', fontSize: 16, fontWeight: '800' },
 });

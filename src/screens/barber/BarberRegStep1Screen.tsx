@@ -7,7 +7,10 @@ import {
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../navigation';
 import { Colors } from '../../constants';
+import BackButton from '../../components/BackButton';
 import { registerBarber } from '../../services/authService';
+import PasswordInput from '../../components/PasswordInput';
+import { friendlyError } from '../../utils/errorMessage';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'BarberRegStep1'>;
 
@@ -47,7 +50,7 @@ export default function BarberRegStep1Screen({ navigation }: Props) {
       // Auth listener tetiklenince otomatik BarberTabs'e geçer,
       // dashboard orada isActive=false görüp kurulumu yönlendirir.
     } catch (e: any) {
-      Alert.alert('Kayıt Hatası', e.message);
+      Alert.alert('Kayıt Hatası', friendlyError(e));
     } finally {
       setLoading(false);
     }
@@ -58,9 +61,7 @@ export default function BarberRegStep1Screen({ navigation }: Props) {
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }}>
         <ScrollView contentContainerStyle={styles.inner} keyboardShouldPersistTaps="handled">
 
-          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
-            <Text style={styles.backText}>← Geri</Text>
-          </TouchableOpacity>
+          <BackButton onPress={() => navigation.goBack()} label="Geri" color={Colors.secondary} size={18} style={styles.backBtn} />
 
           {/* Progress */}
           <View style={styles.progress}>
@@ -101,15 +102,15 @@ export default function BarberRegStep1Screen({ navigation }: Props) {
             keyboardType="phone-pad" value={form.phone} onChangeText={set('phone')} />
 
           <Text style={styles.label}>Şifre *</Text>
-          <TextInput style={styles.input} placeholder="••••••••" placeholderTextColor={Colors.textMuted}
-            secureTextEntry value={form.password} onChangeText={set('password')} />
+          <PasswordInput style={styles.input} placeholder="••••••••" placeholderTextColor={Colors.textMuted}
+            value={form.password} onChangeText={set('password')} />
 
           <Text style={styles.label}>Şifre Tekrar *</Text>
-          <TextInput style={styles.input} placeholder="••••••••" placeholderTextColor={Colors.textMuted}
-            secureTextEntry value={form.confirmPassword} onChangeText={set('confirmPassword')} />
+          <PasswordInput style={styles.input} placeholder="••••••••" placeholderTextColor={Colors.textMuted}
+            value={form.confirmPassword} onChangeText={set('confirmPassword')} />
 
           <TouchableOpacity style={[styles.btn, loading && { opacity: 0.6 }]} onPress={handleRegister} disabled={loading}>
-            {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.btnText}>Hesap Oluştur →</Text>}
+            {loading ? <ActivityIndicator color="#020000" /> : <Text style={styles.btnText}>Hesap Oluştur →</Text>}
           </TouchableOpacity>
 
           <View style={styles.loginRow}>
@@ -133,9 +134,9 @@ const styles = StyleSheet.create({
 
   progress:     { flexDirection: 'row', gap: 8, marginBottom: 8 },
   dot:          { width: 28, height: 28, borderRadius: 14, backgroundColor: Colors.borderLight, alignItems: 'center', justifyContent: 'center' },
-  dotActive:    { backgroundColor: Colors.primary },
+  dotActive:    { backgroundColor: Colors.secondary },
   dotText:      { fontSize: 12, fontWeight: '700', color: Colors.textMuted },
-  dotTextActive:{ color: '#fff' },
+  dotTextActive:{ color: '#020000' },
 
   title: { fontSize: 24, fontWeight: '800', color: Colors.primary },
   sub:   { fontSize: 13, color: Colors.textSecondary, marginBottom: 4 },
@@ -145,8 +146,8 @@ const styles = StyleSheet.create({
     borderWidth: 1.5, borderColor: Colors.border, borderRadius: 10,
     paddingHorizontal: 14, paddingVertical: 12, fontSize: 15, color: Colors.text, backgroundColor: '#fafafa',
   },
-  btn:     { backgroundColor: Colors.primary, borderRadius: 12, paddingVertical: 15, alignItems: 'center', marginTop: 8 },
-  btnText: { color: '#fff', fontSize: 16, fontWeight: '700' },
+  btn:     { backgroundColor: Colors.secondary, borderRadius: 12, paddingVertical: 15, alignItems: 'center', marginTop: 8 },
+  btnText: { color: '#020000', fontSize: 16, fontWeight: '700' },
   loginRow:{ flexDirection: 'row', justifyContent: 'center', marginTop: 4 },
   loginText:{ fontSize: 13, color: Colors.textSecondary },
   link:    { fontSize: 13, color: Colors.secondary, fontWeight: '600' },

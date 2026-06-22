@@ -7,6 +7,8 @@ import {
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../navigation';
 import { Colors } from '../../constants';
+import BackButton from '../../components/BackButton';
+import { friendlyError } from '../../utils/errorMessage';
 import { getBarber, BarberShop } from '../../services/barberService';
 import { updateDoc, doc } from 'firebase/firestore';
 import { db } from '../../services/firebase';
@@ -37,7 +39,7 @@ export default function BarberRegStep4Screen({ navigation, route }: Props) {
       // Dashboard şimdi isActive=true görecek.
       navigation.reset({ index: 0, routes: [{ name: 'BarberTabs' }] });
     } catch (e: any) {
-      Alert.alert('Hata', e.message);
+      Alert.alert('Hata', friendlyError(e));
     } finally {
       setSaving(false);
     }
@@ -69,6 +71,8 @@ export default function BarberRegStep4Screen({ navigation, route }: Props) {
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.inner}>
 
+        <BackButton onPress={() => navigation.goBack()} label="Geri" color={Colors.secondary} size={18} style={{ marginBottom: 8 }} />
+
         {/* Progress */}
         <View style={styles.progress}>
           {[1, 2, 3, 4].map(n => (
@@ -80,7 +84,7 @@ export default function BarberRegStep4Screen({ navigation, route }: Props) {
 
         {/* Başlık */}
         <View style={styles.checkWrap}>
-          <View style={styles.checkCircle}><Text style={{ fontSize: 32 }}>🎉</Text></View>
+          <View style={styles.checkCircle}><Text style={{ fontSize: 32, color: Colors.secondary }}>✂</Text></View>
           <Text style={styles.title}>Her Şey Hazır!</Text>
           <Text style={styles.sub}>Bilgilerini kontrol et ve dükkanını aç.</Text>
         </View>
@@ -99,7 +103,7 @@ export default function BarberRegStep4Screen({ navigation, route }: Props) {
         {/* Hizmetler */}
         {(shop?.services?.length ?? 0) > 0 && (
           <View style={styles.card}>
-            <Text style={styles.cardTitle}>✂️ Hizmetler</Text>
+            <Text style={styles.cardTitle}>Hizmetler</Text>
             {shop!.services.map(s => (
               <View key={s.id} style={styles.row}>
                 <Text style={styles.rowLabel}>{s.name}</Text>
@@ -112,7 +116,7 @@ export default function BarberRegStep4Screen({ navigation, route }: Props) {
         {/* Uyarı */}
         <View style={styles.notice}>
           <Text style={styles.noticeText}>
-            ℹ️ Dükkanı açtıktan sonra bu bilgileri Dashboard → Ayarlar kısmından güncelleyebilirsin.
+            Dükkanı açtıktan sonra bu bilgileri Dashboard → Ayarlar kısmından güncelleyebilirsin.
           </Text>
         </View>
 
@@ -122,8 +126,8 @@ export default function BarberRegStep4Screen({ navigation, route }: Props) {
           disabled={saving}
         >
           {saving
-            ? <ActivityIndicator color="#fff" />
-            : <Text style={styles.btnText}>🚀 Dükkanı Aç!</Text>
+            ? <ActivityIndicator color="#020000" />
+            : <Text style={styles.btnText}>Dükkanı Aç</Text>
           }
         </TouchableOpacity>
 
@@ -139,12 +143,12 @@ const styles = StyleSheet.create({
 
   progress:     { flexDirection: 'row', gap: 8 },
   dot:          { width: 28, height: 28, borderRadius: 14, backgroundColor: Colors.borderLight, alignItems: 'center', justifyContent: 'center' },
-  dotActive:    { backgroundColor: Colors.primary },
+  dotActive:    { backgroundColor: Colors.secondary },
   dotText:      { fontSize: 12, fontWeight: '700', color: Colors.textMuted },
-  dotTextActive:{ fontSize: 12, fontWeight: '700', color: '#fff' },
+  dotTextActive:{ fontSize: 12, fontWeight: '700', color: '#020000' },
 
   checkWrap:   { alignItems: 'center', gap: 8, paddingVertical: 8 },
-  checkCircle: { width: 72, height: 72, borderRadius: 36, backgroundColor: '#dcfce7', alignItems: 'center', justifyContent: 'center' },
+  checkCircle: { width: 72, height: 72, borderRadius: 36, backgroundColor: '#FFF9D9', alignItems: 'center', justifyContent: 'center' },
   title:       { fontSize: 24, fontWeight: '800', color: Colors.primary },
   sub:         { fontSize: 14, color: Colors.textSecondary },
 
@@ -154,9 +158,9 @@ const styles = StyleSheet.create({
   rowLabel:  { fontSize: 12, color: Colors.textSecondary, flex: 1 },
   rowVal:    { fontSize: 13, fontWeight: '600', color: Colors.primary, flex: 1, textAlign: 'right' },
 
-  notice:     { backgroundColor: '#eff6ff', borderRadius: 10, padding: 12 },
-  noticeText: { fontSize: 12, color: '#1e40af', lineHeight: 18 },
+  notice:     { backgroundColor: '#FFF9D9', borderRadius: 10, padding: 12 },
+  noticeText: { fontSize: 12, color: Colors.primary, lineHeight: 18 },
 
-  btn:     { backgroundColor: Colors.primary, borderRadius: 14, paddingVertical: 16, alignItems: 'center' },
-  btnText: { color: '#fff', fontSize: 17, fontWeight: '800' },
+  btn:     { backgroundColor: Colors.secondary, borderRadius: 14, paddingVertical: 16, alignItems: 'center' },
+  btnText: { color: '#020000', fontSize: 17, fontWeight: '800' },
 });

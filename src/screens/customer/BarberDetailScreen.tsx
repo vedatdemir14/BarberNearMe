@@ -4,10 +4,29 @@ import { View, Text, ScrollView, TouchableOpacity, StyleSheet, ActivityIndicator
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../navigation';
 import { Colors } from '../../constants';
+import BackButton from '../../components/BackButton';
 import { getBarber, BarberShop } from '../../services/barberService';
 import { getBarberReviews, Review } from '../../services/reviewService';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'BarberDetail'>;
+
+const MONTHS_TR = ['Ocak','Şubat','Mart','Nisan','Mayıs','Haziran','Temmuz','Ağustos','Eylül','Ekim','Kasım','Aralık'];
+function formatReviewDate(at: any): string {
+  const d = at?.toDate?.();
+  return d ? `${d.getDate()} ${MONTHS_TR[d.getMonth()]} ${d.getFullYear()}` : '';
+}
+
+// Dükkan şu an çalışma saatleri içinde mi? (days: 0=Pzt … 6=Paz)
+function isOpenNow(wh?: { days?: number[]; openTime?: string; closeTime?: string }): boolean {
+  if (!wh?.openTime || !wh?.closeTime) return false;
+  const now = new Date();
+  const dayIdx = (now.getDay() + 6) % 7;
+  if (!wh.days?.includes(dayIdx)) return false;
+  const cur = now.getHours() * 60 + now.getMinutes();
+  const [oh, om] = wh.openTime.split(':').map(Number);
+  const [ch, cm] = wh.closeTime.split(':').map(Number);
+  return cur >= oh * 60 + om && cur < ch * 60 + cm;
+}
 
 // Fallback used when the barber doc cannot be loaded (e.g. offline / mock data)
 const MOCK: Partial<BarberShop> & { services: any[]; staff: any[] } = {
@@ -64,39 +83,39 @@ export default function BarberDetailScreen({ navigation, route }: Props) {
 
   const data = barber ?? (MOCK as BarberShop);
   const wh = data.workingHours ?? MOCK.workingHours!;
-  const services = (data.services?.length ? data.services : MOCK.services);
-  const staff = (data.staff?.length ? data.staff : MOCK.staff);
-  const fullAddress = [data.address, data.neighborhood, data.city].filter(Boolean).join(', ');
 
-  // Harita uygulamasında yol tarifi aç (konum varsa koordinata, yoksa adrese)
   function openDirections() {
     const loc: any = data.location;
-    const lat = loc?.latitude ?? loc?._lat;
-    const lng = loc?.longitude ?? loc?._long;
-    const url = (lat && lng)
-      ? `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`
-      : fullAddress
-        ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(fullAddress)}`
-        : null;
-    if (!url) { Alert.alert('Konum yok', 'Bu berber için konum bilgisi bulunamadı.'); return; }
+    let dest: string;
+    if (loc?.latitude != null && loc?.longitude != null) {
+      dest = `${loc.latitude},${loc.longitude}`;
+    } else {
+      dest = encodeURIComponent([data.shopName, data.neighborhood, data.city].filter(Boolean).join(' '));
+    }
+    const url = `https://www.google.com/maps/dir/?api=1&destination=${dest}`;
     Linking.openURL(url).catch(() => Alert.alert('Hata', 'Harita uygulaması açılamadı.'));
   }
+  const services = (data.services?.length ? data.services : MOCK.services);
+  const staff = (data.staff?.length ? data.staff : MOCK.staff);
+  const openNow = isOpenNow(wh);
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: Colors.background }}>
-      <ScrollView>
+      <ScrollView style={{ flex: 1 }}>
         {/* Header */}
         <View style={styles.header}>
-          <TouchableOpacity onPress={() => navigation.goBack()}>
-            <Text style={{ color: '#aabbff', fontSize: 15 }}>← Geri</Text>
-          </TouchableOpacity>
-          <View style={styles.shopIcon}><Text style={{ fontSize: 28 }}>💈</Text></View>
+          <BackButton onPress={() => navigation.goBack()} label="Geri" color={Colors.secondary} size={18} />
+          <View style={styles.shopIcon}><Text style={{ fontSize: 28, color: Colors.secondary }}>✂</Text></View>
           <Text style={styles.shopName}>{data.shopName}</Text>
-          <Text style={styles.shopSub}>⭐ {data.rating ?? 0} · {data.reviewCount ?? 0} yorum</Text>
+          <Text style={styles.shopSub}>★ {data.rating ?? 0} · {data.reviewCount ?? 0} yorum</Text>
           <View style={styles.metaRow}>
-            {!!data.neighborhood && <Text style={styles.metaItem}>📍 {data.neighborhood}</Text>}
-            <Text style={styles.metaItem}>🕐 {wh.openTime}–{wh.closeTime}</Text>
-            <View style={styles.openBadge}><Text style={{ color: '#4ade80', fontSize: 11, fontWeight: '700' }}>● Açık</Text></View>
+            {!!data.neighborhood && <Text style={styles.metaItem}>{data.neighborhood}</Text>}
+            <Text style={styles.metaItem}>{wh.openTime}–{wh.closeTime}</Text>
+            <View style={[styles.openBadge, !openNow && styles.closedBadge]}>
+              <Text style={{ color: openNow ? '#4ade80' : '#f87171', fontSize: 11, fontWeight: '700' }}>
+                {openNow ? '● Açık' : '● Kapalı'}
+              </Text>
+            </View>
           </View>
         </View>
 
@@ -106,7 +125,7 @@ export default function BarberDetailScreen({ navigation, route }: Props) {
           <ScrollView horizontal showsHorizontalScrollIndicator={false}>
             {staff.map((s: any) => (
               <View key={s.id} style={styles.staffItem}>
-                <View style={styles.staffAvatar}><Text style={{ fontSize: 22 }}>✂</Text></View>
+                <View style={styles.staffAvatar}><Text style={{ fontSize: 18, color: Colors.primary }}>✂</Text></View>
                 <Text style={styles.staffName}>{s.name}</Text>
                 <Text style={styles.staffTitle}>{s.title}</Text>
               </View>
@@ -136,62 +155,60 @@ export default function BarberDetailScreen({ navigation, route }: Props) {
               <View key={r.id} style={[styles.reviewItem, i < reviews.length - 1 && { borderBottomWidth: 1, borderBottomColor: Colors.borderLight }]}>
                 <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
                   <Text style={{ fontWeight: '700', fontSize: 13 }}>{r.customerName}</Text>
-                  <Text style={{ color: Colors.warning }}>{'⭐'.repeat(r.rating)}</Text>
+                  <Text style={{ color: Colors.warning }}>{'★'.repeat(r.rating)}</Text>
                 </View>
+                {!!formatReviewDate(r.createdAt) && (
+                  <Text style={{ fontSize: 11, color: Colors.textMuted, marginTop: 2 }}>{formatReviewDate(r.createdAt)}</Text>
+                )}
                 <Text style={{ fontSize: 12, color: Colors.textSecondary, marginTop: 4 }}>{r.comment}</Text>
               </View>
             ))}
           </View>
 
-          {/* Address + directions */}
-          {!!fullAddress && (
-            <View style={styles.card}>
-              <Text style={styles.sectionTitle}>Konum</Text>
-              <Text style={styles.addressText}>📍 {fullAddress}</Text>
-              <TouchableOpacity style={styles.directionsBtn} onPress={openDirections}>
-                <Text style={styles.directionsText}>🧭 Yol Tarifi Al</Text>
-              </TouchableOpacity>
-            </View>
-          )}
-
           {/* Buttons */}
-          <TouchableOpacity style={styles.btnPrimary} onPress={() => navigation.navigate('Appointment', { barberId })}>
-            <Text style={styles.btnPrimaryText}>Randevu Al</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.btnSecondary} onPress={() => navigation.navigate('Messaging', { barberId, barberName: data.shopName })}>
+          <TouchableOpacity style={styles.btnSecondary} onPress={() => navigation.navigate('Chat', { barberId, barberName: data.shopName })}>
             <Text style={styles.btnSecondaryText}>Mesaj Gönder</Text>
           </TouchableOpacity>
-          <View style={{ height: 16 }} />
+          <TouchableOpacity style={styles.btnSecondary} onPress={openDirections}>
+            <Text style={styles.btnSecondaryText}>📍 Yol Tarifi</Text>
+          </TouchableOpacity>
+          <View style={{ height: 8 }} />
         </View>
       </ScrollView>
+
+      {/* Sabit alt çubuk — Randevu Al her zaman erişilebilir */}
+      <View style={styles.footer}>
+        <TouchableOpacity style={styles.btnPrimary} onPress={() => navigation.navigate('Appointment', { barberId })}>
+          <Text style={styles.btnPrimaryText}>Randevu Al</Text>
+        </TouchableOpacity>
+      </View>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  header: { backgroundColor: '#1a1a3e', padding: 20, paddingTop: 16 },
-  shopIcon: { width: 60, height: 60, backgroundColor: 'rgba(255,255,255,0.15)', borderRadius: 14, alignItems: 'center', justifyContent: 'center', marginVertical: 10 },
+  header: { backgroundColor: Colors.primary, padding: 20, paddingTop: 16 },
+  shopIcon: { width: 60, height: 60, backgroundColor: 'rgba(255,206,56,0.15)', borderRadius: 14, alignItems: 'center', justifyContent: 'center', marginVertical: 10 },
   shopName: { fontSize: 20, fontWeight: '800', color: '#fff' },
-  shopSub: { fontSize: 13, color: '#aabbff', marginTop: 4 },
+  shopSub: { fontSize: 13, color: '#AAAAAA', marginTop: 4 },
   metaRow: { flexDirection: 'row', gap: 12, marginTop: 10, flexWrap: 'wrap', alignItems: 'center' },
-  metaItem: { fontSize: 12, color: '#ccd' },
+  metaItem: { fontSize: 12, color: '#AAAAAA' },
   openBadge: { backgroundColor: 'rgba(34,197,94,0.2)', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 20 },
+  closedBadge: { backgroundColor: 'rgba(248,113,113,0.2)' },
   sectionTitle: { fontSize: 15, fontWeight: '700', color: Colors.primary },
   staffItem: { alignItems: 'center', marginRight: 16, width: 64 },
-  staffAvatar: { width: 52, height: 52, borderRadius: 26, backgroundColor: '#e8e0ff', alignItems: 'center', justifyContent: 'center' },
-  staffName: { fontSize: 11, fontWeight: '600', marginTop: 6, textAlign: 'center' },
-  staffTitle: { fontSize: 10, color: Colors.textMuted, textAlign: 'center' },
+  staffAvatar: { width: 52, height: 52, borderRadius: 26, backgroundColor: '#F5F5F5', alignItems: 'center', justifyContent: 'center' },
+  staffName: { fontSize: 13, fontWeight: '700', color: Colors.primary, marginTop: 6, textAlign: 'center' },
+  staffTitle: { fontSize: 10, color: Colors.textMuted, textAlign: 'center', marginTop: 1 },
   card: { backgroundColor: Colors.surface, borderRadius: 12, padding: 14, borderWidth: 1, borderColor: Colors.borderLight },
   serviceItem: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: Colors.borderLight },
   serviceName: { fontSize: 14, fontWeight: '600', color: Colors.primary },
   serviceDesc: { fontSize: 12, color: Colors.textSecondary, marginTop: 2 },
   servicePrice: { fontSize: 15, fontWeight: '700', color: Colors.primary },
   reviewItem: { paddingVertical: 10 },
-  btnPrimary: { backgroundColor: Colors.primary, borderRadius: 12, paddingVertical: 15, alignItems: 'center' },
-  btnPrimaryText: { color: '#fff', fontSize: 16, fontWeight: '700' },
+  footer: { padding: 16, backgroundColor: Colors.surface, borderTopWidth: 1, borderTopColor: Colors.border },
+  btnPrimary: { backgroundColor: Colors.secondary, borderRadius: 12, paddingVertical: 15, alignItems: 'center' },
+  btnPrimaryText: { color: '#020000', fontSize: 16, fontWeight: '700' },
   btnSecondary: { borderWidth: 1.5, borderColor: Colors.border, borderRadius: 12, paddingVertical: 14, alignItems: 'center' },
   btnSecondaryText: { fontSize: 15, color: Colors.primary },
-  addressText: { fontSize: 13, color: Colors.textSecondary, marginTop: 6, marginBottom: 10, lineHeight: 18 },
-  directionsBtn: { backgroundColor: '#eff6ff', borderWidth: 1.5, borderColor: Colors.secondary, borderRadius: 10, paddingVertical: 11, alignItems: 'center' },
-  directionsText: { fontSize: 14, fontWeight: '700', color: Colors.secondary },
 });
