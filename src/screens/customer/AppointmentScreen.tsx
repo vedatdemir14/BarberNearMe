@@ -20,7 +20,7 @@ const FALLBACK_SERVICES: Service[] = [
   { id: 's3', name: 'Full Tıraş', price: 400, durationMin: 45 },
 ];
 const FALLBACK_STAFF: StaffMember[] = [{ id: 'st1', name: 'Engyal T.', title: 'Berber' }];
-const FALLBACK_HOURS = { openTime: '09:00', closeTime: '21:00', slotDurationMin: 30 };
+const FALLBACK_HOURS = { days: [0, 1, 2, 3, 4, 5, 6], openTime: '09:00', closeTime: '21:00', slotDurationMin: 30 };
 
 // Generate "HH:MM" slots between open and close times
 function genSlots(open: string, close: string, stepMin: number): string[] {
@@ -42,6 +42,12 @@ function sameDay(a: Date, b: Date) {
 function toMin(s: string) {
   const [h, m] = s.split(':').map(Number);
   return h * 60 + m;
+}
+
+// Bu tarih dükkanın çalışma gününe denk geliyor mu? (days: 0=Pzt … 6=Paz)
+function isWorkingDay(date: Date, days?: number[]): boolean {
+  if (!days || days.length === 0) return true; // gün bilgisi yoksa engelleme
+  return days.includes((date.getDay() + 6) % 7);
 }
 
 export default function AppointmentScreen({ navigation, route }: Props) {
@@ -76,6 +82,22 @@ export default function AppointmentScreen({ navigation, route }: Props) {
     [hours.openTime, hours.closeTime, hours.slotDurationMin]
   );
 
+  // Dükkan elle kapatılmış mı (berber "Dükkanı Kapat" demiş) ve seçili gün çalışma günü mü
+  const shopClosed = barber?.isActive === false;
+  const dayOpen = isWorkingDay(selectedDate, hours.days);
+
+  // Berber yüklenince seçili gün kapalıysa ilk açık güne ilerle
+  useEffect(() => {
+    if (!hours.days || hours.days.length === 0) return;
+    if (isWorkingDay(selectedDate, hours.days)) return;
+    const d = new Date(selectedDate);
+    for (let i = 0; i < 7; i++) {
+      d.setDate(d.getDate() + 1);
+      if (isWorkingDay(d, hours.days)) { setSelectedDate(new Date(d)); break; }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hours.days]);
+
   // Fetch already-booked slots whenever the selected day changes
   useEffect(() => {
     let active = true;
@@ -95,6 +117,8 @@ export default function AppointmentScreen({ navigation, route }: Props) {
 
   async function handleBook() {
     if (!user) { Alert.alert('Giriş gerekli', 'Randevu almak için giriş yapın.'); return; }
+    if (shopClosed) { Alert.alert('Dükkan kapalı', 'Bu dükkan şu anda kapalı, randevu alınamıyor.'); return; }
+    if (!dayOpen) { Alert.alert('Dükkan kapalı', 'Seçtiğin gün dükkan çalışmıyor. Lütfen açık bir gün seç.'); return; }
     if (!selectedTime) { Alert.alert('Saat seçin', 'Lütfen bir saat seçin.'); return; }
 
     const svc = services[selectedSvc];
@@ -137,6 +161,12 @@ export default function AppointmentScreen({ navigation, route }: Props) {
         <View><Text style={styles.headerTitle}>Randevu Al</Text><Text style={styles.headerSub}>{barber?.shopName ?? 'Berber'}</Text></View>
       </View>
       <ScrollView contentContainerStyle={{ padding: 16, gap: 16 }}>
+        {shopClosed && (
+          <View style={styles.closedNote}>
+            <Text style={styles.closedNoteText}>Bu dükkan şu anda kapalı. Tekrar açılınca randevu alabilirsin.</Text>
+          </View>
+        )}
+
         {/* Service */}
         <Text style={styles.sectionTitle}>Hizmet Seç</Text>
         {services.map((s, i) => (
@@ -170,12 +200,14 @@ export default function AppointmentScreen({ navigation, route }: Props) {
             const day = i + 1;
             const date = new Date(year, month, day);
             const isPast = date < new Date(today.getFullYear(), today.getMonth(), today.getDate());
+            const closedDay = !isWorkingDay(date, hours.days);
+            const disabled = isPast || closedDay;
             const isSel = sameDay(selectedDate, date);
             return (
-              <TouchableOpacity key={day} disabled={isPast}
+              <TouchableOpacity key={day} disabled={disabled}
                 style={[styles.calDay, isSel && styles.calDaySelected]}
                 onPress={() => setSelectedDate(date)}>
-                <Text style={[styles.calDayText, isPast && { color: Colors.textMuted, opacity: 0.4 }, isSel && { color: '#fff' }]}>{day}</Text>
+                <Text style={[styles.calDayText, disabled && { color: Colors.textMuted, opacity: 0.4 }, isSel && { color: '#fff' }]}>{day}</Text>
               </TouchableOpacity>
             );
           })}
@@ -183,6 +215,11 @@ export default function AppointmentScreen({ navigation, route }: Props) {
 
         {/* Time */}
         <Text style={styles.sectionTitle}>Saat Seç <Text style={styles.durationHint}>· seçilen hizmet ~{services[selectedSvc]?.durationMin ?? 30} dk</Text></Text>
+        {shopClosed ? (
+          <View style={styles.closedNote}><Text style={styles.closedNoteText}>Bu dükkan şu anda kapalı, randevu alınamıyor.</Text></View>
+        ) : !dayOpen ? (
+          <View style={styles.closedNote}><Text style={styles.closedNoteText}>Seçilen gün dükkan çalışmıyor. Lütfen açık bir gün seç.</Text></View>
+        ) : (
         <View style={styles.timeGrid}>
           {(() => {
             const svcDur = services[selectedSvc]?.durationMin ?? 30;
@@ -207,6 +244,7 @@ export default function AppointmentScreen({ navigation, route }: Props) {
             });
           })()}
         </View>
+        )}
 
         {/* Summary */}
         <Text style={styles.sectionTitle}>Özet</Text>
@@ -225,8 +263,13 @@ export default function AppointmentScreen({ navigation, route }: Props) {
           </View>
         </View>
 
-        <TouchableOpacity style={[styles.btnPrimary, booking && { opacity: 0.6 }]} onPress={handleBook} disabled={booking}>
-          {booking ? <ActivityIndicator color="#fff" /> : <Text style={styles.btnText}>Randevu Oluştur →</Text>}
+        <TouchableOpacity
+          style={[styles.btnPrimary, (booking || shopClosed || !dayOpen) && { opacity: 0.5 }]}
+          onPress={handleBook}
+          disabled={booking || shopClosed || !dayOpen}>
+          {booking
+            ? <ActivityIndicator color="#fff" />
+            : <Text style={styles.btnText}>{shopClosed || !dayOpen ? 'Dükkan kapalı' : 'Randevu Oluştur →'}</Text>}
         </TouchableOpacity>
         <View style={{ height: 16 }} />
       </ScrollView>
@@ -258,6 +301,8 @@ const styles = StyleSheet.create({
   calDay: { width: '13%', aspectRatio: 1, alignItems: 'center', justifyContent: 'center', borderRadius: 8 },
   calDaySelected: { backgroundColor: Colors.secondary, borderRadius: 999 },
   calDayText: { fontSize: 12, color: Colors.text },
+  closedNote: { backgroundColor: 'rgba(248,113,113,0.12)', borderWidth: 1, borderColor: 'rgba(248,113,113,0.4)', borderRadius: 10, padding: 14 },
+  closedNoteText: { color: '#b91c1c', fontSize: 13, fontWeight: '600', textAlign: 'center' },
   timeGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   timeSlot: { width: '30%', paddingVertical: 10, borderWidth: 1.5, borderColor: Colors.border, borderRadius: 10, alignItems: 'center' },
   timeSelected: { backgroundColor: Colors.secondary, borderColor: Colors.secondary },
