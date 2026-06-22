@@ -172,6 +172,90 @@ const barbers = [
     reviewCount: 2,
     isActive: true,
   },
+  {
+    id: 'barber_006',
+    ownerId: 'owner_guzelbahce',
+    shopName: 'Güzelbahçe Stil Erkek Kuaförü',
+    email: '',
+    phone: '0532 700 12 34',
+    address: 'Atatürk Mah. Sahil Cd. No:18',
+    neighborhood: 'Güzelbahçe',
+    city: 'İzmir',
+    country: 'TR',
+    // İYTE/Urla merkezine ~15 km
+    location: new GeoPoint(38.365, 26.876),
+    photoURLs: [],
+    licenseURL: '',
+    services: [
+      { id: 's1', name: 'Saç', price: 450, durationMin: 30 },
+      { id: 's2', name: 'Sakal', price: 250, durationMin: 20 },
+      { id: 's3', name: 'Saç + Sakal', price: 650, durationMin: 50 },
+      { id: 's4', name: 'Çocuk Saç', price: 300, durationMin: 25 },
+    ],
+    staff: [
+      { id: 'st1', name: 'Serkan', title: 'Usta Berber' },
+      { id: 'st2', name: 'Kaan', title: 'Berber' },
+    ],
+    workingHours: { days: [0, 1, 2, 3, 4, 5, 6], openTime: '09:00', closeTime: '21:00', slotDurationMin: 30 },
+    rating: 4.7,
+    reviewCount: 2,
+    isActive: true,
+  },
+  {
+    id: 'barber_007',
+    ownerId: 'owner_balcova',
+    shopName: 'Balçova Modern Kuaför',
+    email: '',
+    phone: '0533 811 45 67',
+    address: 'Teleferik Mah. Mithatpaşa Cd. No:402',
+    neighborhood: 'Balçova',
+    city: 'İzmir',
+    country: 'TR',
+    // İYTE/Urla merkezine ~28 km
+    location: new GeoPoint(38.390, 27.020),
+    photoURLs: [],
+    licenseURL: '',
+    services: [
+      { id: 's1', name: 'Saç', price: 550, durationMin: 30 },
+      { id: 's2', name: 'Sakal', price: 350, durationMin: 20 },
+      { id: 's3', name: 'Cilt Bakımı', price: 600, durationMin: 40 },
+    ],
+    staff: [
+      { id: 'st1', name: 'Murat', title: 'Baş Stilist' },
+      { id: 'st2', name: 'Berkay', title: 'Berber' },
+    ],
+    workingHours: { days: [1, 2, 3, 4, 5, 6], openTime: '10:00', closeTime: '22:00', slotDurationMin: 30 },
+    rating: 4.9,
+    reviewCount: 2,
+    isActive: true,
+  },
+  {
+    id: 'barber_008',
+    ownerId: 'owner_konak',
+    shopName: 'Konak Barber House',
+    email: '',
+    phone: '0534 922 78 90',
+    address: 'Konak Mah. Anafartalar Cd. No:75',
+    neighborhood: 'Konak',
+    city: 'İzmir',
+    country: 'TR',
+    // İYTE/Urla merkezine ~40 km
+    location: new GeoPoint(38.430, 27.140),
+    photoURLs: [],
+    licenseURL: '',
+    services: [
+      { id: 's1', name: 'Saç', price: 600, durationMin: 30 },
+      { id: 's2', name: 'Sakal', price: 400, durationMin: 20 },
+      { id: 's3', name: 'Saç + Sakal', price: 900, durationMin: 55 },
+    ],
+    staff: [
+      { id: 'st1', name: 'Emin', title: 'Usta Berber' },
+    ],
+    workingHours: { days: [0, 1, 2, 3, 4, 5], openTime: '09:30', closeTime: '20:00', slotDurationMin: 30 },
+    rating: 4.4,
+    reviewCount: 2,
+    isActive: true,
+  },
 ];
 
 // ─── Örnek yorumlar (sabit id → tekrar çalışınca çoğalmaz) ───────────────────
@@ -187,6 +271,12 @@ const reviews = [
   { id: 'rev_009', barberId: 'barber_004', customerName: 'Sinan K.', rating: 4, comment: 'Biraz pahalı ama kalite var.' },
   { id: 'rev_010', barberId: 'barber_005', customerName: 'Burak E.', rating: 5, comment: 'Mahallenin en iyisi, hızlı ve temiz.' },
   { id: 'rev_011', barberId: 'barber_005', customerName: 'Deniz A.', rating: 4, comment: 'Fiyat uygun, sakal tıraşı güzeldi.' },
+  { id: 'rev_012', barberId: 'barber_006', customerName: 'Uğur P.', rating: 5, comment: 'Sahile yakın, randevu sistemi çok pratik.' },
+  { id: 'rev_013', barberId: 'barber_006', customerName: 'Cem L.', rating: 4, comment: 'Çocuğumun saçını da güzel kestiler.' },
+  { id: 'rev_014', barberId: 'barber_007', customerName: 'Barış N.', rating: 5, comment: 'Cilt bakımı muhteşemdi, ortam çok şık.' },
+  { id: 'rev_015', barberId: 'barber_007', customerName: 'Eren V.', rating: 5, comment: 'Murat usta tam bir profesyonel.' },
+  { id: 'rev_016', barberId: 'barber_008', customerName: 'Furkan G.', rating: 4, comment: 'Merkezi konum, kesim başarılı.' },
+  { id: 'rev_017', barberId: 'barber_008', customerName: 'Selim R.', rating: 5, comment: 'Şehir merkezinde kaliteli bir berber.' },
 ];
 
 async function seed() {
