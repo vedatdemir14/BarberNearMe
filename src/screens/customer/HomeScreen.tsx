@@ -373,7 +373,19 @@ export default function HomeScreen({ navigation }: Props) {
             >
               <View style={styles.avatar}><Text style={{ fontSize: 20, color: Colors.primary }}>✂</Text></View>
               <View style={{ flex: 1 }}>
-                <Text style={styles.shopName}>{item.shopName}</Text>
+                <View style={styles.nameRow}>
+                  <Text style={styles.shopName}>{item.shopName}</Text>
+                  {(() => {
+                    const open = isOpenNow(item);
+                    return (
+                      <View style={[styles.statusPill, { backgroundColor: open ? 'rgba(34,197,94,0.15)' : 'rgba(248,113,113,0.15)' }]}>
+                        <Text style={{ fontSize: 10, fontWeight: '700', color: open ? '#16a34a' : '#dc2626' }}>
+                          {open ? '● Açık' : '● Kapalı'}
+                        </Text>
+                      </View>
+                    );
+                  })()}
+                </View>
                 <Text style={styles.shopMeta}>{item.neighborhood} · {item.workingHours.openTime}–{item.workingHours.closeTime}</Text>
                 {(() => {
                   const km = distanceKm(item);
@@ -552,6 +564,8 @@ const styles = StyleSheet.create({
     width: 56, height: 56, borderRadius: 12, backgroundColor: '#f0f0f0',
     alignItems: 'center', justifyContent: 'center',
   },
+  nameRow: { flexDirection: 'row', alignItems: 'center', gap: 8, flexWrap: 'wrap' },
+  statusPill: { paddingHorizontal: 7, paddingVertical: 2, borderRadius: 10 },
   shopName: { fontSize: 15, fontWeight: '700', color: Colors.primary },
   shopMeta: { fontSize: 12, color: Colors.textSecondary, marginTop: 2 },
   rating: { fontSize: 12, color: Colors.warning, marginTop: 4 },

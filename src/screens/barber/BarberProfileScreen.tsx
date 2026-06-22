@@ -165,12 +165,32 @@ export default function BarberProfileScreen({ navigation }: any) {
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={styles.menuItem}
+            style={[styles.menuItem, styles.menuBorder]}
             activeOpacity={0.7}
             onPress={() => navigation.navigate('BarberReviews')}
           >
             <View style={styles.iconChip}><Ionicons name="star-outline" size={19} color={Colors.primary} /></View>
             <Text style={styles.menuLabel}>Müşteri Değerlendirmeleri</Text>
+            <Ionicons name="chevron-forward" size={18} color={Colors.textMuted} />
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.menuItem, styles.menuBorder]}
+            activeOpacity={0.7}
+            onPress={() => navigation.navigate('Notifications')}
+          >
+            <View style={styles.iconChip}><Ionicons name="notifications-outline" size={19} color={Colors.primary} /></View>
+            <Text style={styles.menuLabel}>Bildirimler</Text>
+            <Ionicons name="chevron-forward" size={18} color={Colors.textMuted} />
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.menuItem}
+            activeOpacity={0.7}
+            onPress={() => navigation.navigate('Settings')}
+          >
+            <View style={styles.iconChip}><Ionicons name="settings-outline" size={19} color={Colors.primary} /></View>
+            <Text style={styles.menuLabel}>Ayarlar</Text>
             <Ionicons name="chevron-forward" size={18} color={Colors.textMuted} />
           </TouchableOpacity>
         </View>

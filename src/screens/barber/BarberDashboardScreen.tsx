@@ -2,13 +2,17 @@ import React, { useEffect, useState } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
   View, Text, StyleSheet, ScrollView,
-  TouchableOpacity, ActivityIndicator, RefreshControl,
+  TouchableOpacity, ActivityIndicator, RefreshControl, Alert, Switch,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '../../constants';
+import { friendlyError } from '../../utils/errorMessage';
 import { useAuth } from '../../hooks/useAuth';
 import { getBarber, BarberShop } from '../../services/barberService';
 import { getBarberAppointments, Appointment } from '../../services/appointmentService';
 import { useNavigation } from '@react-navigation/native';
+import { updateDoc, doc } from 'firebase/firestore';
+import { db } from '../../services/firebase';
 
 function StatusBadge({ status }: { status: string }) {
   const map: Record<string, { label: string; bg: string; color: string }> = {
@@ -32,6 +36,18 @@ export default function BarberDashboardScreen() {
   const [appointments, setAppts]  = useState<Appointment[]>([]);
   const [loading, setLoading]     = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [toggling, setToggling]   = useState(false);
+
+  async function handleToggleOpen(val: boolean) {
+    if (!user || toggling) return;
+    setToggling(true);
+    try {
+      await updateDoc(doc(db, 'barbers', user.uid), { isActive: val });
+      setShop(prev => prev ? { ...prev, isActive: val } : prev);
+    } catch (e: any) {
+      Alert.alert('Hata', friendlyError(e));
+    } finally { setToggling(false); }
+  }
 
   async function load() {
     if (!user) return;
@@ -70,10 +86,12 @@ export default function BarberDashboardScreen() {
     );
   }
 
-  // Kurulum tamamlanmamış
-  if (user && shop && !shop.isActive) {
-    const hasServices = (shop.services?.length ?? 0) > 0;
-    const hasHours    = !!shop.workingHours?.openTime;
+  const hasServices = (shop?.services?.length ?? 0) > 0;
+  const hasHours    = !!shop?.workingHours?.openTime;
+  const setupComplete = hasServices && hasHours;
+
+  // Kurulum tamamlanmamış (henüz hizmet/saat girilmemiş) → kurulum sihirbazı
+  if (user && shop && !setupComplete) {
     const nextStep    = !hasServices ? 'BarberRegStep2' : !hasHours ? 'BarberRegStep3' : 'BarberRegStep4';
     const steps = [
       { label: 'Hesap oluşturuldu',     done: true },
@@ -126,6 +144,44 @@ export default function BarberDashboardScreen() {
             </Text>
           </View>
         </View>
+
+        {/* Dükkan kapalı uyarısı + aç/kapa */}
+        {!shop?.isActive && (
+          <View style={styles.closedBanner}>
+            <View style={styles.closedRow}>
+              <Ionicons name="moon" size={20} color="#991b1b" />
+              <View style={{ flex: 1 }}>
+                <Text style={styles.closedTitle}>Dükkanınız kapalı</Text>
+                <Text style={styles.closedSub}>Müşteriler sizi göremez ve randevu alamaz.</Text>
+              </View>
+            </View>
+            <TouchableOpacity
+              style={[styles.openBtn, toggling && { opacity: 0.6 }]}
+              onPress={() => handleToggleOpen(true)}
+              disabled={toggling}
+            >
+              <Ionicons name="storefront" size={16} color="#020000" />
+              <Text style={styles.openBtnText}>Dükkanı Aç</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+
+        {/* Hızlı aç/kapa */}
+        {shop?.isActive && (
+          <View style={styles.quickToggle}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+              <View style={[styles.dot, { backgroundColor: '#22c55e' }]} />
+              <Text style={styles.quickToggleText}>Dükkan açık — randevu kabul ediliyor</Text>
+            </View>
+            <Switch
+              value={!!shop?.isActive}
+              onValueChange={handleToggleOpen}
+              disabled={toggling}
+              trackColor={{ false: Colors.border, true: '#22c55e' }}
+              thumbColor="#fff"
+            />
+          </View>
+        )}
 
         {/* Cüzdan kartı */}
         <View style={styles.walletCard}>
@@ -212,6 +268,17 @@ const styles = StyleSheet.create({
   greeting:    { fontSize: 13, color: Colors.textSecondary },
   shopName:    { fontSize: 22, fontWeight: '800', color: Colors.primary },
   activeBadge: { borderRadius: 10, paddingHorizontal: 10, paddingVertical: 5 },
+
+  closedBanner: { backgroundColor: '#fef2f2', borderRadius: 16, padding: 16, borderWidth: 1, borderColor: '#fecaca', gap: 12 },
+  closedRow:    { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  closedTitle:  { fontSize: 15, fontWeight: '800', color: '#991b1b' },
+  closedSub:    { fontSize: 12, color: '#b91c1c', marginTop: 1 },
+  openBtn:      { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: Colors.secondary, borderRadius: 12, paddingVertical: 13 },
+  openBtnText:  { fontSize: 15, fontWeight: '800', color: '#020000' },
+
+  quickToggle:  { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: Colors.surface, borderRadius: 14, padding: 14, borderWidth: 1, borderColor: Colors.borderLight },
+  quickToggleText: { fontSize: 13, fontWeight: '600', color: Colors.primary },
+  dot:          { width: 9, height: 9, borderRadius: 5 },
 
   walletCard:   { backgroundColor: Colors.secondary, borderRadius: 16, padding: 20 },
   walletLabel:  { fontSize: 13, color: 'rgba(0,0,0,0.6)', marginBottom: 4 },

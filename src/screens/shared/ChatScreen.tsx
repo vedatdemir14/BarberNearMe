@@ -5,6 +5,7 @@ import {
   StyleSheet, ActivityIndicator, KeyboardAvoidingView, Platform, Alert,
 } from 'react-native';
 import { Colors } from '../../constants';
+import BackButton from '../../components/BackButton';
 import { friendlyError } from '../../utils/errorMessage';
 import { useAuth } from '../../hooks/useAuth';
 import {
@@ -100,9 +101,7 @@ export default function ChatScreen({ navigation, route }: Props) {
     <SafeAreaView style={{ flex: 1, backgroundColor: Colors.surface }}>
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()}>
-          <Text style={styles.back}>←</Text>
-        </TouchableOpacity>
+        <BackButton onPress={() => navigation.goBack()} />
         <View style={styles.avatar}>
           <Text style={{ fontSize: 16, color: Colors.primary }}>✂</Text>
         </View>

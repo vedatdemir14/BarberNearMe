@@ -4,6 +4,7 @@ import { View, Text, TouchableOpacity, TextInput, ScrollView, StyleSheet, Alert,
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../navigation';
 import { Colors } from '../../constants';
+import BackButton from '../../components/BackButton';
 import { friendlyError } from '../../utils/errorMessage';
 import { useAuth } from '../../hooks/useAuth';
 import { getAppointment, Appointment } from '../../services/appointmentService';
@@ -99,7 +100,7 @@ export default function RatingScreen({ navigation, route }: Props) {
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: Colors.background }}>
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()}><Text style={{ fontSize: 22 }}>←</Text></TouchableOpacity>
+        <BackButton onPress={() => navigation.goBack()} />
         <View><Text style={styles.title}>Değerlendirme</Text><Text style={styles.sub}>Hizmetinizi değerlendirin</Text></View>
       </View>
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }}>

@@ -3,6 +3,7 @@ import React, { useCallback, useState } from 'react';
 import { View, Text, TouchableOpacity, FlatList, StyleSheet, ActivityIndicator } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { Colors } from '../../constants';
+import BackButton from '../../components/BackButton';
 import { useAuth } from '../../hooks/useAuth';
 import { getCustomerAppointments, getBarberAppointments, Appointment, AppointmentStatus } from '../../services/appointmentService';
 import { getBarber } from '../../services/barberService';
@@ -88,7 +89,7 @@ export default function NotificationsScreen({ navigation }: any) {
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: Colors.background }}>
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()}><Text style={{ fontSize: 22 }}>←</Text></TouchableOpacity>
+        <BackButton onPress={() => navigation.goBack()} />
         <Text style={styles.title}>Bildirimler</Text>
       </View>
 

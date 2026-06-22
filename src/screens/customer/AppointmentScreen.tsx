@@ -5,6 +5,7 @@ import { Timestamp } from 'firebase/firestore';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../navigation';
 import { Colors, DAYS_TR } from '../../constants';
+import BackButton from '../../components/BackButton';
 import { useAuth } from '../../hooks/useAuth';
 import { getBarber, BarberShop, Service, StaffMember } from '../../services/barberService';
 import { createAppointment, getBookedSlots, BookedSlot } from '../../services/appointmentService';
@@ -132,7 +133,7 @@ export default function AppointmentScreen({ navigation, route }: Props) {
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: Colors.background }}>
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()}><Text style={styles.back}>←</Text></TouchableOpacity>
+        <BackButton onPress={() => navigation.goBack()} />
         <View><Text style={styles.headerTitle}>Randevu Al</Text><Text style={styles.headerSub}>{barber?.shopName ?? 'Berber'}</Text></View>
       </View>
       <ScrollView contentContainerStyle={{ padding: 16, gap: 16 }}>

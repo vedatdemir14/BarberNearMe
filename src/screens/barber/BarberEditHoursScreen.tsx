@@ -7,6 +7,7 @@ import {
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../navigation';
 import { Colors } from '../../constants';
+import BackButton from '../../components/BackButton';
 import { friendlyError } from '../../utils/errorMessage';
 import { getBarber, updateBarberWorkingHours } from '../../services/barberService';
 
@@ -80,7 +81,7 @@ export default function BarberEditHoursScreen({ navigation, route }: Props) {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()}><Text style={{ fontSize: 22 }}>←</Text></TouchableOpacity>
+        <BackButton onPress={() => navigation.goBack()} />
         <Text style={styles.headerTitle}>Çalışma Saatleri</Text>
       </View>
 

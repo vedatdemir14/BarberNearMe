@@ -8,6 +8,7 @@ import {
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../navigation';
 import { Colors } from '../../constants';
+import BackButton from '../../components/BackButton';
 import { addToWallet } from '../../services/barberService';
 import { createAppointment } from '../../services/appointmentService';
 import { auth } from '../../services/firebase';
@@ -89,9 +90,7 @@ export default function PaymentScreen({ route, navigation }: Props) {
     <SafeAreaView style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()}>
-          <Text style={styles.back}>←</Text>
-        </TouchableOpacity>
+        <BackButton onPress={() => navigation.goBack()} />
         <View>
           <Text style={styles.headerTitle}>Kapora Ödemesi</Text>
           <Text style={styles.headerSub}>{barberName}</Text>

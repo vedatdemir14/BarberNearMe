@@ -7,6 +7,7 @@ import {
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../navigation';
 import { Colors } from '../../constants';
+import BackButton from '../../components/BackButton';
 import { friendlyError } from '../../utils/errorMessage';
 import { updateBarberServices, Service, StaffMember } from '../../services/barberService';
 
@@ -78,9 +79,7 @@ export default function BarberRegStep2Screen({ navigation, route }: Props) {
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }}>
         <ScrollView contentContainerStyle={styles.inner} keyboardShouldPersistTaps="handled">
 
-          <TouchableOpacity onPress={() => navigation.goBack()} style={{ marginBottom: 8 }}>
-            <Text style={{ fontSize: 15, color: Colors.secondary }}>← Geri</Text>
-          </TouchableOpacity>
+          <BackButton onPress={() => navigation.goBack()} label="Geri" color={Colors.secondary} size={18} style={{ marginBottom: 8 }} />
 
           {/* Progress */}
           <View style={styles.progress}>

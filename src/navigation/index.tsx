@@ -179,6 +179,8 @@ export default function Navigation() {
             <Stack.Screen name="BarberEditServices" component={BarberEditServicesScreen} />
             <Stack.Screen name="BarberEditHours"    component={BarberEditHoursScreen} />
             <Stack.Screen name="BarberReviews"      component={BarberReviewsScreen} />
+            <Stack.Screen name="Notifications"      component={NotificationsScreen} />
+            <Stack.Screen name="Settings"           component={SettingsScreen} />
           </>
         ) : (
           <>

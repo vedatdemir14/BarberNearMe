@@ -8,6 +8,7 @@ import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../navigation';
 import { registerCustomer } from '../../services/authService';
 import { Colors } from '../../constants';
+import BackButton from '../../components/BackButton';
 import PasswordInput from '../../components/PasswordInput';
 import { friendlyError } from '../../utils/errorMessage';
 
@@ -50,9 +51,7 @@ export default function SignUpScreen({ navigation }: Props) {
     <SafeAreaView style={styles.container}>
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }}>
         <ScrollView contentContainerStyle={styles.inner} keyboardShouldPersistTaps="handled">
-          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
-            <Text style={styles.backText}>← Geri</Text>
-          </TouchableOpacity>
+          <BackButton onPress={() => navigation.goBack()} label="Geri" color={Colors.secondary} size={18} style={styles.backBtn} />
 
           <Text style={styles.title}>Hesap Oluştur</Text>
 

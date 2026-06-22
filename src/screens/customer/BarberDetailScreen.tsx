@@ -4,6 +4,7 @@ import { View, Text, ScrollView, TouchableOpacity, StyleSheet, ActivityIndicator
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../navigation';
 import { Colors } from '../../constants';
+import BackButton from '../../components/BackButton';
 import { getBarber, BarberShop } from '../../services/barberService';
 import { getBarberReviews, Review } from '../../services/reviewService';
 
@@ -13,6 +14,18 @@ const MONTHS_TR = ['Ocak','Şubat','Mart','Nisan','Mayıs','Haziran','Temmuz','A
 function formatReviewDate(at: any): string {
   const d = at?.toDate?.();
   return d ? `${d.getDate()} ${MONTHS_TR[d.getMonth()]} ${d.getFullYear()}` : '';
+}
+
+// Dükkan şu an çalışma saatleri içinde mi? (days: 0=Pzt … 6=Paz)
+function isOpenNow(wh?: { days?: number[]; openTime?: string; closeTime?: string }): boolean {
+  if (!wh?.openTime || !wh?.closeTime) return false;
+  const now = new Date();
+  const dayIdx = (now.getDay() + 6) % 7;
+  if (!wh.days?.includes(dayIdx)) return false;
+  const cur = now.getHours() * 60 + now.getMinutes();
+  const [oh, om] = wh.openTime.split(':').map(Number);
+  const [ch, cm] = wh.closeTime.split(':').map(Number);
+  return cur >= oh * 60 + om && cur < ch * 60 + cm;
 }
 
 // Fallback used when the barber doc cannot be loaded (e.g. offline / mock data)
@@ -84,22 +97,25 @@ export default function BarberDetailScreen({ navigation, route }: Props) {
   }
   const services = (data.services?.length ? data.services : MOCK.services);
   const staff = (data.staff?.length ? data.staff : MOCK.staff);
+  const openNow = isOpenNow(wh);
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: Colors.background }}>
       <ScrollView style={{ flex: 1 }}>
         {/* Header */}
         <View style={styles.header}>
-          <TouchableOpacity onPress={() => navigation.goBack()}>
-            <Text style={{ color: Colors.secondary, fontSize: 15 }}>← Geri</Text>
-          </TouchableOpacity>
+          <BackButton onPress={() => navigation.goBack()} label="Geri" color={Colors.secondary} size={18} />
           <View style={styles.shopIcon}><Text style={{ fontSize: 28, color: Colors.secondary }}>✂</Text></View>
           <Text style={styles.shopName}>{data.shopName}</Text>
           <Text style={styles.shopSub}>★ {data.rating ?? 0} · {data.reviewCount ?? 0} yorum</Text>
           <View style={styles.metaRow}>
             {!!data.neighborhood && <Text style={styles.metaItem}>{data.neighborhood}</Text>}
             <Text style={styles.metaItem}>{wh.openTime}–{wh.closeTime}</Text>
-            <View style={styles.openBadge}><Text style={{ color: '#4ade80', fontSize: 11, fontWeight: '700' }}>● Açık</Text></View>
+            <View style={[styles.openBadge, !openNow && styles.closedBadge]}>
+              <Text style={{ color: openNow ? '#4ade80' : '#f87171', fontSize: 11, fontWeight: '700' }}>
+                {openNow ? '● Açık' : '● Kapalı'}
+              </Text>
+            </View>
           </View>
         </View>
 
@@ -178,6 +194,7 @@ const styles = StyleSheet.create({
   metaRow: { flexDirection: 'row', gap: 12, marginTop: 10, flexWrap: 'wrap', alignItems: 'center' },
   metaItem: { fontSize: 12, color: '#AAAAAA' },
   openBadge: { backgroundColor: 'rgba(34,197,94,0.2)', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 20 },
+  closedBadge: { backgroundColor: 'rgba(248,113,113,0.2)' },
   sectionTitle: { fontSize: 15, fontWeight: '700', color: Colors.primary },
   staffItem: { alignItems: 'center', marginRight: 16, width: 64 },
   staffAvatar: { width: 52, height: 52, borderRadius: 26, backgroundColor: '#F5F5F5', alignItems: 'center', justifyContent: 'center' },

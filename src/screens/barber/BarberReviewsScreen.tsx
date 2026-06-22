@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
 import { Colors } from '../../constants';
+import BackButton from '../../components/BackButton';
 import { useAuth } from '../../hooks/useAuth';
 import { getBarberReviews, Review } from '../../services/reviewService';
 
@@ -35,7 +36,7 @@ export default function BarberReviewsScreen({ navigation }: Props) {
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: Colors.background }}>
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()}><Text style={{ fontSize: 22 }}>←</Text></TouchableOpacity>
+        <BackButton onPress={() => navigation.goBack()} />
         <Text style={styles.title}>Değerlendirmeler</Text>
       </View>
 

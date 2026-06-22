@@ -7,6 +7,7 @@ import {
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../navigation';
 import { Colors } from '../../constants';
+import BackButton from '../../components/BackButton';
 import { friendlyError } from '../../utils/errorMessage';
 import { getBarber, BarberShop } from '../../services/barberService';
 import { updateDoc, doc } from 'firebase/firestore';
@@ -70,9 +71,7 @@ export default function BarberRegStep4Screen({ navigation, route }: Props) {
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.inner}>
 
-        <TouchableOpacity onPress={() => navigation.goBack()} style={{ marginBottom: 8 }}>
-          <Text style={{ fontSize: 15, color: Colors.secondary }}>← Geri</Text>
-        </TouchableOpacity>
+        <BackButton onPress={() => navigation.goBack()} label="Geri" color={Colors.secondary} size={18} style={{ marginBottom: 8 }} />
 
         {/* Progress */}
         <View style={styles.progress}>
