@@ -82,6 +82,15 @@ export async function updateAppointmentStatus(
     }
   }
 
+  // Randevu iptal edilince (müşteri ya da berber) alınan kapora müşteriye iade edilir
+  // → berberin cüzdanından düşülür.
+  if (status === 'cancelled' && prev && prev.status !== 'cancelled') {
+    const kapora = prev.kaporaAmount ?? 0;
+    if (kapora > 0) {
+      await addToWallet(prev.barberId, -kapora).catch(() => {});
+    }
+  }
+
   const appt = await getAppointment(id);
   if (!appt) return;
 
@@ -143,6 +152,57 @@ export async function getBarberAppointments(barberId: string): Promise<Appointme
 export interface BookedSlot {
   timeSlot: string;     // "10:30"
   durationMin: number;
+}
+
+// ── Cüzdan hareketleri (randevulardan türetilir) ──────────────
+export interface WalletTx {
+  id: string;
+  type: 'in' | 'out';
+  amount: number;
+  title: string;
+  customerName?: string;
+  serviceName?: string;
+  dateMs: number;
+}
+
+// Bir berberin randevularından cüzdan hareketleri listesini üretir (en yeni önce).
+export function buildWalletTransactions(appts: Appointment[]): WalletTx[] {
+  const txs: WalletTx[] = [];
+  for (const a of appts) {
+    const dateMs = a.date?.toMillis?.() ?? 0;
+    const kapora = a.kaporaAmount ?? 0;
+    const total  = a.totalPrice ?? a.servicePrice ?? 0;
+
+    // Rezervasyonda alınan kapora (iptal/tamam fark etmez, başta alınmıştı)
+    if (a.kaporaPaid && kapora > 0) {
+      txs.push({
+        id: `${a.id}_kapora`, type: 'in', amount: kapora,
+        title: 'Kapora alındı', customerName: a.customerName, serviceName: a.serviceName,
+        dateMs,
+      });
+    }
+    // Tamamlanınca kalan ücret
+    if (a.status === 'completed') {
+      const remaining = Math.max(0, total - kapora);
+      if (remaining > 0) {
+        txs.push({
+          id: `${a.id}_complete`, type: 'in', amount: remaining,
+          title: 'Hizmet geliri (tamamlandı)', customerName: a.customerName, serviceName: a.serviceName,
+          dateMs: dateMs + 1,
+        });
+      }
+    }
+    // İptal edilince kapora iadesi (cüzdandan çıkış)
+    if (a.status === 'cancelled' && kapora > 0) {
+      txs.push({
+        id: `${a.id}_refund`, type: 'out', amount: kapora,
+        title: a.cancelledBy === 'customer' ? 'İptal (müşteri) — kapora iadesi' : 'İptal (berber) — kapora iadesi',
+        customerName: a.customerName, serviceName: a.serviceName,
+        dateMs: dateMs + 2,
+      });
+    }
+  }
+  return txs.sort((x, y) => y.dateMs - x.dateMs);
 }
 
 export async function getBookedSlots(

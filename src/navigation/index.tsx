@@ -44,6 +44,7 @@ import BarberRegStep4Screen from '../screens/barber/BarberRegStep4Screen';
 import BarberEditServicesScreen from '../screens/barber/BarberEditServicesScreen';
 import BarberEditHoursScreen from '../screens/barber/BarberEditHoursScreen';
 import BarberReviewsScreen from '../screens/barber/BarberReviewsScreen';
+import BarberWalletScreen from '../screens/barber/BarberWalletScreen';
 
 export type RootStackParamList = {
   EmailVerification: undefined;
@@ -84,6 +85,7 @@ export type RootStackParamList = {
   BarberEditServices: { uid: string };
   BarberEditHours: { uid: string };
   BarberReviews: undefined;
+  BarberWallet: undefined;
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -179,6 +181,7 @@ export default function Navigation() {
             <Stack.Screen name="BarberEditServices" component={BarberEditServicesScreen} />
             <Stack.Screen name="BarberEditHours"    component={BarberEditHoursScreen} />
             <Stack.Screen name="BarberReviews"      component={BarberReviewsScreen} />
+            <Stack.Screen name="BarberWallet"       component={BarberWalletScreen} />
             <Stack.Screen name="Notifications"      component={NotificationsScreen} />
             <Stack.Screen name="Settings"           component={SettingsScreen} />
           </>

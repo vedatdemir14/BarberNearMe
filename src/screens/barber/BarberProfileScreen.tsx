@@ -147,6 +147,16 @@ export default function BarberProfileScreen({ navigation }: any) {
           <TouchableOpacity
             style={[styles.menuItem, styles.menuBorder]}
             activeOpacity={0.7}
+            onPress={() => navigation.navigate('BarberWallet')}
+          >
+            <View style={styles.iconChip}><Ionicons name="wallet-outline" size={19} color={Colors.primary} /></View>
+            <Text style={styles.menuLabel}>Hesap Hareketleri</Text>
+            <Ionicons name="chevron-forward" size={18} color={Colors.textMuted} />
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.menuItem, styles.menuBorder]}
+            activeOpacity={0.7}
             onPress={() => navigation.navigate('BarberEditServices', { uid: user!.uid })}
           >
             <View style={styles.iconChip}><Ionicons name="cut-outline" size={19} color={Colors.primary} /></View>

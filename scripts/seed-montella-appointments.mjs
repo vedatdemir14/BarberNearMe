@@ -133,8 +133,11 @@ async function run() {
       totalPrice: price,
       createdAt: serverTimestamp(),
     });
-    // Cüzdan: kapora rezervasyonda; tamamlananlarda kalan ücret de eklenir
-    walletTotal += kapora + (p.status === 'completed' ? (price - kapora) : 0);
+    // Cüzdan: kapora rezervasyonda eklenir; tamamlananlarda kalan ücret de eklenir;
+    // iptallerde kapora müşteriye iade edilir (cüzdandan düşülür) → net 0
+    walletTotal += kapora
+      + (p.status === 'completed' ? (price - kapora) : 0)
+      - (p.status === 'cancelled' ? kapora : 0);
     i++;
   }
   console.log(`✅ ${plan.length} randevu yazıldı (bekleyen 3, onaylı 3, tamamlandı 3, iptal 2).`);
